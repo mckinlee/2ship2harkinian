@@ -8,6 +8,7 @@
 #include "z64rumble.h"
 #include "overlays/actors/ovl_Eff_Dust/z_eff_dust.h"
 #include "objects/gameplay_keep/gameplay_keep.h"
+#include "Enhancements/GameInteractor/GameInteractor.h"
 
 #define FLAGS (ACTOR_FLAG_10)
 
@@ -174,6 +175,11 @@ void EnMThunder_Init(Actor* thisx, PlayState* play) {
             this->timer = 1;
             this->scaleTarget = 12;
             this->collider.info.toucher.dmgFlags = DMG_SWORD_BEAM;
+            // #region 2S2H - Enhancements - Give sword beams arrow damage effect
+            if (!GameInteractor_Should(GI_VB_SWORD_BEAMS_ON_REGULAR_ENEMIES, true, NULL)) {
+                this->collider.info.toucher.dmgFlags |= DMG_NORMAL_ARROW;
+            }
+            // #endregion
             this->collider.info.toucher.damage = 3;
         } else {
             this->actionFunc = EnMThunder_Spin_Attack;
