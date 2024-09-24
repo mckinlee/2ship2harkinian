@@ -17,6 +17,7 @@
 #include "Cycle/EndOfCycle.h"
 #include "Cycle/BothLetterToMamaRewards.h"
 #include "Equipment/SkipMagicArrowEquip.h"
+#include "Equipment/GreatFairySwordOnB.h"
 #include "Fixes/Fixes.h"
 #include "Masks/BlastMaskKeg.h"
 #include "Masks/FierceDeityAnywhere.h"
