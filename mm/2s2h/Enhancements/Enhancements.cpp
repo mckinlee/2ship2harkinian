@@ -30,6 +30,7 @@ void InitEnhancements() {
 
     // Equipment
     RegisterSkipMagicArrowEquip();
+    RegisterTwoHandedSwordSpinAttack();
     RegisterGreatFairySwordOnB();
     RegisterInstantRecall();
 

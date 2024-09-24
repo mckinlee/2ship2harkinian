@@ -18,6 +18,7 @@
 #include "Cycle/BothLetterToMamaRewards.h"
 #include "Cycle/SkipScarecrowSong.h"
 #include "Equipment/SkipMagicArrowEquip.h"
+#include "Equipment/TwoHandedSwordSpinAttack.h"
 #include "Equipment/GreatFairySwordOnB.h"
 #include "Fixes/Fixes.h"
 #include "Masks/BlastMaskKeg.h"

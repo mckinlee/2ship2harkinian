@@ -69,6 +69,8 @@ typedef enum {
     GI_VB_NEED_SCARECROW_SONG,
     GI_VB_SHOULD_PUTAWAY,
     GI_VB_FD_ALWAYS_WIELD_SWORD,
+    GI_VB_HELD_ITEM_BUTTON_PRESS,
+    GI_VB_MAGIC_SPIN_ATTACK_FORM_CHECK,
 } GIVanillaBehavior;
 
 typedef enum {
