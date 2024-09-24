@@ -65,6 +65,7 @@ typedef enum {
     GI_VB_DRAW_DAMAGE_EFFECT,
     GI_VB_CHECK_BUMPER_COLLISION,
     GI_VB_THIEF_BIRD_STEAL,
+    GI_VB_ALLOW_EQUIP_MASK,
 } GIVanillaBehavior;
 
 typedef enum {
@@ -271,6 +272,7 @@ class GameInteractor {
     DEFINE_HOOK(OnKaleidoUpdate, (PauseContext * pauseCtx));
     DEFINE_HOOK(BeforeKaleidoDrawPage, (PauseContext * pauseCtx, u16 pauseIndex));
     DEFINE_HOOK(AfterKaleidoDrawPage, (PauseContext * pauseCtx, u16 pauseIndex));
+    DEFINE_HOOK(OnKaleidoClose, ());
     DEFINE_HOOK(OnSaveInit, (s16 fileNum));
     DEFINE_HOOK(BeforeEndOfCycleSave, ());
     DEFINE_HOOK(AfterEndOfCycleSave, ());
@@ -321,6 +323,7 @@ void GameInteractor_ExecuteOnConsoleLogoUpdate();
 void GameInteractor_ExecuteOnKaleidoUpdate(PauseContext* pauseCtx);
 void GameInteractor_ExecuteBeforeKaleidoDrawPage(PauseContext* pauseCtx, u16 pauseIndex);
 void GameInteractor_ExecuteAfterKaleidoDrawPage(PauseContext* pauseCtx, u16 pauseIndex);
+void GameInteractor_ExecuteOnKaleidoClose();
 void GameInteractor_ExecuteOnSaveInit(s16 fileNum);
 void GameInteractor_ExecuteBeforeEndOfCycleSave();
 void GameInteractor_ExecuteAfterEndOfCycleSave();

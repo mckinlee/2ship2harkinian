@@ -23,6 +23,7 @@
 #include "Masks/NoBlastMaskCooldown.h"
 #include "Masks/FastTransformation.h"
 #include "Masks/PersistentMasks.h"
+#include "Masks/EasyMaskEquip.h"
 #include "Minigames/AlwaysWinDoggyRace.h"
 #include "Cutscenes/Cutscenes.h"
 #include "Restorations/FlipHopVariable.h"

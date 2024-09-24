@@ -1328,6 +1328,8 @@ void osContGetReadData(OSContPad* pad);
 // #region 2S2H [Port] Previously unavailable functions, made available for porting
 void PadMgr_ThreadEntry();
 void Heaps_Alloc(void);
+void Player_UseItem(PlayState* play, Player* this, ItemId item);
+void KaleidoScope_GrayOutTextureRGBA32(u32* texture, u16 pixelCount);
 void KaleidoScope_UpdateOwlWarpNamePanel(PlayState* play);
 void KaleidoScope_UpdateNamePanel(PlayState* play);
 // #endregion
