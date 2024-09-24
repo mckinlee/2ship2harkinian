@@ -23,6 +23,7 @@ void InitEnhancements() {
     RegisterSavingEnhancements();
     RegisterAutosave();
     RegisterBothLetterToMamaRewards();
+    RegisterSkipScarecrowSong();
 
     // Dialogue
     RegisterFastBankSelection();

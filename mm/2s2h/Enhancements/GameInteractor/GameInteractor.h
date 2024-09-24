@@ -66,6 +66,7 @@ typedef enum {
     GI_VB_CHECK_BUMPER_COLLISION,
     GI_VB_THIEF_BIRD_STEAL,
     GI_VB_ALLOW_EQUIP_MASK,
+    GI_VB_NEED_SCARECROW_SONG,
 } GIVanillaBehavior;
 
 typedef enum {

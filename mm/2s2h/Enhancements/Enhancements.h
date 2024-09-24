@@ -16,6 +16,7 @@
 #include "Cheats/TimeStop.h"
 #include "Cycle/EndOfCycle.h"
 #include "Cycle/BothLetterToMamaRewards.h"
+#include "Cycle/SkipScarecrowSong.h"
 #include "Equipment/SkipMagicArrowEquip.h"
 #include "Equipment/GreatFairySwordOnB.h"
 #include "Fixes/Fixes.h"
