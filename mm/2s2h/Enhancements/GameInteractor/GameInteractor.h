@@ -72,6 +72,7 @@ typedef enum {
     GI_VB_HELD_ITEM_BUTTON_PRESS,
     GI_VB_MAGIC_SPIN_ATTACK_FORM_CHECK,
     GI_VB_ELEGY_IN_IKANA_ONLY,
+    GI_VB_ENABLE_HOOKSHOT_ANYWHERE,
 } GIVanillaBehavior;
 
 typedef enum {
