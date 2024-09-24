@@ -71,6 +71,7 @@ typedef enum {
     GI_VB_FD_ALWAYS_WIELD_SWORD,
     GI_VB_HELD_ITEM_BUTTON_PRESS,
     GI_VB_MAGIC_SPIN_ATTACK_FORM_CHECK,
+    GI_VB_ELEGY_IN_IKANA_ONLY,
 } GIVanillaBehavior;
 
 typedef enum {

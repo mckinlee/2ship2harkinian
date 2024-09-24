@@ -14,6 +14,7 @@
 #include "Cheats/UnbreakableRazorSword.h"
 #include "Cheats/UnrestrictedItems.h"
 #include "Cheats/TimeStop.h"
+#include "Cheats/ElegyAnywhere.h"
 #include "Cycle/EndOfCycle.h"
 #include "Cycle/BothLetterToMamaRewards.h"
 #include "Cycle/SkipScarecrowSong.h"
