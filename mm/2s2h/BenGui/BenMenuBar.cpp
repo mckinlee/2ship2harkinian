@@ -481,6 +481,10 @@ void DrawEnhancementsMenu() {
                 "Do not reset Time Speed", "gEnhancements.Cycle.DoNotResetTimeSpeed",
                 { .tooltip =
                       "Playing the Song Of Time will not reset the current time speed set by Inverted Song of Time." });
+            UIWidgets::CVarCheckbox(
+                "Both Letter to Mama Rewards", "gEnhancements.Cycle.BothLetterToMamaRewards",
+                { .tooltip =
+                      "Giving the Letter to Mama to either Madame Aroma or the Postman will yield both rewards." });
 
             ImGui::PushStyleColor(ImGuiCol_Text, ImVec4(255, 255, 0, 255));
             ImGui::SeparatorText("Unstable");

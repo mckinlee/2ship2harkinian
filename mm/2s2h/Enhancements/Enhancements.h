@@ -14,6 +14,7 @@
 #include "Cheats/UnrestrictedItems.h"
 #include "Cheats/TimeStop.h"
 #include "Cycle/EndOfCycle.h"
+#include "Cycle/BothLetterToMamaRewards.h"
 #include "Equipment/SkipMagicArrowEquip.h"
 #include "Fixes/Fixes.h"
 #include "Masks/BlastMaskKeg.h"
