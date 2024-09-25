@@ -41,6 +41,7 @@ void InitEnhancements() {
 
     // Graphics
     RegisterDisableBlackBars();
+    RegisterHyruleWarriorsStyledLink();
     Register3DItemDrops();
 
     // Masks
