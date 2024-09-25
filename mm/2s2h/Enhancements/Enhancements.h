@@ -28,7 +28,7 @@
 #include "Masks/FastTransformation.h"
 #include "Masks/PersistentMasks.h"
 #include "Masks/EasyMaskEquip.h"
-#include "Minigames/AlwaysWinDoggyRace.h"
+#include "Minigames/Minigames.h"
 #include "Cutscenes/Cutscenes.h"
 #include "Restorations/FlipHopVariable.h"
 #include "Restorations/PowerCrouchStab.h"
