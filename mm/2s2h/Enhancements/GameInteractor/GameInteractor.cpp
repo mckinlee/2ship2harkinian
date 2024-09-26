@@ -296,7 +296,7 @@ int GameInteractor_InvertControl(GIInvertType type) {
             if (CVarGetInteger("gEnhancements.Camera.FirstPerson.RightStickInvertY", 1)) {
                 result *= -1;
             }
-            break;            
+            break;
     }
 
     // Invert all X axis inputs if the Mirrored World mode is enabled
