@@ -227,18 +227,14 @@ void Lib_GetControlStickData(f32* outMagnitude, s16* outAngle, Input* input, u8 
     f32 y = input->rel.stick_y;
     f32 magnitude;
 
-    if (isRealPlayer) {
-        x *= GameInteractor_InvertControl(GI_INVERT_MOVEMENT_X);
-    }
+    x *= GameInteractor_InvertControl(GI_INVERT_MOVEMENT_X);
     magnitude = sqrtf(SQ(x) + SQ(y));
     *outMagnitude = (60.0f < magnitude) ? 60.0f : magnitude;
 
     if (magnitude > 0.0f) {
         x = input->cur.stick_x;
         y = input->cur.stick_y;
-        if (isRealPlayer) {
-            x *= GameInteractor_InvertControl(GI_INVERT_MOVEMENT_X);
-        }
+        x *= GameInteractor_InvertControl(GI_INVERT_MOVEMENT_X);
         *outAngle = Math_Atan2S_XY(y, -x);
     } else {
         *outAngle = 0;
