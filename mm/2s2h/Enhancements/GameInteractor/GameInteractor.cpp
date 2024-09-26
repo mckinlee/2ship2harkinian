@@ -296,23 +296,23 @@ int GameInteractor_InvertControl(GIInvertType type) {
             if (CVarGetInteger("gEnhancements.Camera.FirstPerson.RightStickInvertY", 1)) {
                 result *= -1;
             }
-            break;
+            break;            
     }
 
-    /*
     // Invert all X axis inputs if the Mirrored World mode is enabled
     if (CVarGetInteger("gModes.MirroredWorld.State", 0)) {
         switch (type) {
             case GI_INVERT_CAMERA_RIGHT_STICK_X:
+            case GI_INVERT_MOVEMENT_X:
             case GI_INVERT_FIRST_PERSON_AIM_X:
-            case GI_INVERT_FIRST_PERSON_GYRO_X:
-            case GI_INVERT_FIRST_PERSON_RIGHT_STICK_X:
-            case GI_INVERT_FIRST_PERSON_MOVING_X:
+            case GI_INVERT_SHIELD_X:
+            case GI_INVERT_SHOP_X:
+            case GI_INVERT_HORSE_X:
+            case GI_INVERT_ZORA_SWIM_X:
                 result *= -1;
                 break;
         }
     }
-    */
 
     /*
     if (CrowdControl::State::InvertedInputs) {
