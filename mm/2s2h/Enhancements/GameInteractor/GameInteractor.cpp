@@ -277,6 +277,26 @@ int GameInteractor_InvertControl(GIInvertType type) {
                 result *= -1;
             }
             break;
+        case GI_INVERT_FIRST_PERSON_GYRO_X:
+            if (CVarGetInteger("gEnhancements.Camera.FirstPerson.GyroInvertX", 0)) {
+                result *= -1;
+            }
+            break;
+        case GI_INVERT_FIRST_PERSON_GYRO_Y:
+            if (CVarGetInteger("gEnhancements.Camera.FirstPerson.GyroInvertY", 0)) {
+                result *= -1;
+            }
+            break;
+        case GI_INVERT_FIRST_PERSON_RIGHT_STICK_X:
+            if (CVarGetInteger("gEnhancements.Camera.FirstPerson.RightStickInvertX", 0)) {
+                result *= -1;
+            }
+            break;
+        case GI_INVERT_FIRST_PERSON_RIGHT_STICK_Y:
+            if (CVarGetInteger("gEnhancements.Camera.FirstPerson.RightStickInvertY", 1)) {
+                result *= -1;
+            }
+            break;
     }
 
     /*
@@ -285,6 +305,9 @@ int GameInteractor_InvertControl(GIInvertType type) {
         switch (type) {
             case GI_INVERT_CAMERA_RIGHT_STICK_X:
             case GI_INVERT_FIRST_PERSON_AIM_X:
+            case GI_INVERT_FIRST_PERSON_GYRO_X:
+            case GI_INVERT_FIRST_PERSON_RIGHT_STICK_X:
+            case GI_INVERT_FIRST_PERSON_MOVING_X:
                 result *= -1;
                 break;
         }

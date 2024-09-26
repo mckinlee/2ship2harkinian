@@ -356,6 +356,8 @@ void DrawEnhancementsMenu() {
                       "Fixes the camera snap that occurs when you are moving and press the targetting button." });
 
             ImGui::SeparatorText("First Person");
+            UIWidgets::CVarCheckbox("Disable Auto-Centering",
+                                    "gEnhancements.Camera.FirstPerson.DisableFirstPersonAutoCenterView");
             UIWidgets::CVarCheckbox("Invert X Axis", "gEnhancements.Camera.FirstPerson.InvertX");
             UIWidgets::CVarCheckbox("Invert Y Axis", "gEnhancements.Camera.FirstPerson.InvertY",
                                     { .defaultValue = true });
@@ -383,6 +385,8 @@ void DrawEnhancementsMenu() {
                 { .tooltip = "Enables right stick aiming in first person mode. Requires the controller right stick to "
                              "be mapped in the Controller Mapping menu" });
             if (CVarGetInteger("gEnhancements.Camera.FirstPerson.RightStickEnabled", 0)) {
+                UIWidgets::CVarCheckbox("Move with left stick while in first person",
+                                        "gEnhancements.Camera.FirstPerson.MoveInFirstPerson");
                 UIWidgets::CVarCheckbox("Invert Right Stick X Axis",
                                         "gEnhancements.Camera.FirstPerson.RightStickInvertX");
                 UIWidgets::CVarCheckbox("Invert Right Stick Y Axis",
