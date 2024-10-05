@@ -683,6 +683,11 @@ void DrawEnhancementsMenu() {
         }
 
         if (UIWidgets::BeginMenu("Modes")) {
+            if (UIWidgets::CVarCheckbox("Invisible Enemies", "gModes.InvisibleEnemies",
+                                        { .tooltip = "Enemies will appear invisible without using the Lens of Truth. "
+                                                     "Requires scene reload to take effect." })) {
+                RegisterInvisibleEnemies();
+            }
             UIWidgets::CVarCheckbox("Play As Kafei", "gModes.PlayAsKafei",
                                     { .tooltip = "Requires scene reload to take effect." });
             UIWidgets::CVarCheckbox("Hyrule Warriors Young Link", "gModes.HyruleWarriorsStyledLink",
