@@ -70,6 +70,7 @@ typedef enum {
     GI_VB_DRAW_DAMAGE_EFFECT,
     GI_VB_CHECK_BUMPER_COLLISION,
     GI_VB_RANDOM_COMPARISON,
+    GI_VB_ENABLE_HOOKSHOT_ANYWHERE,
 } GIVanillaBehavior;
 
 typedef enum {

@@ -13,6 +13,7 @@ void InitEnhancements() {
     RegisterUnbreakableRazorSword();
     RegisterUnrestrictedItems();
     RegisterTimeStopInTemples();
+    RegisterHookshotAnywhere();
 
     // Clock
     RegisterTextBasedClock();
