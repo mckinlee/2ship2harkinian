@@ -60,6 +60,12 @@ static const std::unordered_map<int32_t, const char*> timeStopOptions = {
     { TIME_STOP_TEMPLES_DUNGEONS, "Temples + Mini Dungeons" },
 };
 
+static const std::unordered_map<int32_t, const char*> cremiaRewardOptions = {
+    { CREMIA_REWARD_RANDOM, "Vanilla. Reward is random" },
+    { CREMIA_REWARD_ALWAYS_HUG, "Always get the hug cutscene" },
+    { CREMIA_REWARD_ALWAYS_RUPEE, "Always get the rupee reward" },
+};
+
 namespace BenGui {
 std::shared_ptr<std::vector<Ship::WindowBackend>> availableWindowBackends;
 std::unordered_map<Ship::WindowBackend, const char*> availableWindowBackendsMap;
@@ -491,6 +497,7 @@ void DrawEnhancementsMenu() {
                     .tooltip =
                         "Disclaimer: This doesn't do much yet, we will be progressively adding more skips over time",
                 });
+            UIWidgets::CVarCombobox("Cremia Reward Options", "gEnhancements.Cutscenes.CremiaHugs", cremiaRewardOptions);
 
             ImGui::EndMenu();
         }
