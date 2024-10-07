@@ -72,6 +72,8 @@ typedef enum {
     GI_VB_RANDOM_COMPARISON,
     GI_VB_ENABLE_HOOKSHOT_ANYWHERE,
     GI_VB_ELEGY_IN_IKANA_ONLY,
+    GI_VB_SHOULD_PUTAWAY,
+    GI_VB_FD_ALWAYS_WIELD_SWORD,
 } GIVanillaBehavior;
 
 typedef enum {
