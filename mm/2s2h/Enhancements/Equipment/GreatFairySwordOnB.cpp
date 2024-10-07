@@ -197,8 +197,7 @@ void RegisterGreatFairySwordOnB() {
     // underneath)
     REGISTER_VB_SHOULD(VB_DRAW_ITEM_EQUIPPED_OUTLINE, {
         ItemId* itemId = va_arg(args, ItemId*);
-        if (*itemId == ITEM_SWORD_GREAT_FAIRY &&
-            CVarGetInteger("gEnhancements.Equipment.GreatFairySwordB.State", 0)) {
+        if (*itemId == ITEM_SWORD_GREAT_FAIRY && CVarGetInteger("gEnhancements.Equipment.GreatFairySwordB.State", 0)) {
             *should = false;
         }
     });
