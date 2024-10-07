@@ -71,6 +71,7 @@ typedef enum {
     GI_VB_CHECK_BUMPER_COLLISION,
     GI_VB_RANDOM_COMPARISON,
     GI_VB_ENABLE_HOOKSHOT_ANYWHERE,
+    GI_VB_ELEGY_IN_IKANA_ONLY,
 } GIVanillaBehavior;
 
 typedef enum {

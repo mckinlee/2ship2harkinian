@@ -830,6 +830,8 @@ void DrawCheatsMenu() {
                                     { .tooltip = "Allows most surfaces hookshot-able" })) {
             RegisterHookshotAnywhere();
         }
+        UIWidgets::CVarCheckbox("Elegy of Emptiness Anywhere", "gCheats.ElegyAnywhere",
+                                { .tooltip = "Allows Elegy of Emptiness outside of Ikana" });
 
         ImGui::EndMenu();
     }

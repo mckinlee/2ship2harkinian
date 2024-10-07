@@ -19,6 +19,7 @@
 #include "Graphics/HyruleWarriorsStyledLink.h"
 #include "Modes/InvisibleEnemies.h"
 #include "Cheats/HookshotAnywhere.h"
+#include "Cheats/ElegyAnywhere.h"
 
 enum AlwaysWinDoggyRaceOptions {
     ALWAYS_WIN_DOGGY_RACE_OFF,
