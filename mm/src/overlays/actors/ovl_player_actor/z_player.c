@@ -13100,7 +13100,8 @@ s32 Ship_HandleFirstPersonAiming(PlayState* play, Player* this, s32 arg2) {
 
     if (!func_800B7128(this) && !func_8082EF20(this) && !arg2) { // First person without weapon
         var_s0 = stickY * 0xF0;
-        if (CVarGetInteger("gEnhancements.Camera.FirstPerson.DisableFirstPersonAutoCenterView", 0)) {
+        if (CVarGetInteger("gEnhancements.Camera.FirstPerson.DisableFirstPersonAutoCenterView", 0) ||
+            CVarGetInteger("gEnhancements.Camera.FirstPerson.GyroEnabled", 0)) {
             this->actor.focus.rot.x += var_s0 * 0.1f;
         } else {
             Math_SmoothStepToS(&this->actor.focus.rot.x, var_s0, 0xE, 0xFA0, 0x1E);

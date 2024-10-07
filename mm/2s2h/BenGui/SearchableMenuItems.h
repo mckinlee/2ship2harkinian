@@ -32,6 +32,7 @@ typedef enum {
     DISABLE_FOR_FREE_LOOK_ON,
     DISABLE_FOR_FREE_LOOK_OFF,
     DISABLE_FOR_GYRO_OFF,
+    DISABLE_FOR_GYRO_ON,
     DISABLE_FOR_RIGHT_STICK_OFF,
     DISABLE_FOR_AUTO_SAVE_OFF,
     DISABLE_FOR_NULL_PLAY_STATE,
@@ -283,6 +284,9 @@ static std::map<DisableOption, disabledInfo> disabledMap = {
     { DISABLE_FOR_GYRO_OFF,
       { [](disabledInfo& info) -> bool { return !CVarGetInteger("gEnhancements.Camera.FirstPerson.GyroEnabled", 0); },
         "Gyro Aiming is Disabled" } },
+    { DISABLE_FOR_GYRO_ON,
+      { [](disabledInfo& info) -> bool { return CVarGetInteger("gEnhancements.Camera.FirstPerson.GyroEnabled", 0); },
+        "Gyro Aiming is Enabled" } },
     { DISABLE_FOR_RIGHT_STICK_OFF,
       { [](disabledInfo& info) -> bool {
            return !CVarGetInteger("gEnhancements.Camera.FirstPerson.RightStickEnabled", 0);
@@ -721,8 +725,16 @@ void AddEnhancements() {
                   WIDGET_CVAR_CHECKBOX,
                   {} },
                 { .widgetName = "First Person", .widgetType = WIDGET_SEPARATOR_TEXT },
-                { "Disable Auto-Centering", "gEnhancements.Camera.FirstPerson.DisableFirstPersonAutoCenterView",
-                  "Disables the auto-centering of the camera in first person mode.", WIDGET_CVAR_CHECKBOX },
+                { "Disable Auto-Centering",
+                  "gEnhancements.Camera.FirstPerson.DisableFirstPersonAutoCenterView",
+                  "Disables the auto-centering of the camera in first person mode.",
+                  WIDGET_CVAR_CHECKBOX,
+                  {},
+                  nullptr,
+                  [](widgetInfo& info) {
+                      if (disabledMap.at(DISABLE_FOR_GYRO_ON).active)
+                          info.activeDisables.push_back(DISABLE_FOR_GYRO_ON);
+                  } },
                 { "Invert X Axis", "gEnhancements.Camera.FirstPerson.InvertX",
                   "Inverts the X Axis of the Camera in First Person Mode.", WIDGET_CVAR_CHECKBOX },
                 { "Invert Y Axis",
@@ -1227,7 +1239,13 @@ void AddEnhancements() {
                 WIDGET_CVAR_SLIDER_INT,
                 { 1, 7, 7 } },
               { "Prevent Dropped Ocarina Inputs", "gEnhancements.Playback.NoDropOcarinaInput",
-                "Prevent dropping inputs when playing the ocarina quickly.", WIDGET_CVAR_CHECKBOX } } } });
+                "Prevent dropping inputs when playing the ocarina quickly.", WIDGET_CVAR_CHECKBOX },
+              { "Faster Song Playback",
+                "gEnhancements.Songs.FasterSongPlayback",
+                "Speeds up the playback of songs.",
+                WIDGET_CVAR_CHECKBOX,
+                {},
+                [](widgetInfo& info) { RegisterFasterSongPlayback(); } } } } });
     enhancementsSidebar.push_back(
         { "Time Savers",
           3,
@@ -1301,6 +1319,15 @@ void AddEnhancements() {
                 WIDGET_CVAR_CHECKBOX,
                 {},
                 [](widgetInfo& info) { RegisterWoodfallMountainAppearance(); } } } } });
+    enhancementsSidebar.push_back(
+        { "Difficulty Options",
+          3,
+          { { { "Disable Takkuri Steal",
+                "gEnhancements.Cheats.DisableTakkuriSteal",
+                "Prevents the Takkuri from stealing key items like bottles and swords. It may still steal other items.",
+                WIDGET_CVAR_CHECKBOX,
+                {},
+                [](widgetInfo& info) { RegisterDisableTakkuriSteal(); } } } } });
     enhancementsSidebar.push_back({ "HUD Editor",
                                     1,
                                     { // HUD Editor
