@@ -76,6 +76,7 @@ typedef enum {
     GI_VB_FD_ALWAYS_WIELD_SWORD,
     GI_VB_NEED_SCARECROW_SONG,
     GI_VB_ALLOW_EQUIP_MASK,
+    GI_VB_MANUAL_JUMP,
 } GIVanillaBehavior;
 
 typedef enum {

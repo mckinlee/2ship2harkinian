@@ -744,6 +744,8 @@ void DrawEnhancementsMenu() {
                                     { .tooltip = "Allows Link to instantly puts away held item without waiting." });
             UIWidgets::CVarCheckbox("Fierce Deity Putaway", "gEnhancements.Player.FierceDeityPutaway",
                                     { .tooltip = "Allows Fierce Deity Link to put away his sword." });
+            UIWidgets::CVarCheckbox("Manual Jump", "gEnhancements.Player.ManualJump",
+                                    { .tooltip = "Z + A to Jump and B while midair to Jump Attack" });
             ImGui::EndMenu();
         }
 
