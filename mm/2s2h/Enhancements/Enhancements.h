@@ -20,6 +20,7 @@
 #include "Modes/InvisibleEnemies.h"
 #include "Cheats/HookshotAnywhere.h"
 #include "Cheats/ElegyAnywhere.h"
+#include "Cycle/SkipScarecrowSong.h"
 
 enum AlwaysWinDoggyRaceOptions {
     ALWAYS_WIN_DOGGY_RACE_OFF,

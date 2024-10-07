@@ -74,6 +74,7 @@ typedef enum {
     GI_VB_ELEGY_IN_IKANA_ONLY,
     GI_VB_SHOULD_PUTAWAY,
     GI_VB_FD_ALWAYS_WIELD_SWORD,
+    GI_VB_NEED_SCARECROW_SONG,
 } GIVanillaBehavior;
 
 typedef enum {

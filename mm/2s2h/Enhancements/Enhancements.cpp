@@ -25,6 +25,7 @@ void InitEnhancements() {
     RegisterSavingEnhancements();
     RegisterAutosave();
     RegisterKeepExpressMail();
+    RegisterSkipScarecrowSong();
 
     // Dialogue
     RegisterFastBankSelection();

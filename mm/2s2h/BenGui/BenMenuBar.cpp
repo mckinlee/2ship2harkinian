@@ -785,6 +785,8 @@ void DrawEnhancementsMenu() {
                                      { .tooltip = "The number of eggs required to unlock new wave bossa nova." });
             UIWidgets::CVarCheckbox("Faster song playbacks", "gEnhancements.Playback.FastSongPlayback",
                                     { .tooltip = "Makes song playback faster" });
+            UIWidgets::CVarCheckbox("Skip Scarecrow Song", "gEnhancements.Playback.SkipScarecrowSong",
+                                    { .tooltip = "Pierre appears when the Ocarina is pulled out" });
 
             ImGui::EndMenu();
         }
