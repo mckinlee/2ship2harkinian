@@ -22,6 +22,7 @@
 #include "Cheats/ElegyAnywhere.h"
 #include "Cycle/SkipScarecrowSong.h"
 #include "Player/ManualJump.h"
+#include "Equipment/GreatFairySwordOnB.h"
 
 enum AlwaysWinDoggyRaceOptions {
     ALWAYS_WIN_DOGGY_RACE_OFF,
