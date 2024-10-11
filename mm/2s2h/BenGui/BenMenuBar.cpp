@@ -57,12 +57,6 @@ static const std::unordered_map<int32_t, const char*> alwaysWinDoggyraceOptions 
     { ALWAYS_WIN_DOGGY_RACE_ALWAYS, "Always" },
 };
 
-static const std::unordered_map<int32_t, const char*> cremiaRewardOptions = {
-    { CREMIA_REWARD_RANDOM, "Vanilla" },
-    { CREMIA_REWARD_ALWAYS_HUG, "Hug" },
-    { CREMIA_REWARD_ALWAYS_RUPEE, "Rupee" },
-};
-
 static const std::unordered_map<int32_t, const char*> timeStopOptions = {
     { TIME_STOP_OFF, "Off" },
     { TIME_STOP_TEMPLES, "Temples" },
