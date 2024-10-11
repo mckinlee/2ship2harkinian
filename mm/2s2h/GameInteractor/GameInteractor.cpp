@@ -38,6 +38,10 @@ void GameInteractor_ExecuteAfterKaleidoDrawPage(PauseContext* pauseCtx, u16 paus
     GameInteractor::Instance->ExecuteHooksForID<GameInteractor::AfterKaleidoDrawPage>(pauseIndex, pauseCtx, pauseIndex);
 }
 
+void GameInteractor_ExecuteOnKaleidoClose() {
+    GameInteractor::Instance->ExecuteHooks<GameInteractor::OnKaleidoClose>();
+}
+
 void GameInteractor_ExecuteOnSaveInit(s16 fileNum) {
     GameInteractor::Instance->ExecuteHooks<GameInteractor::OnSaveInit>(fileNum);
 }
@@ -228,6 +232,13 @@ void GameInteractor_ExecuteOnItemGive(u8 item) {
     GameInteractor::Instance->ExecuteHooks<GameInteractor::OnItemGive>(item);
     GameInteractor::Instance->ExecuteHooksForID<GameInteractor::OnItemGive>(item, item);
     GameInteractor::Instance->ExecuteHooksForFilter<GameInteractor::OnItemGive>(item);
+}
+
+void GameInteractor_ExecuteOnItemStolen(u8 item) {
+    SPDLOG_DEBUG("OnItemStolen: item: {}", item);
+    GameInteractor::Instance->ExecuteHooks<GameInteractor::OnItemStolen>(item);
+    GameInteractor::Instance->ExecuteHooksForID<GameInteractor::OnItemStolen>(item, item);
+    GameInteractor::Instance->ExecuteHooksForFilter<GameInteractor::OnItemStolen>(item);
 }
 
 bool GameInteractor_Should(GIVanillaBehavior flag, uint32_t result, ...) {

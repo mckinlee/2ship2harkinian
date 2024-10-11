@@ -526,6 +526,7 @@ void Font_LoadChar(PlayState* play, u16 codePointIndex, s32 offset);
 void Font_LoadCharNES(PlayState* play, u8 codePointIndex, s32 offset);
 void Font_LoadMessageBoxEndIcon(Font* font, u16 icon);
 void Font_LoadOrderedFont(Font* font);
+void Font_LoadOrderedFont_JP(Font* font);
 
 void Lib_GetControlStickData(f32* outMagnitude, s16* outAngle, Input* input);
 void Actor_ProcessInitChain(Actor* actor, InitChainEntry* ichain);
@@ -1320,6 +1321,10 @@ u8 AudioSeq_ResetReverb(void);
 void AudioSeq_ResetActiveSequences(void);
 void AudioSeq_ResetActiveSequencesAndVolume(void);
 
+// #region 2S2H [JP]
+s32 Kanji_OffsetFromShiftJIS(u32);
+// #endregion
+
 // #region 2S2H [Port] Made Available via C++
 s32 osContInit(OSMesgQueue* mq, u8* controllerBits, OSContStatus* status);
 s32 osContStartReadData(OSMesgQueue* mesg);
@@ -1328,9 +1333,11 @@ void osContGetReadData(OSContPad* pad);
 // #region 2S2H [Port] Previously unavailable functions, made available for porting
 void PadMgr_ThreadEntry();
 void Heaps_Alloc(void);
+void KaleidoScope_GrayOutTextureRGBA32(u32* texture, u16 pixelCount);
 void KaleidoScope_UpdateOwlWarpNamePanel(PlayState* play);
 void KaleidoScope_UpdateNamePanel(PlayState* play);
 void SkinMatrix_Clear(MtxF* mf);
+void Player_UseItem(PlayState* play, Player* this, ItemId item);
 // #endregion
 // #region 2S2H [Port] New methods added for porting
 void AudioSeq_SetPortVolumeScale(u8 seqPlayerIndex, f32 volume);

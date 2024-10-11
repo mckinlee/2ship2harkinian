@@ -1631,7 +1631,7 @@ PlayerAnimationHeader* D_8085BE84[PLAYER_ANIMGROUP_MAX][PLAYER_ANIMTYPE_MAX] = {
         &gPlayerAnim_sude_nwait,
     }
 };
-
+// Animations while on Z-Target
 struct_8085C2A4 D_8085C2A4[] = {
     /* 0 / Forward */
     {
@@ -3730,8 +3730,11 @@ void Player_ProcessItemButtons(Player* this, PlayState* play) {
                 if ((maskIdMinusOne < PLAYER_MASK_TRUTH - 1) || (maskIdMinusOne >= PLAYER_MASK_MAX - 1)) {
                     maskIdMinusOne = this->currentMask - 1;
                 }
-                Player_UseItem(play, this, Player_MaskIdToItemId(maskIdMinusOne));
-                return;
+
+                if (GameInteractor_Should(GI_VB_ALLOW_EQUIP_MASK, false)) {
+                    Player_UseItem(play, this, Player_MaskIdToItemId(maskIdMinusOne));
+                    return;
+                }
             }
 
             if ((this->currentMask == PLAYER_MASK_GIANT) && (gSaveContext.save.saveInfo.playerData.magic == 0)) {
@@ -3761,8 +3764,9 @@ void Player_ProcessItemButtons(Player* this, PlayState* play) {
         ItemId item;
         EquipSlot i = func_8082FDC4();
 
-        i = ((i >= EQUIP_SLOT_A) && (this->transformation == PLAYER_FORM_FIERCE_DEITY) &&
-             (this->heldItemAction != PLAYER_IA_SWORD_TWO_HANDED))
+        i = GameInteractor_Should(VB_FD_ALWAYS_WIELD_SWORD, (i >= EQUIP_SLOT_A) &&
+                                                                (this->transformation == PLAYER_FORM_FIERCE_DEITY) &&
+                                                                (this->heldItemAction != PLAYER_IA_SWORD_TWO_HANDED))
                 ? EQUIP_SLOT_B
                 : i;
 
@@ -5267,7 +5271,9 @@ void func_808332A0(PlayState* play, Player* this, s32 magicCost, s32 isSwordBeam
     }
 
     this->stateFlags1 |= PLAYER_STATE1_1000;
-    if ((this->actor.id == ACTOR_PLAYER) && (isSwordBeam || (this->transformation == PLAYER_FORM_HUMAN))) {
+    if ((this->actor.id == ACTOR_PLAYER) &&
+        (isSwordBeam || (GameInteractor_Should(VB_MAGIC_SPIN_ATTACK_CHECK_FORM,
+                                               this->transformation == PLAYER_FORM_HUMAN, this->transformation)))) {
         s16 pitch = 0;
         Actor* thunder;
 
@@ -7912,7 +7918,7 @@ s32 func_80839800(Player* this, PlayState* play) {
     }
     return false;
 }
-
+// Side Hops and Backflip
 void func_80839860(Player* this, PlayState* play, s32 arg2) {
     s32 pad;
     f32 speed = (!(arg2 & 1) ? 5.8f : 3.5f);
@@ -7974,12 +7980,13 @@ s32 func_80839A84(PlayState* play, Player* this) {
     return true;
 }
 
+// Z target but doesn't activate when you're swimming
 s32 Player_ActionChange_10(Player* this, PlayState* play) {
     if (CHECK_BTN_ALL(sPlayerControlInput->press.button, BTN_A) &&
         (play->roomCtx.curRoom.behaviorType1 != ROOM_BEHAVIOR_TYPE1_2) && (sPlayerFloorType != FLOOR_TYPE_7) &&
         (sPlayerFloorEffect != FLOOR_EFFECT_1)) {
         s32 temp_a2 = this->unk_AE3[this->unk_ADE];
-
+        // covers when link is staying put and when link is moving forward
         if (temp_a2 <= 0) {
             if (func_8082FBE8(this)) {
                 if (this->actor.category != ACTORCAT_PLAYER) {
@@ -7988,16 +7995,34 @@ s32 Player_ActionChange_10(Player* this, PlayState* play) {
                     } else {
                         func_80836B3C(play, this, 0.0f);
                     }
-                } else if (!(this->stateFlags1 & PLAYER_STATE1_8000000) &&
-                           (Player_GetMeleeWeaponHeld(this) != PLAYER_MELEEWEAPON_NONE) &&
-                           Player_CanUpdateItems(this) && (this->transformation != PLAYER_FORM_GORON)) {
-                    func_808395F0(play, this, PLAYER_MWA_JUMPSLASH_START, 5.0f, 5.0f);
+                }
+                // Jump/Leap (Was jump slash)
+                else if (!(this->stateFlags1 & PLAYER_STATE1_8000000) &&
+                         (Player_GetMeleeWeaponHeld(this) != PLAYER_MELEEWEAPON_NONE) && Player_CanUpdateItems(this) &&
+                         (this->transformation != PLAYER_FORM_GORON)) {
+                    if (!GameInteractor_Should(GI_VB_MANUAL_JUMP, true, NULL)) {
+                        if (this->transformation == PLAYER_FORM_ZORA) {
+                            func_808395F0(play, this, PLAYER_MWA_JUMPSLASH_START, 5.0f, 5.0f);
+                        }
+                        // Leap
+                        else if (temp_a2 == 0) {
+                            func_80834D50(play, this, D_8085C2A4[0].unk_0, 5.8f, NA_SE_VO_LI_SWORD_N);
+                        }
+                        // Jump
+                        else {
+                            func_80834DB8(this, &gPlayerAnim_link_normal_jump, REG(69) / 100.0f, play);
+                        }
+                    } else {
+                        func_808395F0(play, this, PLAYER_MWA_JUMPSLASH_START, 5.0f, 5.0f);
+                    }
+
                 } else if (!func_80839A84(play, this)) {
                     func_80836B3C(play, this, 0.0f);
                 }
 
                 return true;
             }
+            // covers when link is backflipping or sidehopping
         } else {
             func_80839860(this, play, temp_a2);
             return true;
@@ -8115,7 +8140,7 @@ s32 Player_ActionChange_6(Player* this, PlayState* play) {
             }
 
             if ((this->putAwayCountdown == 0) && (this->heldItemAction >= PLAYER_IA_SWORD_KOKIRI) &&
-                (this->transformation != PLAYER_FORM_FIERCE_DEITY)) {
+                GameInteractor_Should(VB_SHOULD_PUTAWAY, (this->transformation != PLAYER_FORM_FIERCE_DEITY))) {
                 Player_UseItem(play, this, ITEM_NONE);
             } else {
                 this->stateFlags2 ^= PLAYER_STATE2_100000;
@@ -8190,14 +8215,34 @@ s32 func_8083A4A4(Player* this, f32* arg1, s16* arg2, f32 arg3) {
     return false;
 }
 
+// #region 2S2H [Port] [Dpad] Convenience method that checks any held item button, not just B
+bool isPressingHeldItemButton(Player* this) {
+    if (this->heldItemButton < 0) {
+        return false;
+    }
+
+    uint16_t buttonToCheck;
+    if (IS_HELD_DPAD(this->heldItemButton)) {
+        buttonToCheck = sDpadItemButtons[HELD_ITEM_TO_DPAD(this->heldItemButton)];
+    } else {
+        buttonToCheck = sPlayerItemButtons[this->heldItemButton];
+    }
+
+    return CHECK_BTN_ALL(sPlayerControlInput->cur.button, buttonToCheck);
+}
+// #endregion
+
 void func_8083A548(Player* this) {
-    if ((this->unk_ADC > 0) && !CHECK_BTN_ALL(sPlayerControlInput->cur.button, BTN_B)) {
+    if ((this->unk_ADC > 0) &&
+        !GameInteractor_Should(VB_CHECK_HELD_ITEM_BUTTON_PRESS, CHECK_BTN_ALL(sPlayerControlInput->cur.button, BTN_B),
+                               sDpadItemButtons, sPlayerItemButtons)) {
         this->unk_ADC = -this->unk_ADC;
     }
 }
 
 s32 Player_ActionChange_8(Player* this, PlayState* play) {
-    if (CHECK_BTN_ALL(sPlayerControlInput->cur.button, BTN_B)) {
+    if (GameInteractor_Should(VB_CHECK_HELD_ITEM_BUTTON_PRESS, CHECK_BTN_ALL(sPlayerControlInput->cur.button, BTN_B),
+                              sDpadItemButtons, sPlayerItemButtons)) {
         if (!(this->stateFlags1 & PLAYER_STATE1_400000) &&
             (Player_GetMeleeWeaponHeld(this) != PLAYER_MELEEWEAPON_NONE)) {
             if ((this->unk_ADC > 0) && (((this->transformation == PLAYER_FORM_ZORA)) ||
@@ -10461,7 +10506,9 @@ s32 func_80840A30(PlayState* play, Player* this, f32* arg2, f32 arg3) {
 s32 func_80840CD4(Player* this, PlayState* play) {
     if (Player_StartCsAction(play, this)) {
         this->stateFlags2 |= PLAYER_STATE2_20000;
-    } else if (!CHECK_BTN_ALL(sPlayerControlInput->cur.button, BTN_B)) {
+    } else if (!GameInteractor_Should(VB_CHECK_HELD_ITEM_BUTTON_PRESS,
+                                      CHECK_BTN_ALL(sPlayerControlInput->cur.button, BTN_B), sDpadItemButtons,
+                                      sPlayerItemButtons)) {
         PlayerMeleeWeaponAnimation meleeWeaponAnim;
 
         if ((this->unk_B08 >= 0.85f) || func_808333CC(this)) {
@@ -11243,8 +11290,8 @@ void Player_SetDoAction(PlayState* play, Player* this) {
                 } else if ((this->transformation == PLAYER_FORM_DEKU) && !(this->stateFlags1 & PLAYER_STATE1_8000000) &&
                            (this->actor.bgCheckFlags & BGCHECKFLAG_GROUND)) {
                     doActionA = DO_ACTION_ATTACK;
-                } else if (((this->transformation == PLAYER_FORM_HUMAN) ||
-                            (this->transformation == PLAYER_FORM_ZORA)) &&
+                } else if (GameInteractor_Should(VB_SHOULD_PUTAWAY, ((this->transformation == PLAYER_FORM_HUMAN) ||
+                                                                     (this->transformation == PLAYER_FORM_ZORA))) &&
                            ((this->heldItemAction >= PLAYER_IA_SWORD_KOKIRI) ||
                             ((this->stateFlags2 & PLAYER_STATE2_100000) &&
                              (play->actorCtx.targetCtx.fairyActor == NULL)))) {
@@ -13596,7 +13643,12 @@ void func_80848640(PlayState* play, Player* this) {
         Math_Vec3f_Copy(&torch2->actor.home.pos, &this->actor.world.pos);
         torch2->actor.home.rot.y = this->actor.shape.rot.y;
         torch2->state = 0;
-        torch2->framesUntilNextState = 20;
+        if (CVarGetInteger("gEnhancements.Playback.FastSongPlayback",
+                           0)) { // Speeds up the spawning of the elegy statue
+            torch2->framesUntilNextState = 1;
+        } else {
+            torch2->framesUntilNextState = 20;
+        }
     } else {
         torch2 = (EnTorch2*)Actor_Spawn(&play->actorCtx, play, ACTOR_EN_TORCH2, this->actor.world.pos.x,
                                         this->actor.world.pos.y, this->actor.world.pos.z, 0, this->actor.shape.rot.y, 0,
@@ -14560,7 +14612,9 @@ void Player_Action_12(Player* this, PlayState* play) {
     if (!func_80847880(play, this)) {
         if (!Player_TryActionChangeList(play, this, sPlayerActionChangeList7, false) ||
             (Player_Action_12 == this->actionFunc)) {
-            if (!CHECK_BTN_ALL(sPlayerControlInput->cur.button, BTN_B)) {
+            if (!GameInteractor_Should(VB_CHECK_HELD_ITEM_BUTTON_PRESS,
+                                       CHECK_BTN_ALL(sPlayerControlInput->cur.button, BTN_B), sDpadItemButtons,
+                                       sPlayerItemButtons)) {
                 func_80839E74(this, play);
             }
         }
@@ -15245,7 +15299,9 @@ void Player_Action_30(Player* this, PlayState* play) {
             if (this->unk_B08 >= 0.1f) {
                 this->unk_ADD = 0;
                 this->av2.actionVar2 = 1;
-            } else if (!CHECK_BTN_ALL(sPlayerControlInput->cur.button, BTN_B)) {
+            } else if (!GameInteractor_Should(VB_CHECK_HELD_ITEM_BUTTON_PRESS,
+                                              CHECK_BTN_ALL(sPlayerControlInput->cur.button, BTN_B), sDpadItemButtons,
+                                              sPlayerItemButtons)) {
                 func_80840E5C(this, play);
             }
         } else if (!func_80840CD4(this, play)) {
@@ -17244,13 +17300,28 @@ void Player_Action_63(Player* this, PlayState* play) {
                 (play->msgCtx.ocarinaMode == OCARINA_MODE_APPLY_INV_SOT_SLOW)) {
                 if (play->msgCtx.ocarinaMode == OCARINA_MODE_APPLY_SOT) {
                     if (!func_8082DA90(play)) {
-                        if (gSaveContext.save.saveInfo.playerData.threeDayResetCount == 1) {
+                        if (CVarGetInteger("gEnhancements.Playback.FastSongPlayback",
+                                           0)) { // Ensures proper time reset whenever fast playback is active. Probably
+                                                 // a better way to do this.
+                            play->nextEntrance = ENTRANCE(SOUTH_CLOCK_TOWN, 0);
+                            gSaveContext.save.timeSpeedOffset = 0;
+                            gSaveContext.save.eventDayCount = 0;
+                            gSaveContext.save.day = 0;
+                            gSaveContext.save.time = CLOCK_TIME(6, 0) - 1;
+
+                        } else if (gSaveContext.save.saveInfo.playerData.threeDayResetCount == 1) {
                             play->nextEntrance = ENTRANCE(CUTSCENE, 1);
                         } else {
                             play->nextEntrance = ENTRANCE(CUTSCENE, 0);
                         }
 
-                        gSaveContext.nextCutsceneIndex = 0xFFF7;
+                        if (CVarGetInteger("gEnhancements.Playback.FastSongPlayback",
+                                           0)) { // Ensures the player spawns back at the door of the clock tower when
+                                                 // fast playback is active.
+                            gSaveContext.nextCutsceneIndex = 0;
+                        } else {
+                            gSaveContext.nextCutsceneIndex = 0xFFF7;
+                        }
                         play->transitionTrigger = TRANS_TRIGGER_START;
                     }
                 } else {
@@ -18538,7 +18609,15 @@ void Player_Action_87(Player* this, PlayState* play) {
 }
 
 void Player_Action_88(Player* this, PlayState* play) {
-    if (this->av2.actionVar2++ > 90) {
+    if (CVarGetInteger("gEnhancements.Playback.FastSongPlayback",
+                       0)) { // Speeds up the ocarina waiting timer, allowing the player to move sooner
+        if (this->av2.actionVar2++ > 1) {
+            play->msgCtx.ocarinaMode = OCARINA_MODE_END;
+            func_8085B384(this, play);
+        } else if (this->av2.actionVar2 == 1) {
+            func_80848640(play, this);
+        }
+    } else if (this->av2.actionVar2++ > 90) {
         play->msgCtx.ocarinaMode = OCARINA_MODE_END;
         func_8085B384(this, play);
     } else if (this->av2.actionVar2 == 10) {

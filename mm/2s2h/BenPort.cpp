@@ -852,6 +852,7 @@ extern "C" uint32_t ResourceMgr_GetGamePlatform(int index) {
         case OOT_PAL_GC_DBG2:
         case OOT_PAL_GC_MQ_DBG:
         case MM_NTSC_US_GC:
+        case MM_NTSC_JP_GC:
             return GAME_PLATFORM_GC;
     }
 }
@@ -870,6 +871,7 @@ extern "C" uint32_t ResourceMgr_GetGameRegion(int index) {
         case OOT_NTSC_US_MQ:
         case MM_NTSC_US_10:
         case MM_NTSC_US_GC:
+        case MM_NTSC_JP_GC:
             return GAME_REGION_NTSC;
         case OOT_PAL_10:
         case OOT_PAL_11:
@@ -879,6 +881,33 @@ extern "C" uint32_t ResourceMgr_GetGameRegion(int index) {
         case OOT_PAL_GC_DBG2:
         case OOT_PAL_GC_MQ_DBG:
             return GAME_REGION_PAL;
+    }
+}
+
+extern "C" uint32_t ResourceMgr_GetGameDefaultLanguage(int index) {
+    uint32_t version =
+        Ship::Context::GetInstance()->GetResourceManager()->GetArchiveManager()->GetGameVersions()[index];
+
+    switch (version) {
+        case OOT_NTSC_US_10:
+        case OOT_NTSC_US_11:
+        case OOT_NTSC_US_12:
+        case OOT_PAL_10:
+        case OOT_PAL_11:
+        case MM_NTSC_US_10:
+        case OOT_NTSC_JP_GC:
+        case OOT_NTSC_US_GC:
+        case OOT_PAL_GC:
+        case OOT_NTSC_JP_MQ:
+        case OOT_NTSC_US_MQ:
+        case OOT_PAL_MQ:
+        case OOT_PAL_GC_DBG1:
+        case OOT_PAL_GC_DBG2:
+        case OOT_PAL_GC_MQ_DBG:
+        case MM_NTSC_US_GC:
+            return LANGUAGE_ENG;
+        case MM_NTSC_JP_GC:
+            return LANGUAGE_JPN;
     }
 }
 
@@ -1174,6 +1203,10 @@ extern "C" CollisionHeader* ResourceMgr_LoadColByName(const char* path) {
 
 extern "C" Vtx* ResourceMgr_LoadVtxByName(char* path) {
     return (Vtx*)ResourceGetDataByName(path);
+}
+
+extern "C" Mtx* ResourceMgr_LoadMtxByName(char* path) {
+    return (Mtx*)ResourceGetDataByName(path);
 }
 
 extern "C" SequenceData ResourceMgr_LoadSeqByName(const char* path) {

@@ -63,8 +63,29 @@ typedef enum {
     VB_CLOCK_TOWER_OPENING_CONSIDER_THIS_FIRST_CYCLE,
     VB_DRAW_SLIME_BODY_ITEM,
     VB_ZTARGET_SPEED_CHECK,
+    GI_VB_HELD_ITEM_BUTTON_PRESS,
+    GI_VB_MAGIC_SPIN_ATTACK_FORM_CHECK,
+    GI_VB_DAMAGE_MULTIPLIER,
+    GI_VB_DAMAGE_EFFECT,
+    GI_VB_DRAW_DAMAGE_EFFECT,
+    GI_VB_CHECK_BUMPER_COLLISION,
+    GI_VB_RANDOM_COMPARISON,
+    GI_VB_ENABLE_HOOKSHOT_ANYWHERE,
+    GI_VB_ELEGY_IN_IKANA_ONLY,
+    GI_VB_SHOULD_PUTAWAY,
+    GI_VB_FD_ALWAYS_WIELD_SWORD,
+    GI_VB_NEED_SCARECROW_SONG,
+    GI_VB_ALLOW_EQUIP_MASK,
+    GI_VB_MANUAL_JUMP,
     VB_THIEF_BIRD_STEAL,
     VB_PLAY_CREMIA_HUG_CUTSCENE,
+    VB_FD_ALWAYS_WIELD_SWORD,
+    VB_SHOULD_PUTAWAY,
+    VB_ELEGY_CHECK_SCENE,
+    VB_NEED_SCARECROW_SONG,
+    VB_CHECK_HELD_ITEM_BUTTON_PRESS,
+    VB_MAGIC_SPIN_ATTACK_CHECK_FORM,
+    VB_TRANSFORM_THUNDER_MATRIX,
 } GIVanillaBehavior;
 
 typedef enum {
@@ -285,6 +306,7 @@ class GameInteractor {
     DEFINE_HOOK(OnKaleidoUpdate, (PauseContext * pauseCtx));
     DEFINE_HOOK(BeforeKaleidoDrawPage, (PauseContext * pauseCtx, u16 pauseIndex));
     DEFINE_HOOK(AfterKaleidoDrawPage, (PauseContext * pauseCtx, u16 pauseIndex));
+    DEFINE_HOOK(OnKaleidoClose, ());
     DEFINE_HOOK(OnSaveInit, (s16 fileNum));
     DEFINE_HOOK(BeforeEndOfCycleSave, ());
     DEFINE_HOOK(AfterEndOfCycleSave, ());
@@ -322,6 +344,8 @@ class GameInteractor {
     DEFINE_HOOK(ShouldItemGive, (u8 item, bool* should));
     DEFINE_HOOK(OnItemGive, (u8 item));
 
+    DEFINE_HOOK(OnItemStolen, (u8 item));
+
     DEFINE_HOOK(ShouldVanillaBehavior, (GIVanillaBehavior flag, bool* should, va_list originalArgs));
 };
 
@@ -335,6 +359,7 @@ void GameInteractor_ExecuteOnConsoleLogoUpdate();
 void GameInteractor_ExecuteOnKaleidoUpdate(PauseContext* pauseCtx);
 void GameInteractor_ExecuteBeforeKaleidoDrawPage(PauseContext* pauseCtx, u16 pauseIndex);
 void GameInteractor_ExecuteAfterKaleidoDrawPage(PauseContext* pauseCtx, u16 pauseIndex);
+void GameInteractor_ExecuteOnKaleidoClose();
 void GameInteractor_ExecuteOnSaveInit(s16 fileNum);
 void GameInteractor_ExecuteBeforeEndOfCycleSave();
 void GameInteractor_ExecuteAfterEndOfCycleSave();
@@ -371,6 +396,7 @@ void GameInteractor_ExecuteOnOpenText(u16 textId);
 
 bool GameInteractor_ShouldItemGive(u8 item);
 void GameInteractor_ExecuteOnItemGive(u8 item);
+void GameInteractor_ExecuteOnItemStolen(u8 item);
 
 bool GameInteractor_Should(GIVanillaBehavior flag, uint32_t result, ...);
 #define REGISTER_VB_SHOULD(flag, body)                                                      \

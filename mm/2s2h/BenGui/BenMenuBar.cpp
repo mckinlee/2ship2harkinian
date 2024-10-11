@@ -8,8 +8,13 @@
 #include <unordered_map>
 #include <string>
 #include "2s2h/Enhancements/Enhancements.h"
+#include "2s2h/Enhancements/Graphics/HyruleWarriorsStyledLink.h"
 #include "2s2h/DeveloperTools/DeveloperTools.h"
 #include "HudEditor.h"
+#include <Enhancements/ResolutionEditor/ResolutionEditor.h>
+
+#include "2s2h/Enhancements/Trackers/ItemTracker.h"
+#include "2s2h/Enhancements/Trackers/ItemTrackerSettings.h"
 
 extern "C" {
 #include "z64.h"
@@ -52,16 +57,16 @@ static const std::unordered_map<int32_t, const char*> alwaysWinDoggyraceOptions 
     { ALWAYS_WIN_DOGGY_RACE_ALWAYS, "Always" },
 };
 
-static const std::unordered_map<int32_t, const char*> cremiaRewardOptions = {
-    { CREMIA_REWARD_RANDOM, "Vanilla" },
-    { CREMIA_REWARD_ALWAYS_HUG, "Hug" },
-    { CREMIA_REWARD_ALWAYS_RUPEE, "Rupee" },
-};
-
 static const std::unordered_map<int32_t, const char*> timeStopOptions = {
     { TIME_STOP_OFF, "Off" },
     { TIME_STOP_TEMPLES, "Temples" },
     { TIME_STOP_TEMPLES_DUNGEONS, "Temples + Mini Dungeons" },
+};
+
+static const std::unordered_map<int32_t, const char*> cremiaRewardOptions = {
+    { CREMIA_REWARD_RANDOM, "Vanilla. Reward is random" },
+    { CREMIA_REWARD_ALWAYS_HUG, "Always get the hug cutscene" },
+    { CREMIA_REWARD_ALWAYS_RUPEE, "Always get the rupee reward" },
 };
 
 namespace BenGui {
@@ -154,6 +159,7 @@ void DrawBenMenu() {
 }
 
 extern std::shared_ptr<BenInputEditorWindow> mBenInputEditorWindow;
+extern std::shared_ptr<AdvancedResolutionSettings::AdvancedResolutionSettingsWindow> mAdvancedResolutionSettingsWindow;
 
 void DrawSettingsMenu() {
     if (UIWidgets::BeginMenu("Settings")) {
@@ -197,7 +203,12 @@ void DrawSettingsMenu() {
         if (UIWidgets::BeginMenu("Graphics")) {
 
 #ifndef __APPLE__
-            if (UIWidgets::CVarSliderFloat("Internal Resolution: %f %%", CVAR_INTERNAL_RESOLUTION, 0.5f, 2.0f, 1.0f)) {
+            const bool disabled_resolutionSlider =
+                (CVarGetInteger(CVAR_PREFIX_ADVANCED_RESOLUTION ".VerticalResolutionToggle", 0) &&
+                 CVarGetInteger(CVAR_PREFIX_ADVANCED_RESOLUTION ".Enabled", 0)) ||
+                CVarGetInteger("gLowResMode", 0);
+            if (UIWidgets::CVarSliderFloat("Internal Resolution: %f %%", CVAR_INTERNAL_RESOLUTION, 0.5f, 2.0f, 1.0f,
+                                           { .disabled = disabled_resolutionSlider })) {
                 Ship::Context::GetInstance()->GetWindow()->SetResolutionMultiplier(
                     CVarGetFloat(CVAR_INTERNAL_RESOLUTION, 1));
             };
@@ -307,6 +318,11 @@ void DrawSettingsMenu() {
             // Currently this only has "Overlays Text Font", it doesn't use our new UIWidgets so it stands out
             // Ship::Context::GetInstance()->GetWindow()->GetGui()->GetGameOverlay()->DrawSettings();
 
+            if (mAdvancedResolutionSettingsWindow) {
+                UIWidgets::WindowButton("Advanced Resolution", "gWindows.gAdvancedResolutionEditor",
+                                        mAdvancedResolutionSettingsWindow); //, { .tooltip = "" });
+            }
+
             ImGui::EndMenu();
         }
         // #region 2S2H [Todo] None of this works yet
@@ -344,6 +360,8 @@ void DrawSettingsMenu() {
 }
 
 extern std::shared_ptr<HudEditorWindow> mHudEditorWindow;
+extern std::shared_ptr<ItemTrackerWindow> mItemTrackerWindow;
+extern std::shared_ptr<ItemTrackerSettingsWindow> mItemTrackerSettingsWindow;
 
 void DrawEnhancementsMenu() {
     if (UIWidgets::BeginMenu("Enhancements")) {
@@ -472,6 +490,12 @@ void DrawEnhancementsMenu() {
                 {
                     .tooltip = "When starting a game you will be taken straight to South Clock Town as Deku Link.",
                 });
+            if (CVarGetInteger("gEnhancements.Cutscenes.SkipIntroSequence", 0)) {
+                UIWidgets::CVarCheckbox(
+                    "Skip First Cycle", "gEnhancements.Cutscenes.SkipFirstCycle",
+                    { .tooltip = "When starting a game you will be taken straight to South Clock Town as Human Link "
+                                 "with Deku Mask, Ocarina, Song of Time, and Song of Healing." });
+            }
             UIWidgets::CVarCheckbox(
                 "Skip Story Cutscenes", "gEnhancements.Cutscenes.SkipStoryCutscenes",
                 {
@@ -484,6 +508,7 @@ void DrawEnhancementsMenu() {
                     .tooltip =
                         "Disclaimer: This doesn't do much yet, we will be progressively adding more skips over time",
                 });
+            UIWidgets::CVarCombobox("Cremia Reward Options", "gEnhancements.Cutscenes.CremiaHugs", cremiaRewardOptions);
 
             ImGui::EndMenu();
         }
@@ -567,11 +592,20 @@ void DrawEnhancementsMenu() {
             UIWidgets::CVarCheckbox("Fast Magic Arrow Equip Animation", "gEnhancements.Equipment.MagicArrowEquipSpeed",
                                     { .tooltip = "Removes the animation for equipping Magic Arrows." });
 
+            if (UIWidgets::CVarCheckbox(
+                    "Great Fairy Sword on B", "gEnhancements.Equipment.GreatFairySwordB.Enabled",
+                    { .tooltip = "Press A on the Great Fairy Sword in the pause menu to equip/unequip it to B." })) {
+                UpdateGreatFairySwordState();
+            }
+
             UIWidgets::CVarCheckbox(
                 "Instant Fin Boomerangs Recall", "gEnhancements.PlayerActions.InstantRecall",
                 { .tooltip =
                       "Pressing B will instantly recall the fin boomerang back to Zora Link after they are thrown." });
 
+            UIWidgets::CVarCheckbox(
+                "Two-Handed Sword Spin Attack", "gEnhancements.Equipment.TwoHandedSwordSpinAttack",
+                { .tooltip = "Enables magic spin attacks for the Fierce Deity Sword and Great Fairy's Sword." });
             ImGui::EndMenu();
         }
 
@@ -664,6 +698,9 @@ void DrawEnhancementsMenu() {
                                                      "'A' on it in the mask menu." })) {
                 UpdatePersistentMasksState();
             }
+            UIWidgets::CVarCheckbox(
+                "Easy Mask Equip", "gEnhancements.Masks.EasyMaskEquip",
+                { .tooltip = "Allows you to equip masks directly from the pause menu by pressing A." });
 
             ImGui::EndMenu();
         }
@@ -671,6 +708,10 @@ void DrawEnhancementsMenu() {
         if (UIWidgets::BeginMenu("Minigames")) {
             UIWidgets::CVarCombobox("Always Win Doggy Race", "gEnhancements.Minigames.AlwaysWinDoggyRace",
                                     alwaysWinDoggyraceOptions);
+            ImGui::SeparatorText("Swordsman School");
+            UIWidgets::CVarCheckbox("Finish Early", "gEnhancements.Minigames.SwordsmanSchool.FinishEarly");
+            UIWidgets::CVarSliderInt("Winning Score: %d", "gEnhancements.Minigames.SwordsmanSchool.WinningScore", 1, 30,
+                                     30);
             UIWidgets::CVarCombobox(
                 "Milk Run Reward Options", "gEnhancements.Minigames.CremiaHugs", cremiaRewardOptions,
                 { .tooltip = "Choose what reward you get for winning the Milk Run minigame after the first time. \n"
@@ -683,8 +724,16 @@ void DrawEnhancementsMenu() {
         }
 
         if (UIWidgets::BeginMenu("Modes")) {
+            if (UIWidgets::CVarCheckbox("Invisible Enemies", "gModes.InvisibleEnemies",
+                                        { .tooltip = "Enemies will appear invisible without using the Lens of Truth. "
+                                                     "Requires scene reload to take effect." })) {
+                RegisterInvisibleEnemies();
+            }
             UIWidgets::CVarCheckbox("Play As Kafei", "gModes.PlayAsKafei",
                                     { .tooltip = "Requires scene reload to take effect." });
+            UIWidgets::CVarCheckbox("Hyrule Warriors Young Link", "gModes.HyruleWarriorsStyledLink",
+                                    { .tooltip = "When acquired, places the Keaton and Fierce Deity masks on Link "
+                                                 "similarly to how he wears them in Hyrule Warriors" });
             if (UIWidgets::CVarCheckbox("Time Moves When You Move", "gModes.TimeMovesWhenYouMove")) {
                 RegisterTimeMovesWhenYouMove();
             }
@@ -710,6 +759,10 @@ void DrawEnhancementsMenu() {
             }
             UIWidgets::CVarCheckbox("Instant Putaway", "gEnhancements.Player.InstantPutaway",
                                     { .tooltip = "Allows Link to instantly puts away held item without waiting." });
+            UIWidgets::CVarCheckbox("Fierce Deity Putaway", "gEnhancements.Player.FierceDeityPutaway",
+                                    { .tooltip = "Allows Fierce Deity Link to put away his sword." });
+            UIWidgets::CVarCheckbox("Manual Jump", "gEnhancements.Player.ManualJump",
+                                    { .tooltip = "Z + A to Jump and B while midair to Jump Attack" });
             ImGui::EndMenu();
         }
 
@@ -747,11 +800,17 @@ void DrawEnhancementsMenu() {
                                     { .tooltip = "Enables using the Dpad for Ocarina playback." });
             UIWidgets::CVarCheckbox("Prevent Dropped Ocarina Inputs", "gEnhancements.Playback.NoDropOcarinaInput",
                                     { .tooltip = "Prevent dropping inputs when playing the ocarina quickly" });
+            UIWidgets::CVarCheckbox("Skip Scarecrow Song", "gEnhancements.Playback.SkipScarecrowSong",
+                                    { .tooltip = "Pierre appears when the Ocarina is pulled out." });
             UIWidgets::CVarCheckbox("Pause Owl Warp", "gEnhancements.Songs.PauseOwlWarp",
                                     { .tooltip = "Allows the player to use the pause menu map to owl warp instead of "
                                                  "having to play the Song of Soaring." });
             UIWidgets::CVarSliderInt("Zora Eggs For Bossa Nova", "gEnhancements.Songs.ZoraEggCount", 1, 7, 7,
                                      { .tooltip = "The number of eggs required to unlock new wave bossa nova." });
+            UIWidgets::CVarCheckbox("Faster song playbacks", "gEnhancements.Playback.FastSongPlayback",
+                                    { .tooltip = "Makes song playback faster" });
+            UIWidgets::CVarCheckbox("Skip Scarecrow Song", "gEnhancements.Playback.SkipScarecrowSong",
+                                    { .tooltip = "Pierre appears when the Ocarina is pulled out" });
 
             ImGui::EndMenu();
         }
@@ -768,6 +827,15 @@ void DrawEnhancementsMenu() {
         if (mHudEditorWindow) {
             UIWidgets::WindowButton("Hud Editor", "gWindows.HudEditor", mHudEditorWindow,
                                     { .tooltip = "Enables the Hud Editor window, allowing you to edit your hud" });
+        }
+
+        if (mItemTrackerWindow) {
+            UIWidgets::WindowButton("Item Tracker", "gWindows.ItemTracker", mItemTrackerWindow);
+        }
+
+        if (mItemTrackerSettingsWindow) {
+            UIWidgets::WindowButton("Item Tracker Settings", "gWindows.ItemTrackerSettings",
+                                    mItemTrackerSettingsWindow);
         }
 
         ImGui::EndMenu();
@@ -792,6 +860,8 @@ void DrawCheatsMenu() {
                                     { .tooltip = "Holding L makes you float into the air" })) {
             RegisterMoonJumpOnL();
         }
+        UIWidgets::CVarCheckbox("Elegy of Emptiness Anywhere", "gCheats.ElegyAnywhere",
+                                { .tooltip = "Allows Elegy of Emptiness outside of Ikana" });
         UIWidgets::CVarCombobox(
             "Stop Time in Dungeons", "gCheats.TempleTimeStop", timeStopOptions,
             { .tooltip = "Stops time from advancing in selected areas. Requires a room change to update.\n\n"
@@ -800,6 +870,13 @@ void DrawCheatsMenu() {
                          "- Temples + Mini Dungeons: In addition to the above temples, stops time in both Spider "
                          "Houses, Pirate's Fortress, Beneath the Well, Ancient Castle of Ikana, and Secret Shrine.",
               .defaultIndex = TIME_STOP_OFF });
+
+        if (UIWidgets::CVarCheckbox("Hookshot Anywhere", "gCheats.HookshotAnywhere",
+                                    { .tooltip = "Allows most surfaces hookshot-able" })) {
+            RegisterHookshotAnywhere();
+        }
+        UIWidgets::CVarCheckbox("Elegy of Emptiness Anywhere", "gCheats.ElegyAnywhere",
+                                { .tooltip = "Allows Elegy of Emptiness outside of Ikana" });
 
         ImGui::EndMenu();
     }
