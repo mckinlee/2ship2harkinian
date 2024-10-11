@@ -1054,7 +1054,7 @@ void EnKakasi_SetupIdleUnderground(EnKakasi* this) {
 }
 
 void EnKakasi_IdleUnderground(EnKakasi* this, PlayState* play) {
-    if (GameInteractor_Should(GI_VB_NEED_SCARECROW_SONG,
+    if (GameInteractor_Should(VB_NEED_SCARECROW_SONG,
                               CHECK_WEEKEVENTREG(WEEKEVENTREG_79_08) &&
                                   (this->picto.actor.xzDistToPlayer < this->songSummonDist) &&
                                   ((BREG(1) != 0) || (play->msgCtx.ocarinaMode == OCARINA_MODE_PLAYED_SCARECROW_SPAWN)),

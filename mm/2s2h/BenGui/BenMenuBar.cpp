@@ -57,6 +57,12 @@ static const std::unordered_map<int32_t, const char*> alwaysWinDoggyraceOptions 
     { ALWAYS_WIN_DOGGY_RACE_ALWAYS, "Always" },
 };
 
+static const std::unordered_map<int32_t, const char*> cremiaRewardOptions = {
+    { CREMIA_REWARD_RANDOM, "Vanilla" },
+    { CREMIA_REWARD_ALWAYS_HUG, "Hug" },
+    { CREMIA_REWARD_ALWAYS_RUPEE, "Rupee" },
+};
+
 static const std::unordered_map<int32_t, const char*> timeStopOptions = {
     { TIME_STOP_OFF, "Off" },
     { TIME_STOP_TEMPLES, "Temples" },
@@ -712,6 +718,13 @@ void DrawEnhancementsMenu() {
             UIWidgets::CVarCheckbox("Finish Early", "gEnhancements.Minigames.SwordsmanSchool.FinishEarly");
             UIWidgets::CVarSliderInt("Winning Score: %d", "gEnhancements.Minigames.SwordsmanSchool.WinningScore", 1, 30,
                                      30);
+            UIWidgets::CVarCombobox(
+                "Milk Run Reward Options", "gEnhancements.Minigames.CremiaHugs", cremiaRewardOptions,
+                { .tooltip = "Choose what reward you get for winning the Milk Run minigame after the first time. \n"
+                             "-Vanilla: Reward is Random\n"
+                             "-Hug: Get the hugging cutscene\n"
+                             "-Rupee: Get the rupee reward",
+                  .defaultIndex = CREMIA_REWARD_RANDOM });
 
             ImGui::EndMenu();
         }
@@ -793,6 +806,8 @@ void DrawEnhancementsMenu() {
                                     { .tooltip = "Enables using the Dpad for Ocarina playback." });
             UIWidgets::CVarCheckbox("Prevent Dropped Ocarina Inputs", "gEnhancements.Playback.NoDropOcarinaInput",
                                     { .tooltip = "Prevent dropping inputs when playing the ocarina quickly" });
+            UIWidgets::CVarCheckbox("Skip Scarecrow Song", "gEnhancements.Playback.SkipScarecrowSong",
+                                    { .tooltip = "Pierre appears when the Ocarina is pulled out." });
             UIWidgets::CVarCheckbox("Pause Owl Warp", "gEnhancements.Songs.PauseOwlWarp",
                                     { .tooltip = "Allows the player to use the pause menu map to owl warp instead of "
                                                  "having to play the Song of Soaring." });
@@ -851,6 +866,8 @@ void DrawCheatsMenu() {
                                     { .tooltip = "Holding L makes you float into the air" })) {
             RegisterMoonJumpOnL();
         }
+        UIWidgets::CVarCheckbox("Elegy of Emptiness Anywhere", "gCheats.ElegyAnywhere",
+                                { .tooltip = "Allows Elegy of Emptiness outside of Ikana" });
         UIWidgets::CVarCombobox(
             "Stop Time in Dungeons", "gCheats.TempleTimeStop", timeStopOptions,
             { .tooltip = "Stops time from advancing in selected areas. Requires a room change to update.\n\n"

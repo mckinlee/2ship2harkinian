@@ -15,6 +15,7 @@ void InitEnhancements() {
     RegisterTimeStopInTemples();
     RegisterHookshotAnywhere();
     RegisterElegyAnywhere();
+    RegisterElegyAnywhere();
 
     // Clock
     RegisterTextBasedClock();
@@ -38,6 +39,7 @@ void InitEnhancements() {
 
     // Fixes
     RegisterFierceDeityZTargetMovement();
+    RegisterTwoHandedSwordSpinAttack();
 
     // Graphics
     RegisterDisableBlackBars();
@@ -55,6 +57,7 @@ void InitEnhancements() {
     // Minigames
     RegisterAlwaysWinDoggyRace();
     RegisterSwordsmanSchool();
+    RegisterCremiaHugs();
 
     // Player
     RegisterClimbSpeed();
@@ -68,6 +71,7 @@ void InitEnhancements() {
     RegisterFasterSongPlayback();
     RegisterPauseOwlWarp();
     RegisterZoraEggCount();
+    RegisterSkipScarecrowSong();
 
     // Restorations
     RegisterPowerCrouchStab();

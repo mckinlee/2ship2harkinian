@@ -4,4 +4,6 @@
 void RegisterAlwaysWinDoggyRace();
 void RegisterSwordsmanSchool();
 
+void RegisterCremiaHugs();
+
 #endif // MINIGAMES_H
