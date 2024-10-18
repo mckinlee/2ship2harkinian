@@ -13,6 +13,7 @@ void InitEnhancements() {
     RegisterUnbreakableRazorSword();
     RegisterUnrestrictedItems();
     RegisterTimeStopInTemples();
+    RegisterHookshotAnywhere();
     RegisterElegyAnywhere();
 
     // Clock
@@ -24,20 +25,23 @@ void InitEnhancements() {
     RegisterSavingEnhancements();
     RegisterAutosave();
     RegisterKeepExpressMail();
+    RegisterSkipScarecrowSong();
 
     // Dialogue
     RegisterFastBankSelection();
 
     // Equipment
     RegisterSkipMagicArrowEquip();
+    RegisterTwoHandedSwordSpinAttack();
+    RegisterGreatFairySwordOnB();
     RegisterInstantRecall();
 
     // Fixes
     RegisterFierceDeityZTargetMovement();
-    RegisterTwoHandedSwordSpinAttack();
 
     // Graphics
     RegisterDisableBlackBars();
+    RegisterHyruleWarriorsStyledLink();
     Register3DItemDrops();
 
     // Masks
@@ -46,9 +50,11 @@ void InitEnhancements() {
     RegisterBlastMaskKeg();
     RegisterNoBlastMaskCooldown();
     RegisterPersistentMasks();
+    RegisterEasyMaskEquip();
 
     // Minigames
     RegisterAlwaysWinDoggyRace();
+    RegisterSwordsmanSchool();
     RegisterCremiaHugs();
 
     // Player
@@ -56,6 +62,7 @@ void InitEnhancements() {
     RegisterFastFlowerLaunch();
     RegisterInstantPutaway();
     RegisterFierceDeityPutaway();
+    RegisterManualJump();
 
     // Songs
     RegisterEnableSunsSong();
@@ -75,6 +82,7 @@ void InitEnhancements() {
     RegisterCutscenes();
 
     // Modes
+    RegisterInvisibleEnemies();
     RegisterPlayAsKafei();
     RegisterTimeMovesWhenYouMove();
 
