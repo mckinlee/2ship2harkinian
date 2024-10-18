@@ -1370,10 +1370,9 @@ s32 CollisionCheck_SkipBump(ColliderInfo* info) {
  * If the AT element has no dmgFlags in common with the AC element, no collision happens.
  */
 s32 CollisionCheck_NoSharedFlags(ColliderInfo* toucher, ColliderInfo* bumper) {
-    if (GameInteractor_Should(VB_CHECK_BUMPER_COLLISION, true, bumper)) {
-        if (!(toucher->toucher.dmgFlags & bumper->bumper.dmgFlags)) {
-            return 1;
-        }
+    if (GameInteractor_Should(VB_CHECK_BUMPER_COLLISION, !(toucher->toucher.dmgFlags & bumper->bumper.dmgFlags),
+                              toucher, bumper)) {
+        return 1;
     }
     return 0;
 }
