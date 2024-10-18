@@ -15,7 +15,6 @@ void InitEnhancements() {
     RegisterTimeStopInTemples();
     RegisterHookshotAnywhere();
     RegisterElegyAnywhere();
-    RegisterElegyAnywhere();
 
     // Clock
     RegisterTextBasedClock();
@@ -39,7 +38,6 @@ void InitEnhancements() {
 
     // Fixes
     RegisterFierceDeityZTargetMovement();
-    RegisterTwoHandedSwordSpinAttack();
 
     // Graphics
     RegisterDisableBlackBars();
