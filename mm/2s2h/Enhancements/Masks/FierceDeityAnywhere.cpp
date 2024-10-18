@@ -23,7 +23,7 @@ void RegisterFierceDeityAnywhere() {
         }
     });
 
-    REGISTER_VB_SHOULD(GI_VB_DAMAGE_MULTIPLIER, {
+    REGISTER_VB_SHOULD(VB_DAMAGE_MULTIPLIER, {
         if (CVarGetInteger("gEnhancements.Masks.FierceDeitysAnywhere", 0)) {
             int index = va_arg(args, int);
             DamageTable* damageTable = va_arg(args, DamageTable*);
@@ -44,7 +44,7 @@ void RegisterFierceDeityAnywhere() {
         }
     });
 
-    REGISTER_VB_SHOULD(GI_VB_DAMAGE_EFFECT, {
+    REGISTER_VB_SHOULD(VB_DAMAGE_EFFECT, {
         if (CVarGetInteger("gEnhancements.Masks.FierceDeitysAnywhere", 0)) {
             int index = va_arg(args, int);
             DamageTable* damageTable = va_arg(args, DamageTable*);
@@ -94,7 +94,7 @@ void RegisterFierceDeityAnywhere() {
      * If we're drawing the light arrow damage effect, but we know it's from a sword beam, then quietly change the type
      * to the blue lights effect.
      */
-    REGISTER_VB_SHOULD(GI_VB_DRAW_DAMAGE_EFFECT, {
+    REGISTER_VB_SHOULD(VB_DRAW_DAMAGE_EFFECT, {
         if (CVarGetInteger("gEnhancements.Masks.FierceDeitysAnywhere", 0)) {
             if (lightArrowsAsSwordBeams) {
                 u8* type = va_arg(args, u8*);
@@ -111,7 +111,7 @@ void RegisterFierceDeityAnywhere() {
      * purpose of having the blue light orbs effect on Big Octos; that actor handles damage effects differently from
      * most other enemies.
      */
-    REGISTER_VB_SHOULD(GI_VB_CHECK_BUMPER_COLLISION, {
+    REGISTER_VB_SHOULD(VB_CHECK_BUMPER_COLLISION, {
         if (CVarGetInteger("gEnhancements.Masks.FierceDeitysAnywhere", 0)) {
             ColliderInfo* bumper = va_arg(args, ColliderInfo*);
             *should = isSwordBeamCollision = bumper->bumper.dmgFlags & DMG_SWORD_BEAM;

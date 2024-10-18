@@ -3731,7 +3731,7 @@ void Player_ProcessItemButtons(Player* this, PlayState* play) {
                     maskIdMinusOne = this->currentMask - 1;
                 }
 
-                if (GameInteractor_Should(GI_VB_ALLOW_EQUIP_MASK, false)) {
+                if (GameInteractor_Should(VB_ALLOW_EQUIP_MASK, false)) {
                     Player_UseItem(play, this, Player_MaskIdToItemId(maskIdMinusOne));
                     return;
                 }
@@ -8000,7 +8000,7 @@ s32 Player_ActionChange_10(Player* this, PlayState* play) {
                 else if (!(this->stateFlags1 & PLAYER_STATE1_8000000) &&
                          (Player_GetMeleeWeaponHeld(this) != PLAYER_MELEEWEAPON_NONE) && Player_CanUpdateItems(this) &&
                          (this->transformation != PLAYER_FORM_GORON)) {
-                    if (!GameInteractor_Should(GI_VB_MANUAL_JUMP, true, NULL)) {
+                    if (!GameInteractor_Should(VB_MANUAL_JUMP, true, NULL)) {
                         if (this->transformation == PLAYER_FORM_ZORA) {
                             func_808395F0(play, this, PLAYER_MWA_JUMPSLASH_START, 5.0f, 5.0f);
                         }
