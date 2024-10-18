@@ -8,7 +8,6 @@
 #include <unordered_map>
 #include <string>
 #include "2s2h/Enhancements/Enhancements.h"
-#include "2s2h/Enhancements/Graphics/HyruleWarriorsStyledLink.h"
 #include "2s2h/DeveloperTools/DeveloperTools.h"
 #include "HudEditor.h"
 #include <Enhancements/ResolutionEditor/ResolutionEditor.h>
