@@ -11,6 +11,7 @@
 
 #define MM_NTSC_US_10 0x5354631C
 #define MM_NTSC_US_GC 0xB443EB08
+#define MM_NTSC_JP_GC 0x8473D0C1
 
 #ifdef __cplusplus
 #include <Context.h>
@@ -62,6 +63,7 @@ void DeinitOTR(void);
 void VanillaItemTable_Init();
 void OTRAudio_Init();
 void OTRMessage_Init();
+void OTRJPFontMessage_Init();
 void InitAudio();
 void Graph_StartFrame();
 void Graph_ProcessGfxCommands(Gfx* commands);
@@ -75,6 +77,7 @@ uint32_t ResourceMgr_GetNumGameVersions();
 uint32_t ResourceMgr_GetGameVersion(int index);
 uint32_t ResourceMgr_GetGamePlatform(int index);
 uint32_t ResourceMgr_GetGameRegion(int index);
+uint32_t ResourceMgr_GetGameDefaultLanguage(int index);
 void ResourceMgr_LoadDirectory(const char* resName);
 char** ResourceMgr_ListFiles(const char* searchMask, int* resultSize);
 uint8_t ResourceMgr_FileExists(const char* resName);
@@ -103,8 +106,8 @@ Vtx* ResourceMgr_LoadVtxByCRC(uint64_t crc);
 char* ResourceMgr_LoadVtxArrayByName(const char* path);
 size_t ResourceMgr_GetVtxArraySizeByName(const char* path);
 Vtx* ResourceMgr_LoadVtxByName(char* path);
+SequenceData* ResourceMgr_LoadSeqPtrByName(const char* path);
 Mtx* ResourceMgr_LoadMtxByName(char* path);
-
 KeyFrameSkeleton* ResourceMgr_LoadKeyFrameSkelByName(const char* path);
 KeyFrameAnimation* ResourceMgr_LoadKeyFrameAnimByName(const char* path);
 
@@ -145,6 +148,8 @@ void Gfx_RegisterBlendedTexture(const char* name, u8* mask, u8* replacement);
 void Gfx_UnregisterBlendedTexture(const char* name);
 void Gfx_TextureCacheDelete(const uint8_t* texAddr);
 void CheckTracker_OnMessageClose();
+
+void Messagebox_ShowErrorBox(char* title, char* body);
 
 int32_t GetGIID(uint32_t itemID);
 #endif

@@ -526,6 +526,7 @@ void Font_LoadChar(PlayState* play, u16 codePointIndex, s32 offset);
 void Font_LoadCharNES(PlayState* play, u8 codePointIndex, s32 offset);
 void Font_LoadMessageBoxEndIcon(Font* font, u16 icon);
 void Font_LoadOrderedFont(Font* font);
+void Font_LoadOrderedFont_JP(Font* font);
 
 void Lib_GetControlStickData(f32* outMagnitude, s16* outAngle, Input* input);
 void Actor_ProcessInitChain(Actor* actor, InitChainEntry* ichain);
@@ -1238,10 +1239,10 @@ void AudioSfx_SetProperties(u8 bankId, u8 entryIndex, u8 channelIndex);
 void AudioSfx_LowerSfxSettingsReverb(Vec3f* pos, s8 isReverbLowered);
 void AudioSfx_SetChannelIO(Vec3f* pos, u16 sfxId, u8 ioData);
 
-void Audio_PlayObjSoundBgm(Vec3f* pos, s8 seqId);
-void Audio_PlayObjSoundFanfare(Vec3f* pos, s8 seqId);
-void Audio_PlaySubBgmAtPos(Vec3f* pos, u8 seqId, f32 maxDist);
-void Audio_PlaySubBgmAtPosWithFilter(Vec3f* pos, u8 seqId, f32 maxDist);
+void Audio_PlayObjSoundBgm(Vec3f* pos, s16 seqId);
+void Audio_PlayObjSoundFanfare(Vec3f* pos, s16 seqId);
+void Audio_PlaySubBgmAtPos(Vec3f* pos, u16 seqId, f32 maxDist);
+void Audio_PlaySubBgmAtPosWithFilter(Vec3f* pos, u16 seqId, f32 maxDist);
 void Audio_PlaySequenceAtDefaultPos(u8 seqPlayerIndex, u16 seqId);
 void Audio_PlaySequenceAtPos(u8 seqPlayerIndex, Vec3f* pos, u16 seqId, f32 maxDist);
 void Audio_PlayMorningSceneSequence(u16 seqId, u8 dayMinusOne);
@@ -1279,9 +1280,9 @@ void Audio_MuteSeqPlayerBgmSub(u8 isMuted);
 void Audio_MuteAllSeqExceptSystemAndOcarina(u16 duration);
 void Audio_MuteSfxAndAmbienceSeqExceptSysAndOca(u16 duration);
 
-void func_801A0204(s8 seqId);
+void func_801A0204(s16 seqId);
 void func_801A246C(u8 seqPlayerIndex, u8 type);
-s32 Audio_IsSequencePlaying(u8 seqId);
+s32 Audio_IsSequencePlaying(u16 seqId);
 void Audio_RestorePrevBgm(void);
 void Audio_UpdateEnemyBgmVolume(f32 dist);
 u8 func_801A3950(u8 seqPlayerIndex, u8 resetChannelIO);
@@ -1307,7 +1308,7 @@ void AudioSfx_ProcessActiveSfx(void);
 u8 AudioSfx_IsPlaying(u32 sfxId);
 void AudioSfx_Reset(void);
 
-void AudioSeq_StartSequence(u8 seqPlayerIndex, u8 seqId, u8 seqArgs, u16 fadeInDuration);
+void AudioSeq_StartSequence(u8 seqPlayerIndex, u16 seqId, u16 seqArgs, u16 fadeInDuration);
 void AudioSeq_StopSequence(u8 seqPlayerIndex, u16 fadeOutDuration);
 void AudioSeq_QueueSeqCmd(u32 cmd);
 void AudioSeq_ProcessSeqCmds(void);
@@ -1320,6 +1321,10 @@ u8 AudioSeq_ResetReverb(void);
 void AudioSeq_ResetActiveSequences(void);
 void AudioSeq_ResetActiveSequencesAndVolume(void);
 
+// #region 2S2H [JP]
+s32 Kanji_OffsetFromShiftJIS(u32);
+// #endregion
+
 // #region 2S2H [Port] Made Available via C++
 s32 osContInit(OSMesgQueue* mq, u8* controllerBits, OSContStatus* status);
 s32 osContStartReadData(OSMesgQueue* mesg);
@@ -1328,9 +1333,11 @@ void osContGetReadData(OSContPad* pad);
 // #region 2S2H [Port] Previously unavailable functions, made available for porting
 void PadMgr_ThreadEntry();
 void Heaps_Alloc(void);
+void KaleidoScope_GrayOutTextureRGBA32(u32* texture, u16 pixelCount);
 void KaleidoScope_UpdateOwlWarpNamePanel(PlayState* play);
 void KaleidoScope_UpdateNamePanel(PlayState* play);
 void SkinMatrix_Clear(MtxF* mf);
+void Player_UseItem(PlayState* play, Player* thisx, ItemId item);
 // #endregion
 // #region 2S2H [Port] New methods added for porting
 void AudioSeq_SetPortVolumeScale(u8 seqPlayerIndex, f32 volume);

@@ -2,6 +2,7 @@
 #define MINIGAMES_H
 
 void RegisterAlwaysWinDoggyRace();
+void RegisterSwordsmanSchool();
 
 void RegisterCremiaHugs();
 

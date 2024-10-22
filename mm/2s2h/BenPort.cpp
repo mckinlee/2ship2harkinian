@@ -15,6 +15,7 @@
 #include "z64animation.h"
 #include "z64bgcheck.h"
 #include <libultraship/libultra/gbi.h>
+#include "stb_image.h"
 #include <Fonts.h>
 #ifdef _WIN32
 #include <Windows.h>
@@ -32,6 +33,8 @@
 #include <Fast3D/gfx_rendering_api.h>
 
 #ifdef __APPLE__
+#include <unistd.h>
+#include <pwd.h>
 #include <SDL_scancode.h>
 #else
 #include <SDL2/SDL_scancode.h>
@@ -55,6 +58,7 @@ CrowdControl* CrowdControl::Instance;
 #include "2s2h/DeveloperTools/DebugConsole.h"
 #include "2s2h/DeveloperTools/DeveloperTools.h"
 #include "2s2h/SaveManager/SaveManager.h"
+#include "2s2h/Enhancements/Audio/AudioCollection.h"
 
 // Resource Types/Factories
 #include "resource/type/Blob.h"
@@ -101,6 +105,7 @@ CrowdControl* CrowdControl::Instance;
 
 OTRGlobals* OTRGlobals::Instance;
 GameInteractor* GameInteractor::Instance;
+AudioCollection* AudioCollection::Instance;
 
 extern "C" char** cameraStrings;
 bool prevAltAssets = false;
@@ -208,14 +213,24 @@ OTRGlobals::OTRGlobals() {
                                     "Cutscene", static_cast<uint32_t>(SOH::ResourceType::SOH_Cutscene), 0);
     loader->RegisterResourceFactory(std::make_shared<SOH::ResourceFactoryBinaryTextMMV0>(), RESOURCE_FORMAT_BINARY,
                                     "TextMM", static_cast<uint32_t>(SOH::ResourceType::TSH_TextMM), 0);
+
     loader->RegisterResourceFactory(std::make_shared<SOH::ResourceFactoryBinaryAudioSampleV2>(), RESOURCE_FORMAT_BINARY,
                                     "AudioSample", static_cast<uint32_t>(SOH::ResourceType::SOH_AudioSample), 2);
+    loader->RegisterResourceFactory(std::make_shared<SOH::ResourceFactoryXMLAudioSampleV0>(), RESOURCE_FORMAT_XML,
+                                    "Sample", static_cast<uint32_t>(SOH::ResourceType::SOH_AudioSample), 0);
+
     loader->RegisterResourceFactory(std::make_shared<SOH::ResourceFactoryBinaryAudioSoundFontV2>(),
                                     RESOURCE_FORMAT_BINARY, "AudioSoundFont",
                                     static_cast<uint32_t>(SOH::ResourceType::SOH_AudioSoundFont), 2);
+    loader->RegisterResourceFactory(std::make_shared<SOH::ResourceFactoryXMLSoundFontV0>(), RESOURCE_FORMAT_XML,
+                                    "SoundFont", static_cast<uint32_t>(SOH::ResourceType::SOH_AudioSoundFont), 0);
+
     loader->RegisterResourceFactory(std::make_shared<SOH::ResourceFactoryBinaryAudioSequenceV2>(),
                                     RESOURCE_FORMAT_BINARY, "AudioSequence",
                                     static_cast<uint32_t>(SOH::ResourceType::SOH_AudioSequence), 2);
+    loader->RegisterResourceFactory(std::make_shared<SOH::ResourceFactoryXMLAudioSequenceV0>(), RESOURCE_FORMAT_XML,
+                                    "Sequence", static_cast<uint32_t>(SOH::ResourceType::SOH_AudioSequence), 0);
+
     loader->RegisterResourceFactory(std::make_shared<SOH::ResourceFactoryBinaryBackgroundV0>(), RESOURCE_FORMAT_BINARY,
                                     "Background", static_cast<uint32_t>(SOH::ResourceType::SOH_Background), 0);
     loader->RegisterResourceFactory(std::make_shared<SOH::ResourceFactoryBinaryTextureAnimationV0>(),
@@ -478,8 +493,23 @@ void Ben_ProcessDroppedFiles(std::string filePath) {
     }
 }
 
+void CheckAndCreateFoldersAndFile() {
+#if defined(__APPLE__)
+    if (const char* fpath = std::getenv("SHIP_HOME")) {
+        std::string homeDir = getenv("HOME") ? getenv("HOME") : getpwuid(getuid())->pw_dir;
+        std::string modsPath = (fpath[0] == '~') ? (homeDir + std::string(fpath).substr(1)) : std::string(fpath);
+        modsPath += "/mods";
+        std::string filePath = modsPath + "/custom_mod_files_go_here.txt";
+        if (std::filesystem::create_directories(modsPath) || !std::filesystem::exists(filePath)) {
+            std::ofstream(filePath).close();
+        }
+    }
+#endif
+}
+
 extern "C" void InitOTR() {
 #if not defined(__SWITCH__) && not defined(__WIIU__)
+    CheckAndCreateFoldersAndFile();
     if (!std::filesystem::exists(Ship::Context::LocateFileAcrossAppDirs("mm.o2r", appShortName)) &&
         !std::filesystem::exists(Ship::Context::LocateFileAcrossAppDirs("mm.zip", appShortName)) &&
         !std::filesystem::exists(Ship::Context::LocateFileAcrossAppDirs("mm.otr", appShortName))) {
@@ -512,6 +542,7 @@ extern "C" void InitOTR() {
 
     OTRGlobals::Instance = new OTRGlobals();
     GameInteractor::Instance = new GameInteractor();
+    AudioCollection::Instance = new AudioCollection();
     BenGui::SetupGuiElements();
     InitEnhancements();
     InitDeveloperTools();
@@ -563,6 +594,7 @@ extern "C" void DeinitOTR() {
     BenGui::Destroy();
 
     OTRGlobals::Instance->context = nullptr;
+    delete AudioCollection::Instance;
 }
 
 #ifdef _WIN32
@@ -852,6 +884,7 @@ extern "C" uint32_t ResourceMgr_GetGamePlatform(int index) {
         case OOT_PAL_GC_DBG2:
         case OOT_PAL_GC_MQ_DBG:
         case MM_NTSC_US_GC:
+        case MM_NTSC_JP_GC:
             return GAME_PLATFORM_GC;
     }
 }
@@ -870,6 +903,7 @@ extern "C" uint32_t ResourceMgr_GetGameRegion(int index) {
         case OOT_NTSC_US_MQ:
         case MM_NTSC_US_10:
         case MM_NTSC_US_GC:
+        case MM_NTSC_JP_GC:
             return GAME_REGION_NTSC;
         case OOT_PAL_10:
         case OOT_PAL_11:
@@ -879,6 +913,33 @@ extern "C" uint32_t ResourceMgr_GetGameRegion(int index) {
         case OOT_PAL_GC_DBG2:
         case OOT_PAL_GC_MQ_DBG:
             return GAME_REGION_PAL;
+    }
+}
+
+extern "C" uint32_t ResourceMgr_GetGameDefaultLanguage(int index) {
+    uint32_t version =
+        Ship::Context::GetInstance()->GetResourceManager()->GetArchiveManager()->GetGameVersions()[index];
+
+    switch (version) {
+        case OOT_NTSC_US_10:
+        case OOT_NTSC_US_11:
+        case OOT_NTSC_US_12:
+        case OOT_PAL_10:
+        case OOT_PAL_11:
+        case MM_NTSC_US_10:
+        case OOT_NTSC_JP_GC:
+        case OOT_NTSC_US_GC:
+        case OOT_PAL_GC:
+        case OOT_NTSC_JP_MQ:
+        case OOT_NTSC_US_MQ:
+        case OOT_PAL_MQ:
+        case OOT_PAL_GC_DBG1:
+        case OOT_PAL_GC_DBG2:
+        case OOT_PAL_GC_MQ_DBG:
+        case MM_NTSC_US_GC:
+            return LANGUAGE_ENG;
+        case MM_NTSC_JP_GC:
+            return LANGUAGE_JPN;
     }
 }
 
@@ -1184,6 +1245,10 @@ extern "C" SequenceData ResourceMgr_LoadSeqByName(const char* path) {
     SequenceData* sequence = (SequenceData*)ResourceGetDataByName(path);
     return *sequence;
 }
+extern "C" SequenceData* ResourceMgr_LoadSeqPtrByName(const char* path) {
+    SequenceData* sequence = (SequenceData*)ResourceGetDataByName(path);
+    return sequence;
+}
 extern "C" KeyFrameSkeleton* ResourceMgr_LoadKeyFrameSkelByName(const char* path) {
     return (KeyFrameSkeleton*)ResourceGetDataByName(path);
 }
@@ -1254,9 +1319,14 @@ extern "C" SoundFontSample* ResourceMgr_LoadAudioSample(const char* path) {
 }
 #endif
 
-extern "C" SoundFont* ResourceMgr_LoadAudioSoundFont(const char* path) {
+extern "C" SoundFont* ResourceMgr_LoadAudioSoundFontByName(const char* path) {
     return (SoundFont*)ResourceGetDataByName(path);
 }
+
+extern "C" SoundFont* ResourceMgr_LoadAudioSoundFontByCRC(uint64_t crc) {
+    return (SoundFont*)ResourceGetDataByCrc(crc);
+}
+
 extern "C" int ResourceMgr_OTRSigCheck(char* imgData) {
     uintptr_t i = (uintptr_t)(imgData);
 
@@ -1654,4 +1724,8 @@ extern "C" int Controller_ShouldRumble(size_t slot) {
     }
 
     return 0;
+}
+
+extern "C" void Messagebox_ShowErrorBox(char* title, char* body) {
+    Extractor::ShowErrorBox(title, body);
 }

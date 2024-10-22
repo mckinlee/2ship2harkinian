@@ -1010,6 +1010,12 @@ void AddEnhancements() {
                 { 1, 5, 1 } },
               { "Dpad Equips", "gEnhancements.Dpad.DpadEquips", "Allows you to equip items to your d-pad",
                 WIDGET_CVAR_CHECKBOX },
+              { "Fast Magic Arrow Equip Animation", "gEnhancements.Equipment.MagicArrowEquipSpeed",
+                "Removes the animation for equipping Magic Arrows.", WIDGET_CVAR_CHECKBOX },
+              { "Instant Fin Boomerangs Recall", "gEnhancements.PlayerActions.InstantRecall",
+                "Pressing B will instantly recall the fin boomerang back to Zora Link after they are thrown.",
+                WIDGET_CVAR_CHECKBOX },
+              { .widgetName = "Minigames", .widgetType = WIDGET_SEPARATOR_TEXT },
               { "Always Win Doggy Race",
                 "gEnhancements.Minigames.AlwaysWinDoggyRace",
                 "Makes the Doggy Race easier to win.",
@@ -1023,16 +1029,23 @@ void AddEnhancements() {
                 "-Rupee: Get the rupee reward",
                 WIDGET_CVAR_COMBOBOX,
                 { .comboBoxOptions = cremiaRewardOptions } },
-              { "Fast Magic Arrow Equip Animation", "gEnhancements.Equipment.MagicArrowEquipSpeed",
-                "Removes the animation for equipping Magic Arrows.", WIDGET_CVAR_CHECKBOX },
-              { "Instant Fin Boomerangs Recall", "gEnhancements.PlayerActions.InstantRecall",
-                "Pressing B will instantly recall the fin boomerang back to Zora Link after they are thrown.",
+              { "Swordsman School Finish Early", "gEnhancements.Minigames.SwordsmanSchool.FinishEarly",
+                "Allows you to finish the Swordsman School early, as soon as you reach the required score.",
                 WIDGET_CVAR_CHECKBOX },
+              { "Swordsman School Winning Score",
+                "gEnhancements.Minigames.SwordsmanSchool.WinningScore",
+                "Sets the score required to win the Swordsman School.",
+                WIDGET_CVAR_SLIDER_INT,
+                { 1, 30, 30 } },
               { "Two-Handed Sword Spin Attack", "gEnhancements.Equipment.TwoHandedSwordSpinAttack",
                 "Enables magic spin attacks for the Fierce Deity Sword and Great Fairy's Sword.",
                 WIDGET_CVAR_CHECKBOX } },
             { { .widgetName = "Modes", .widgetType = WIDGET_SEPARATOR_TEXT },
               { "Play as Kafei", "gModes.PlayAsKafei", "Requires scene reload to take effect.", WIDGET_CVAR_CHECKBOX },
+              { "Hyrule Warriors Styled Link", "gModes.HyruleWarriorsStyledLink",
+                "When acquired, places the Keaton and Fierce Deity masks on Link similarly to how he wears them in "
+                "Hyrule Warriors",
+                WIDGET_CVAR_CHECKBOX },
               { "Time Moves when you Move",
                 "gModes.TimeMovesWhenYouMove",
                 "Time only moves when Link is not standing still.",
@@ -1231,7 +1244,9 @@ void AddEnhancements() {
                 {},
                 [](widgetInfo& info) { UpdatePersistentMasksState(); } },
               { "No Blast Mask Cooldown", "gEnhancements.Masks.NoBlastMaskCooldown",
-                "Eliminates the Cooldown between Blast Mask usage.", WIDGET_CVAR_CHECKBOX } },
+                "Eliminates the Cooldown between Blast Mask usage.", WIDGET_CVAR_CHECKBOX },
+              { "Easy Mask Equip", "gEnhancements.Masks.EasyMaskEquip",
+                "Allows you to equip masks directly from the pause menu by pressing A.", WIDGET_CVAR_CHECKBOX } },
             // Song Enhancements
             { { .widgetName = "Ocarina", .widgetType = WIDGET_SEPARATOR_TEXT },
               { "Enable Sun's Song", "gEnhancements.Songs.EnableSunsSong",
@@ -1358,6 +1373,15 @@ void AddEnhancements() {
                                           "Enables the HUD Editor window, allowing you to modify your HUD",
                                           WIDGET_WINDOW_BUTTON,
                                           { .size = UIWidgets::Sizes::Inline, .windowName = "HUD Editor" } } } } });
+    enhancementsSidebar.push_back(
+        { "Item Tracker Editor",
+          1,
+          { // Item Tracker Editor
+            { { "Popout Item Tracker Editor",
+                "gWindows.ItemTrackerSettings",
+                "",
+                WIDGET_WINDOW_BUTTON,
+                { .size = UIWidgets::Sizes::Inline, .windowName = "Item Tracker Settings" } } } } });
 }
 
 void AddDevTools() {
@@ -1599,6 +1623,13 @@ void AddDevTools() {
                                       "Enables the event log window",
                                       WIDGET_WINDOW_BUTTON,
                                       { .size = UIWidgets::Sizes::Inline, .windowName = "Event Log" } } } } });
+    devToolsSidebar.push_back({ "Audio Editor",
+                                1,
+                                { { { "Popout Audio Editor",
+                                      "gWindows.AudioEditor",
+                                      "Enables the audio editor window",
+                                      WIDGET_WINDOW_BUTTON,
+                                      { .size = UIWidgets::Sizes::Inline, .windowName = "Audio Editor" } } } } });
 }
 
 void SearchMenuGetItem(widgetInfo& widget) {
