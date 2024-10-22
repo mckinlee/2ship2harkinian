@@ -9,6 +9,7 @@
 #include "UIWidgets.hpp"
 #include "HudEditor.h"
 #include <Enhancements/ResolutionEditor/ResolutionEditor.h>
+#include "../Enhancements/Audio/AudioEditor.h"
 
 #ifdef __APPLE__
 #include "graphic/Fast3D/gfx_metal.h"
@@ -38,6 +39,7 @@ std::shared_ptr<HudEditorWindow> mHudEditorWindow;
 std::shared_ptr<ActorViewerWindow> mActorViewerWindow;
 std::shared_ptr<CollisionViewerWindow> mCollisionViewerWindow;
 std::shared_ptr<EventLogWindow> mEventLogWindow;
+std::shared_ptr<AudioEditor> mAudioEditorWindow;
 std::shared_ptr<BenMenu> mBenMenu;
 std::shared_ptr<BenInputEditorWindow> mBenInputEditorWindow;
 std::shared_ptr<AdvancedResolutionSettings::AdvancedResolutionSettingsWindow> mAdvancedResolutionSettingsWindow;
@@ -106,6 +108,10 @@ void SetupGuiElements() {
     mItemTrackerSettingsWindow = std::make_shared<ItemTrackerSettingsWindow>("gWindows.ItemTrackerSettings",
                                                                              "Item Tracker Settings", ImVec2(800, 400));
     gui->AddGuiWindow(mItemTrackerSettingsWindow);
+
+    mAudioEditorWindow = std::make_shared<AudioEditor>("gWindows.AudioEditor", "Audio Editor");
+    gui->AddGuiWindow(mAudioEditorWindow);
+
     gui->SetPadBtnTogglesMenu();
 
     mAdvancedResolutionSettingsWindow = std::make_shared<AdvancedResolutionSettings::AdvancedResolutionSettingsWindow>(
@@ -131,5 +137,7 @@ void Destroy() {
     mAdvancedResolutionSettingsWindow = nullptr;
     mItemTrackerWindow = nullptr;
     mItemTrackerSettingsWindow = nullptr;
+
+    mAudioEditorWindow = nullptr;
 }
 } // namespace BenGui

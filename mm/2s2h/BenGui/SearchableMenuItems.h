@@ -1623,6 +1623,13 @@ void AddDevTools() {
                                       "Enables the event log window",
                                       WIDGET_WINDOW_BUTTON,
                                       { .size = UIWidgets::Sizes::Inline, .windowName = "Event Log" } } } } });
+    devToolsSidebar.push_back({ "Audio Editor",
+                                1,
+                                { { { "Popout Audio Editor",
+                                      "gWindows.AudioEditor",
+                                      "Enables the audio editor window",
+                                      WIDGET_WINDOW_BUTTON,
+                                      { .size = UIWidgets::Sizes::Inline, .windowName = "Audio Editor" } } } } });
 }
 
 void SearchMenuGetItem(widgetInfo& widget) {
