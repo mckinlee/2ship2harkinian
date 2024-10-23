@@ -183,6 +183,7 @@ jobs:
         HOMEBREW_NO_INSTALL_CLEANUP: "1"
         HOMEBREW_NO_AUTO_UPDATE: "1"
         HOMEBREW_BUILD_FROM_SOURCE: "1"
+        HOMEBREW_NO_BOTTLE: "1"
         HOMEBREW_ARCHS: "arm64;x86_64"
         CFLAGS: "-arch arm64 -arch x86_64"
         CXXFLAGS: "-arch arm64 -arch x86_64"
@@ -190,9 +191,9 @@ jobs:
       run: |
         brew update
         brew uninstall --ignore-dependencies libpng || true
-        # Install dependencies from source with universal architecture
-        brew install --build-from-source ninja
-        brew install --build-from-source sdl2 sdl2_net libpng glew libzip nlohmann-json tinyxml2
+        # Reinstall dependencies from source with universal architecture
+        brew reinstall --build-from-source ninja
+        brew reinstall --build-from-source sdl2 sdl2_net libpng glew libzip nlohmann-json tinyxml2
     - name: Download 2ship.o2r
       uses: actions/download-artifact@v4
       with:
