@@ -178,6 +178,13 @@ jobs:
         restore-keys: |
           ${{ runner.os }}-14-ccache-${{ github.ref }}
           ${{ runner.os }}-14-ccache-
+    - name: Cache MacPorts
+      uses: actions/cache@v4
+      with:
+        path: $HOME/macports
+        key: ${{ runner.os }}-14-macports-${{ hashFiles('**/macports-deps.txt') }}
+        restore-keys: |
+          ${{ runner.os }}-14-macports-
     - name: Install MacPorts in User Directory
       run: |
         mkdir -p $HOME/macports
@@ -189,13 +196,6 @@ jobs:
         make
         make install
         echo "$HOME/macports/bin:$HOME/macports/sbin" >> $GITHUB_PATH
-    - name: Cache MacPorts
-      uses: actions/cache@v4
-      with:
-        path: $HOME/macports
-        key: ${{ runner.os }}-14-macports-${{ hashFiles('.github/workflows/macports-deps.txt') }}
-        restore-keys: |
-          ${{ runner.os }}-14-macports-
     - name: Install dependencies
       run: |
         $HOME/macports/bin/port selfupdate
