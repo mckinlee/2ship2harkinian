@@ -179,11 +179,20 @@ jobs:
           ${{ runner.os }}-14-ccache-${{ github.ref }}
           ${{ runner.os }}-14-ccache-
     - name: Install dependencies
+      env:
+        HOMEBREW_NO_INSTALL_CLEANUP: "1"
+        HOMEBREW_NO_AUTO_UPDATE: "1"
+        HOMEBREW_BUILD_FROM_SOURCE: "1"
+        HOMEBREW_ARCHS: "arm64;x86_64"
+        CFLAGS: "-arch arm64 -arch x86_64"
+        CXXFLAGS: "-arch arm64 -arch x86_64"
+        LDFLAGS: "-arch arm64 -arch x86_64"
       run: |
         brew update
         brew uninstall --ignore-dependencies libpng || true
-        brew install ninja
-        brew install sdl2 sdl2_net libpng glew libzip nlohmann-json tinyxml2
+        # Install dependencies from source with universal architecture
+        brew install --build-from-source ninja
+        brew install --build-from-source sdl2 sdl2_net libpng glew libzip nlohmann-json tinyxml2
     - name: Download 2ship.o2r
       uses: actions/download-artifact@v4
       with:
