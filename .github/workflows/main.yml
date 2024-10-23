@@ -182,7 +182,7 @@ jobs:
       uses: actions/cache@v4
       with:
         path: $HOME/macports
-        key: ${{ runner.os }}-14-macports-${{ hashFiles('**/macports-deps.txt') }}
+        key: ${{ runner.os }}-14-macports-${{ hashFiles('.github/workflows/macports-deps.txt') }}
         restore-keys: |
           ${{ runner.os }}-14-macports-
     - name: Install MacPorts in User Directory
@@ -198,8 +198,9 @@ jobs:
         echo "$HOME/macports/bin:$HOME/macports/sbin" >> $GITHUB_PATH
     - name: Install dependencies
       run: |
-        $HOME/macports/bin/port selfupdate
-        $HOME/macports/bin/port install $(cat .github/workflows/macports-deps.txt)
+        $HOME/macports/bin/port -N sync
+        $HOME/macports/bin/port install -N $(cat .github/workflows/macports-deps.txt)
+      working-directory: ${{ github.workspace }}
     - name: Set Environment Variables
       run: |
         echo "CPATH=$HOME/macports/include" >> $GITHUB_ENV
