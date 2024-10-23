@@ -178,11 +178,32 @@ jobs:
         restore-keys: |
           ${{ runner.os }}-14-ccache-${{ github.ref }}
           ${{ runner.os }}-14-ccache-
+    - name: Install MacPorts in User Directory
+      run: |
+        mkdir -p $HOME/macports
+        curl -L https://github.com/macports/macports-base/releases/download/v2.9.3/MacPorts-2.9.3.tar.gz | tar xz -C $HOME
+        cd $HOME/macports-base-2.9.3
+        ./configure --prefix=$HOME/macports --with-applications-dir=$HOME/macports/Applications
+        make
+        make install
+        echo "$HOME/macports/bin:$HOME/macports/sbin" >> $GITHUB_PATH
+    - name: Cache MacPorts
+      uses: actions/cache@v4
+      with:
+        path: $HOME/macports
+        key: ${{ runner.os }}-14-macports-${{ hashFiles('.github/workflows/macports-deps.txt') }}
+        restore-keys: |
+          ${{ runner.os }}-14-macports-
     - name: Install dependencies
       run: |
-        brew update
-        brew install ninja
-        brew install sdl2 sdl2_net libpng glew libzip nlohmann-json tinyxml2
+        $HOME/macports/bin/port selfupdate
+        $HOME/macports/bin/port install $(cat .github/workflows/macports-deps.txt)
+    - name: Set Environment Variables
+      run: |
+        echo "CPATH=$HOME/macports/include" >> $GITHUB_ENV
+        echo "LIBRARY_PATH=$HOME/macports/lib" >> $GITHUB_ENV
+        echo "PKG_CONFIG_PATH=$HOME/macports/lib/pkgconfig" >> $GITHUB_ENV
+        echo "$HOME/macports/lib" >> $GITHUB_PATH
     - name: Download 2ship.o2r
       uses: actions/download-artifact@v4
       with:
@@ -191,7 +212,10 @@ jobs:
     - name: Build 2Ship
       run: |
         export PATH="/usr/local/opt/ccache/libexec:$PATH"
-        cmake --no-warn-unused-cli -H. -Bbuild-cmake -GNinja -DCMAKE_BUILD_TYPE=Release -DCMAKE_OSX_ARCHITECTURES="x86_64;arm64"
+        cmake --no-warn-unused-cli -H. -Bbuild-cmake -GNinja \
+          -DCMAKE_BUILD_TYPE=Release \
+          -DCMAKE_OSX_ARCHITECTURES="x86_64;arm64" \
+          -DCMAKE_PREFIX_PATH="$HOME/macports"
         cmake --build build-cmake --config Release --parallel 10
         (cd build-cmake && cpack)
         mv _packages/*.dmg 2Ship.dmg
