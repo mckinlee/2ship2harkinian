@@ -183,7 +183,7 @@ jobs:
         brew update
         brew uninstall --ignore-dependencies libpng || true
         brew install ninja
-        bew install sdl2 sdl2_net libpng glew libzip nlohmann-json tinyxml2
+        brew install sdl2 sdl2_net libpng glew libzip nlohmann-json tinyxml2
     - name: Download 2ship.o2r
       uses: actions/download-artifact@v4
       with:
