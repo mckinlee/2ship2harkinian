@@ -165,22 +165,22 @@ jobs:
 
   build-macos:
     needs: generate-2ship-otr
-    runs-on: macos-12
+    runs-on: macos-14
     steps:
     - uses: actions/checkout@v4
-      with:
-        submodules: true
-    - name: ccache
+
+    - name: Set up ccache
       uses: hendrikmuhs/ccache-action@v1.2.13
       with:
         create-symlink: true
-        key: ${{ runner.os }}-ccache-${{ github.ref }}-${{ github.sha }}
+        key: ${{ runner.os }}-14-ccache-${{ github.ref }}-${{ github.sha }}
         restore-keys: |
-          ${{ runner.os }}-ccache-${{ github.ref }}
-          ${{ runner.os }}-ccache-
+          ${{ runner.os }}-14-ccache-${{ github.ref }}
+          ${{ runner.os }}-14-ccache-
     - name: Install dependencies
       run: |
         brew update
+        brew uninstall --ignore-dependencies libpng || true
         brew install ninja
         brew install sdl2 sdl2_net libpng glew libzip nlohmann-json tinyxml2
     - name: Download 2ship.o2r
@@ -194,7 +194,7 @@ jobs:
         export PKG_CONFIG_PATH="${HOMEBREW_PREFIX}/lib/pkgconfig:$PKG_CONFIG_PATH"
         cmake -H. -Bbuild-cmake -GNinja \
           -DCMAKE_BUILD_TYPE=Release \
-          -DCMAKE_OSX_ARCHITECTURES="x86_64" \
+          -DCMAKE_OSX_ARCHITECTURES="x86_64;arm64" \
           -DCMAKE_PREFIX_PATH="${HOMEBREW_PREFIX}" \
           -DCMAKE_INCLUDE_PATH="${HOMEBREW_PREFIX}/include" \
           -DCMAKE_LIBRARY_PATH="${HOMEBREW_PREFIX}/lib"
@@ -205,7 +205,7 @@ jobs:
     - name: Upload build
       uses: actions/upload-artifact@v4
       with:
-        name: 2ship-mac
+        name: 2Ship-macos
         path: |
           2Ship.dmg
           readme.txt
