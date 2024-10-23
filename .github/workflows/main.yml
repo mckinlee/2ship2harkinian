@@ -201,6 +201,10 @@ jobs:
           sudo installer -pkg ./MacPorts-2.9.3-14-Sonoma.pkg -target /
         fi
         echo "/opt/local/bin:/opt/local/sbin" >> $GITHUB_PATH
+    - name: Reset MacPorts
+      run: |
+        sudo rm -rf /opt/local/var/macports/registry/registry.db
+        sudo port selfupdate
     - name: Install dependencies
       run: |
         brew uninstall --ignore-dependencies libpng
