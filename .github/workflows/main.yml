@@ -165,7 +165,7 @@ jobs:
 
   build-macos:
     needs: generate-2ship-otr
-    runs-on: macos-14
+    runs-on: macos-12
     steps:
     - uses: actions/checkout@v4
       with:
@@ -174,39 +174,15 @@ jobs:
       uses: hendrikmuhs/ccache-action@v1.2.13
       with:
         create-symlink: true
-        key: ${{ runner.os }}-14-ccache-${{ github.ref }}-${{ github.sha }}
+        key: ${{ runner.os }}-ccache-${{ github.ref }}-${{ github.sha }}
         restore-keys: |
-          ${{ runner.os }}-14-ccache-${{ github.ref }}
-          ${{ runner.os }}-14-ccache-
-    - name: Cache MacPorts
-      uses: actions/cache@v4
-      with:
-        path: $HOME/macports
-        key: ${{ runner.os }}-14-macports-${{ hashFiles('.github/workflows/macports-deps.txt') }}
-        restore-keys: |
-          ${{ runner.os }}-14-macports-
-    - name: Install MacPorts in User Directory
-      run: |
-        mkdir -p $HOME/macports
-        MACPORTS_VERSION=2.9.3
-        curl -L https://github.com/macports/macports-base/releases/download/v${MACPORTS_VERSION}/MacPorts-${MACPORTS_VERSION}.tar.gz | tar xz -C $HOME
-        cd $HOME/MacPorts-${MACPORTS_VERSION}
-        ./configure --prefix=$HOME/macports --with-applications-dir=$HOME/macports/Applications \
-          --with-install-user=$USER --with-install-group=$(id -gn)
-        make
-        make install
-        echo "$HOME/macports/bin:$HOME/macports/sbin" >> $GITHUB_PATH
+          ${{ runner.os }}-ccache-${{ github.ref }}
+          ${{ runner.os }}-ccache-
     - name: Install dependencies
       run: |
-        $HOME/macports/bin/port -N sync
-        $HOME/macports/bin/port install -N $(cat .github/workflows/macports-deps.txt)
-      working-directory: ${{ github.workspace }}
-    - name: Set Environment Variables
-      run: |
-        echo "CPATH=$HOME/macports/include" >> $GITHUB_ENV
-        echo "LIBRARY_PATH=$HOME/macports/lib" >> $GITHUB_ENV
-        echo "PKG_CONFIG_PATH=$HOME/macports/lib/pkgconfig" >> $GITHUB_ENV
-        echo "$HOME/macports/lib" >> $GITHUB_PATH
+        brew update
+        brew install ninja
+        brew install sdl2 sdl2_net libpng glew libzip nlohmann-json tinyxml2
     - name: Download 2ship.o2r
       uses: actions/download-artifact@v4
       with:
@@ -214,11 +190,14 @@ jobs:
         path: build-cmake/mm
     - name: Build 2Ship
       run: |
-        export PATH="/usr/local/opt/ccache/libexec:$PATH"
-        cmake --no-warn-unused-cli -H. -Bbuild-cmake -GNinja \
+        HOMEBREW_PREFIX=$(brew --prefix)
+        export PKG_CONFIG_PATH="${HOMEBREW_PREFIX}/lib/pkgconfig:$PKG_CONFIG_PATH"
+        cmake -H. -Bbuild-cmake -GNinja \
           -DCMAKE_BUILD_TYPE=Release \
-          -DCMAKE_OSX_ARCHITECTURES="x86_64;arm64" \
-          -DCMAKE_PREFIX_PATH="$HOME/macports"
+          -DCMAKE_OSX_ARCHITECTURES="x86_64" \
+          -DCMAKE_PREFIX_PATH="${HOMEBREW_PREFIX}" \
+          -DCMAKE_INCLUDE_PATH="${HOMEBREW_PREFIX}/include" \
+          -DCMAKE_LIBRARY_PATH="${HOMEBREW_PREFIX}/lib"
         cmake --build build-cmake --config Release --parallel 10
         (cd build-cmake && cpack)
         mv _packages/*.dmg 2Ship.dmg
