@@ -178,38 +178,11 @@ jobs:
         restore-keys: |
           ${{ runner.os }}-14-ccache-${{ github.ref }}
           ${{ runner.os }}-14-ccache-
-    # Needed to apply sudo for macports cache restore
-    - name: Install gtar wrapper
-      run: |
-        sudo mv /opt/homebrew/bin/gtar /opt/homebrew/bin/gtar.orig
-        sudo cp .github/workflows/gtar /opt/homebrew/bin/gtar
-        sudo chmod +x /opt/homebrew/bin/gtar
-    - name: Cache MacPorts
-      id: cache-macports
-      uses: actions/cache@v4
-      with:
-        path: /opt/local/
-        key: ${{ runner.os }}-14-macports-${{ hashFiles('.github/workflows/macports-deps.txt') }}
-        restore-keys: |
-          ${{ runner.os }}-14-macports-
-    - name: Install MacPorts (if necessary)
-      run: |
-        if [ command -v port &>/dev/null ]; then
-          echo "MacPorts already installed"
-        else
-          wget https://github.com/macports/macports-base/releases/download/v2.9.3/MacPorts-2.9.3-14-Sonoma.pkg
-          sudo installer -pkg ./MacPorts-2.9.3-14-Sonoma.pkg -target /
-        fi
-        echo "/opt/local/bin:/opt/local/sbin" >> $GITHUB_PATH
-    - name: Reset MacPorts
-      run: |
-        sudo rm -rf /opt/local/var/macports/registry/registry.db
-        sudo port selfupdate
     - name: Install dependencies
       run: |
-        brew uninstall --ignore-dependencies libpng
-        sudo port install $(cat .github/workflows/macports-deps.txt)
+        brew update
         brew install ninja
+        brew install sdl2 sdl2_net libpng glew libzip nlohmann-json tinyxml2
     - name: Download 2ship.o2r
       uses: actions/download-artifact@v4
       with:
@@ -217,11 +190,10 @@ jobs:
         path: build-cmake/mm
     - name: Build 2Ship
       run: |
-        export PATH="/usr/lib/ccache:/usr/local/opt/ccache/libexec:$PATH"
-        cmake --no-warn-unused-cli -H. -Bbuild-cmake -GNinja -DCMAKE_BUILD_TYPE:STRING=Release -DCMAKE_OSX_ARCHITECTURES="x86_64;arm64"
+        export PATH="/usr/local/opt/ccache/libexec:$PATH"
+        cmake --no-warn-unused-cli -H. -Bbuild-cmake -GNinja -DCMAKE_BUILD_TYPE=Release -DCMAKE_OSX_ARCHITECTURES="x86_64;arm64"
         cmake --build build-cmake --config Release --parallel 10
         (cd build-cmake && cpack)
-
         mv _packages/*.dmg 2Ship.dmg
         mv README.md readme.txt
     - name: Upload build
