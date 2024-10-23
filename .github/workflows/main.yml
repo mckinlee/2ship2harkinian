@@ -168,7 +168,8 @@ jobs:
     runs-on: macos-14
     steps:
     - uses: actions/checkout@v4
-
+      with:
+        submodules: 'recursive'
     - name: Set up ccache
       uses: hendrikmuhs/ccache-action@v1.2.13
       with:
@@ -182,7 +183,7 @@ jobs:
         brew update
         brew uninstall --ignore-dependencies libpng || true
         brew install ninja
-        brew install sdl2 sdl2_net libpng glew libzip nlohmann-json tinyxml2
+        bew install sdl2 sdl2_net libpng glew libzip nlohmann-json tinyxml2
     - name: Download 2ship.o2r
       uses: actions/download-artifact@v4
       with:
