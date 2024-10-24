@@ -169,8 +169,8 @@ jobs:
     steps:
     - uses: actions/checkout@v4
       with:
-        submodules: 'recursive'
-    - name: Set up ccache
+        submodules: true
+    - name: ccache
       uses: hendrikmuhs/ccache-action@v1.2.13
       with:
         create-symlink: true
@@ -178,22 +178,31 @@ jobs:
         restore-keys: |
           ${{ runner.os }}-14-ccache-${{ github.ref }}
           ${{ runner.os }}-14-ccache-
-    - name: Install dependencies
-      env:
-        HOMEBREW_NO_INSTALL_CLEANUP: "1"
-        HOMEBREW_NO_AUTO_UPDATE: "1"
-        HOMEBREW_BUILD_FROM_SOURCE: "1"
-        HOMEBREW_NO_BOTTLE: "1"
-        HOMEBREW_ARCHS: "arm64;x86_64"
-        CFLAGS: "-arch arm64 -arch x86_64"
-        CXXFLAGS: "-arch arm64 -arch x86_64"
-        LDFLAGS: "-arch arm64 -arch x86_64"
+    - name: Cache MacPorts
+      uses: actions/cache@v4
+      with:
+        path: $HOME/macports
+        key: ${{ runner.os }}-14-macports-${{ hashFiles('.github/workflows/macports-deps.txt') }}
+        restore-keys: |
+          ${{ runner.os }}-14-macports-
+    - name: Install MacPorts (if necessary)
       run: |
-        brew update
+        if [ -x "${HOME}/macports/bin/port" ]; then
+          echo "MacPorts already installed"
+        else
+          curl -L https://github.com/macports/macports-base/releases/download/v2.9.3/MacPorts-2.9.3.tar.gz -o MacPorts-2.9.3.tar.gz
+          tar xzf MacPorts-2.9.3.tar.gz
+          cd MacPorts-2.9.3
+          ./configure --prefix=${HOME}/macports
+          make
+          make install
+        fi
+        echo "${HOME}/macports/bin:${HOME}/macports/sbin" >> $GITHUB_PATH
+    - name: Install dependencies
+      run: |
         brew uninstall --ignore-dependencies libpng || true
-        # Reinstall dependencies from source with universal architecture
-        brew reinstall --build-from-source ninja
-        brew reinstall --build-from-source sdl2 sdl2_net libpng glew libzip nlohmann-json tinyxml2
+        ${HOME}/macports/bin/port install $(cat .github/workflows/macports-deps.txt)
+        brew install ninja
     - name: Download 2ship.o2r
       uses: actions/download-artifact@v4
       with:
@@ -201,22 +210,17 @@ jobs:
         path: build-cmake/mm
     - name: Build 2Ship
       run: |
-        HOMEBREW_PREFIX=$(brew --prefix)
-        export PKG_CONFIG_PATH="${HOMEBREW_PREFIX}/lib/pkgconfig:$PKG_CONFIG_PATH"
-        cmake -H. -Bbuild-cmake -GNinja \
-          -DCMAKE_BUILD_TYPE=Release \
-          -DCMAKE_OSX_ARCHITECTURES="x86_64;arm64" \
-          -DCMAKE_PREFIX_PATH="${HOMEBREW_PREFIX}" \
-          -DCMAKE_INCLUDE_PATH="${HOMEBREW_PREFIX}/include" \
-          -DCMAKE_LIBRARY_PATH="${HOMEBREW_PREFIX}/lib"
+        export PATH="/usr/lib/ccache:/usr/local/opt/ccache/libexec:$PATH"
+        cmake --no-warn-unused-cli -H. -Bbuild-cmake -GNinja -DCMAKE_BUILD_TYPE:STRING=Release -DCMAKE_OSX_ARCHITECTURES="x86_64;arm64"
         cmake --build build-cmake --config Release --parallel 10
         (cd build-cmake && cpack)
+
         mv _packages/*.dmg 2Ship.dmg
         mv README.md readme.txt
     - name: Upload build
       uses: actions/upload-artifact@v4
       with:
-        name: 2Ship-macos
+        name: 2ship-mac
         path: |
           2Ship.dmg
           readme.txt
