@@ -193,11 +193,19 @@ jobs:
           curl -L https://github.com/macports/macports-base/releases/download/v2.9.3/MacPorts-2.9.3.tar.gz -o MacPorts-2.9.3.tar.gz
           tar xzf MacPorts-2.9.3.tar.gz
           cd MacPorts-2.9.3
-          ./configure --prefix=${HOME}/macports --with-no-root-privileges
+          ./configure --prefix=${HOME}/macports --with-no-root-privileges --with-install-user=$USER --with-install-group=staff
           make
           make install
         fi
         echo "${HOME}/macports/bin:${HOME}/macports/sbin" >> $GITHUB_PATH
+    - name: Initialize MacPorts ports tree
+      run: |
+        if [ ! -d "${HOME}/macports/var/macports/sources/rsync.macports.org/macports/release/tarballs/ports" ]; then
+          mkdir -p ${HOME}/macports/var/macports/sources/rsync.macports.org/macports/release/tarballs
+          curl -L https://distfiles.macports.org/ports.tar.gz -o ${HOME}/macports/var/macports/sources/rsync.macports.org/macports/release/tarballs/ports.tar.gz
+          cd ${HOME}/macports/var/macports/sources/rsync.macports.org/macports/release/tarballs
+          tar xzf ports.tar.gz
+        fi
     - name: Install dependencies
       run: |
         brew uninstall --ignore-dependencies libpng || true
@@ -211,7 +219,9 @@ jobs:
     - name: Build 2Ship
       run: |
         export PATH="/usr/lib/ccache:/usr/local/opt/ccache/libexec:$PATH"
-        cmake --no-warn-unused-cli -H. -Bbuild-cmake -GNinja -DCMAKE_BUILD_TYPE:STRING=Release -DCMAKE_OSX_ARCHITECTURES="x86_64;arm64"
+        cmake --no-warn-unused-cli -H. -Bbuild-cmake -GNinja \
+          -DCMAKE_BUILD_TYPE:STRING=Release \
+          -DCMAKE_OSX_ARCHITECTURES="x86_64;arm64"
         cmake --build build-cmake --config Release --parallel 10
         (cd build-cmake && cpack)
 
