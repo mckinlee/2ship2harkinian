@@ -1428,7 +1428,10 @@ void AddEnhancements() {
                 "Prevents the Takkuri from stealing key items like bottles and swords. It may still steal other items.",
                 WIDGET_CVAR_CHECKBOX,
                 {},
-                [](widgetInfo& info) { RegisterDisableTakkuriSteal(); } } } } });
+                [](widgetInfo& info) { RegisterDisableTakkuriSteal(); } },
+              { "Receive Oceanside Spider House Wallet Reward Any Day", "gEnhancements.Cheats.OceansideWalletAnyDay",
+                "The wallet reward for clearing the oceanside spider house can be received on any day.",
+                WIDGET_CVAR_CHECKBOX } } } });
     enhancementsSidebar.push_back({ "HUD Editor",
                                     1,
                                     { // HUD Editor

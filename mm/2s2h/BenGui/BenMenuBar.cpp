@@ -804,6 +804,11 @@ void DrawEnhancementsMenu() {
                                                      "swords. It may still steal other items." })) {
                 RegisterDisableTakkuriSteal();
             }
+
+            UIWidgets::CVarCheckbox(
+                "Receive Oceanside Spider House Wallet Reward Any Day", "gEnhancements.Cheats.OceansideWalletAnyDay",
+                { .tooltip = "The wallet reward for clearing the oceanside spider house can be received on any day." });
+
             ImGui::EndMenu();
         }
 
