@@ -13,6 +13,7 @@
 #include "Minigames/Minigames.h"
 #include "Modes/Modes.h"
 #include "Player/Player.h"
+#include "Player/ManualJump.h"
 #include "Restorations/Restorations.h"
 #include "Saving/SavingEnhancements.h"
 #include "Songs/Songs.h"

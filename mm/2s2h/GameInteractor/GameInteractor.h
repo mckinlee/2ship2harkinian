@@ -77,6 +77,7 @@ typedef enum {
     VB_PLAY_HEART_CONTAINER_GET_FANFARE,
     VB_ALLOW_EQUIP_MASK,
     VB_DRAW_MASK_ITEM,
+    GI_VB_MANUAL_JUMP,
 } GIVanillaBehavior;
 
 typedef enum {
