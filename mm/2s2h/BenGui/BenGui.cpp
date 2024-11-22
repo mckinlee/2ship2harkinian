@@ -10,6 +10,7 @@
 #include "HudEditor.h"
 #include "2s2h/Enhancements/Audio/AudioEditor.h"
 #include "Notification.h"
+#include <Enhancements/ResolutionEditor/ResolutionEditor.h>
 
 #ifdef __APPLE__
 #include "graphic/Fast3D/gfx_metal.h"
@@ -45,6 +46,7 @@ std::shared_ptr<BenInputEditorWindow> mBenInputEditorWindow;
 std::shared_ptr<Notification::Window> mNotificationWindow;
 std::shared_ptr<ItemTrackerWindow> mItemTrackerWindow;
 std::shared_ptr<ItemTrackerSettingsWindow> mItemTrackerSettingsWindow;
+std::shared_ptr<AdvancedResolutionSettings::AdvancedResolutionSettingsWindow> mAdvancedResolutionSettingsWindow;
 
 void SetupGuiElements() {
     auto gui = Ship::Context::GetInstance()->GetWindow()->GetGui();
@@ -117,6 +119,10 @@ void SetupGuiElements() {
     mNotificationWindow = std::make_shared<Notification::Window>("gWindows.Notifications", "Notifications Window");
     gui->AddGuiWindow(mNotificationWindow);
     mNotificationWindow->Show();
+
+    mAdvancedResolutionSettingsWindow = std::make_shared<AdvancedResolutionSettings::AdvancedResolutionSettingsWindow>(
+        "gWindows.gAdvancedResolutionEditor", "Advanced Resolution Settings");
+    gui->AddGuiWindow(mAdvancedResolutionSettingsWindow);
 }
 
 void Destroy() {
@@ -138,5 +144,6 @@ void Destroy() {
     mAudioEditorWindow = nullptr;
     mItemTrackerWindow = nullptr;
     mItemTrackerSettingsWindow = nullptr;
+    mAdvancedResolutionSettingsWindow = nullptr;
 }
 } // namespace BenGui
