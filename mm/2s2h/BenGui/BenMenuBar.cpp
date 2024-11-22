@@ -842,6 +842,8 @@ void DrawEnhancementsMenu() {
             UIWidgets::CVarCheckbox(
                 "Receive Oceanside Spider House Wallet Reward Any Day", "gEnhancements.Cheats.OceansideWalletAnyDay",
                 { .tooltip = "The wallet reward for clearing the oceanside spider house can be received on any day." });
+            UIWidgets::CVarCheckbox("Faster song playbacks", "gEnhancements.Playback.FastSongPlayback",
+                                    { .tooltip = "Makes song playback faster" });
 
             ImGui::EndMenu();
         }
