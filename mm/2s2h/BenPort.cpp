@@ -148,9 +148,7 @@ OTRGlobals::OTRGlobals() {
             }
         }
     }
-
-    std::unordered_set<uint32_t> validHashes = { MM_NTSC_US_10, MM_NTSC_US_GC };
-
+    std::unordered_set<uint32_t> ValidHashes = { MM_NTSC_US_10, MM_NTSC_US_GC, MM_NTSC_JP_GC };
     // tell LUS to reserve 3 SoH specific threads (Game, Audio, Save)
     context =
         Ship::Context::CreateInstance("2 Ship 2 Harkinian", appShortName, "2ship2harkinian.json", archiveFiles, {}, 3,
@@ -243,7 +241,7 @@ OTRGlobals::OTRGlobals() {
 
     auto versions = context->GetResourceManager()->GetArchiveManager()->GetGameVersions();
     for (uint32_t version : versions) {
-        if (!validHashes.contains(version)) {
+        if (!ValidHashes.contains(version)) {
 #if defined(__SWITCH__)
             SPDLOG_ERROR("Invalid O2R File!");
 #elif defined(__WIIU__)
@@ -978,6 +976,7 @@ extern "C" uint32_t ResourceMgr_GetGamePlatform(int index) {
         case MM_NTSC_US_10:
             return GAME_PLATFORM_N64;
         case MM_NTSC_US_GC:
+        case MM_NTSC_JP_GC:
             return GAME_PLATFORM_GC;
     }
 }
@@ -989,7 +988,21 @@ extern "C" uint32_t ResourceMgr_GetGameRegion(int index) {
     switch (version) {
         case MM_NTSC_US_10:
         case MM_NTSC_US_GC:
+        case MM_NTSC_JP_GC:
             return GAME_REGION_NTSC;
+    }
+}
+
+extern "C" uint32_t ResourceMgr_GetGameDefaultLanguage(int index) {
+    uint32_t version =
+        Ship::Context::GetInstance()->GetResourceManager()->GetArchiveManager()->GetGameVersions()[index];
+
+    switch (version) {
+        case MM_NTSC_US_10:
+        case MM_NTSC_US_GC:
+            return LANGUAGE_ENG;
+        case MM_NTSC_JP_GC:
+            return LANGUAGE_JPN;
     }
 }
 
