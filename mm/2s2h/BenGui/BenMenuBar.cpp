@@ -68,6 +68,12 @@ static const std::unordered_map<int32_t, const char*> timeStopOptions = {
     { TIME_STOP_TEMPLES_DUNGEONS, "Temples + Mini Dungeons" },
 };
 
+static const std::unordered_map<int32_t, const char*> dekuGuardSearchBallsOptions = {
+    { DEKU_GUARD_SEARCH_BALLS_NEVER, "Never" },
+    { DEKU_GUARD_SEARCH_BALLS_NIGHT_ONLY, "Night Only" },
+    { DEKU_GUARD_SEARCH_BALLS_ALWAYS, "Always" },
+};
+
 namespace BenGui {
 std::shared_ptr<std::vector<Ship::WindowBackend>> availableWindowBackends;
 std::unordered_map<Ship::WindowBackend, const char*> availableWindowBackendsMap;
@@ -753,6 +759,15 @@ void DrawEnhancementsMenu() {
                                  "Requires a scene reload to take effect" })) {
                 RegisterWoodfallMountainAppearance();
             }
+
+            UIWidgets::CVarCombobox(
+                "Deku Guard Search Balls", "gEnhancements.Restorations.DekuGuardSearchBalls",
+                dekuGuardSearchBallsOptions,
+                { .tooltip = "Choose when to show the Deku Palace Guards' search balls\n"
+                             "- Never: Never show the search balls. This matches Majora's Mask 3D behaviour\n"
+                             "- Night Only: Only show the search balls at night. This matches original N64 behaviour.\n"
+                             "- Always: Always show the search balls.",
+                  .defaultIndex = DEKU_GUARD_SEARCH_BALLS_NIGHT_ONLY });
 
             ImGui::EndMenu();
         }

@@ -426,6 +426,12 @@ static const std::unordered_map<int32_t, const char*> notificationPosition = {
     { 0, "Top Left" }, { 1, "Top Right" }, { 2, "Bottom Left" }, { 3, "Bottom Right" }, { 4, "Hidden" },
 };
 
+static const std::unordered_map<int32_t, const char*> dekuGuardSearchBallsOptions = {
+    { DEKU_GUARD_SEARCH_BALLS_NEVER, "Never" },
+    { DEKU_GUARD_SEARCH_BALLS_NIGHT_ONLY, "Night Only" },
+    { DEKU_GUARD_SEARCH_BALLS_ALWAYS, "Always" },
+};
+
 void FreeLookPitchMinMax() {
     f32 maxY = CVarGetFloat("gEnhancements.Camera.FreeLook.MaxPitch", 72.0f);
     f32 minY = CVarGetFloat("gEnhancements.Camera.FreeLook.MinPitch", -49.0f);
@@ -1399,7 +1405,17 @@ void AddEnhancements() {
                 "Requires a scene reload to take effect",
                 WIDGET_CVAR_CHECKBOX,
                 {},
-                [](widgetInfo& info) { RegisterWoodfallMountainAppearance(); } } } } });
+                [](widgetInfo& info) { RegisterWoodfallMountainAppearance(); } },
+              { "Deku Guard Search Balls",
+                "gEnhancements.Restorations.DekuGuardSearchBalls",
+                "Choose when to show the Deku Palace Guards' search balls\n"
+                "- Never: Never show the search balls. This matches Majora's Mask 3D behaviour\n"
+                "- Night Only: Only show the search balls at night. This matches original N64 behaviour.\n"
+                "- Always: Always show the search balls.",
+                WIDGET_CVAR_COMBOBOX,
+                { .defaultVariant = DEKU_GUARD_SEARCH_BALLS_NIGHT_ONLY,
+                  .comboBoxOptions = dekuGuardSearchBallsOptions } } } } });
+
     enhancementsSidebar.push_back(
         { "Difficulty Options",
           3,

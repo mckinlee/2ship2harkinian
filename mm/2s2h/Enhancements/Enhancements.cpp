@@ -72,6 +72,7 @@ void InitEnhancements() {
     RegisterTatlISG();
     RegisterVariableFlipHop();
     RegisterWoodfallMountainAppearance();
+    RegisterShowDekuGuardSearchBalls();
 
     // Cutscenes
     RegisterCutscenes();
