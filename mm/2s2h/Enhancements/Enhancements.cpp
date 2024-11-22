@@ -53,6 +53,7 @@ void InitEnhancements() {
     RegisterAlwaysWinDoggyRace();
     RegisterCremiaHugs();
     RegisterSwordsmanSchool();
+    RegisterCuccoShackCuccoCount();
 
     // Player
     RegisterClimbSpeed();
