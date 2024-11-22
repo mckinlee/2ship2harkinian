@@ -1383,7 +1383,11 @@ void AddEnhancements() {
                 .widgetTooltip = "Fixes textures that normally overflow to be patched with the correct size or format",
                 .widgetType = WIDGET_CVAR_CHECKBOX,
                 .widgetOptions = { .defaultVariant = true },
-                .widgetCallback = [](widgetInfo& info) { GfxPatcher_ApplyOverflowTexturePatches(); } } } } });
+                .widgetCallback = [](widgetInfo& info) { GfxPatcher_ApplyOverflowTexturePatches(); } },
+              { "Fix Completed Heart Container Audio", "gEnhancements.Fixes.CompletedHeartContainerAudio",
+                "Fixes a bug that results in the wrong audio playing upon receiving a 4th piece of heart to "
+                "fill a new heart container.",
+                WIDGET_CVAR_CHECKBOX } } } });
     enhancementsSidebar.push_back(
         { "Restorations",
           3,

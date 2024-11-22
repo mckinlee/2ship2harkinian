@@ -36,6 +36,7 @@ void InitEnhancements() {
     // Fixes
     RegisterFierceDeityZTargetMovement();
     RegisterTwoHandedSwordSpinAttack();
+    RegisterCompletedHeartContainerAudio();
 
     // Graphics
     RegisterDisableBlackBars();

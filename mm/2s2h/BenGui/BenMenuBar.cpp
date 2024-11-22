@@ -617,6 +617,11 @@ void DrawEnhancementsMenu() {
                                     { .tooltip = "Fixes a bug that results in the Ikana Great Fairy fountain looking "
                                                  "green instead of yellow, this was fixed in the EU version" });
 
+            UIWidgets::CVarCheckbox("Fix Completed Heart Container Audio",
+                                    "gEnhancements.Fixes.CompletedHeartContainerAudio",
+                                    { .tooltip = "Fixes a bug that results in the wrong audio playing upon "
+                                                 "receiving a 4th piece of heart to fill a new heart container." });
+
             if (UIWidgets::CVarCheckbox(
                     "Fix Texture overflow OOB", "gEnhancements.Fixes.FixTexturesOOB",
                     { .tooltip = "Fixes textures that normally overflow to be patched with the correct size or format",

@@ -13521,8 +13521,9 @@ s32 func_808482E0(PlayState* play, Player* this) {
         } else {
             s32 seqId;
 
-            if ((this->getItemId == GI_HEART_CONTAINER) ||
-                ((this->getItemId == GI_HEART_PIECE) && EQ_MAX_QUEST_HEART_PIECE_COUNT)) {
+            bool vanillaCondition = (this->getItemId == GI_HEART_CONTAINER) ||
+                                    ((this->getItemId == GI_HEART_PIECE) && EQ_MAX_QUEST_HEART_PIECE_COUNT);
+            if (GameInteractor_Should(VB_PLAY_HEART_CONTAINER_GET_FANFARE, vanillaCondition, this->getItemId)) {
                 seqId = NA_BGM_GET_HEART | 0x900;
             } else {
                 s32 var_v1;
