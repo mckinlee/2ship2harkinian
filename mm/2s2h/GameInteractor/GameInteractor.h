@@ -78,6 +78,10 @@ typedef enum {
     VB_ALLOW_EQUIP_MASK,
     VB_DRAW_MASK_ITEM,
     GI_VB_MANUAL_JUMP,
+    VB_DAMAGE_MULTIPLIER,
+    VB_DAMAGE_EFFECT,
+    VB_DRAW_DAMAGE_EFFECT,
+    VB_CHECK_BUMPER_COLLISION,
 } GIVanillaBehavior;
 
 typedef enum {
