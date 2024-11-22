@@ -49,6 +49,7 @@ void InitEnhancements() {
     RegisterBlastMaskKeg();
     RegisterNoBlastMaskCooldown();
     RegisterPersistentMasks();
+    RegisterEasyMaskEquip();
 
     // Minigames
     RegisterAlwaysWinDoggyRace();
