@@ -280,6 +280,10 @@ uint32_t OTRGlobals::GetInterpolationFPS() {
                               CVarGetInteger("gInterpolationFPS", 20));
 }
 
+extern "C" uint32_t Ship_GetInterpolationFPS() {
+    return OTRGlobals::Instance->GetInterpolationFPS();
+}
+
 struct ExtensionEntry {
     std::string path;
     std::string ext;
