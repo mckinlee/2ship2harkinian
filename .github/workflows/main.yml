@@ -1,7 +1,10 @@
 name: generate-builds
 on:
   push:
-  pull_request:
+    branches:
+      - mouse
+      - mouse-dev
+      - tweaked-dev
 concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}
   cancel-in-progress: true

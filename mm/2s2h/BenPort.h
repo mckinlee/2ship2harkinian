@@ -148,6 +148,8 @@ void CheckTracker_OnMessageClose();
 
 void Messagebox_ShowErrorBox(char* title, char* body);
 
+void OTRMoveCursor(uint32_t x, uint32_t y); //(RR) for shield
+
 int32_t GetGIID(uint32_t itemID);
 #endif
 

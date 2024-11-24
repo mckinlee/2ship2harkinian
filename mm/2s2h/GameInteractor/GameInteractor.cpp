@@ -300,6 +300,16 @@ int GameInteractor_InvertControl(GIInvertType type) {
                 result *= -1;
             }
             break;
+        case GI_INVERT_FIRST_PERSON_MOUSE_X:
+            if (CVarGetInteger("gEnhancements.Mouse.POVCameraInvert.X", 0)) {
+                result *= -1;
+            }
+            break;
+        case GI_INVERT_FIRST_PERSON_MOUSE_Y:
+            if (CVarGetInteger("gEnhancements.Mouse.POVCameraInvert.Y", 1)) {
+                result *= -1;
+            }
+            break;
     }
 
     // Invert all X axis inputs if the Mirrored World mode is enabled

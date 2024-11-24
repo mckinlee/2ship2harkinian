@@ -4,12 +4,15 @@
  * Description: Player
  */
 
+#include <SDL2/SDL.h> //TODO (RR): don't import SDL in game code
+
 #include "prevent_bss_reordering.h"
 #include "global.h"
 #include "z64horse.h"
 #include "z64quake.h"
 #include "z64rumble.h"
 #include "z64shrink_window.h"
+#include "BenPort.h"
 #include <string.h>
 
 #include "overlays/actors/ovl_Arms_Hook/z_arms_hook.h"
@@ -2039,6 +2042,7 @@ void Player_ProcessControlStick(PlayState* play, Player* this) {
 
     D_80862B02 = Camera_GetInputDirYaw(GET_ACTIVE_CAM(play)) + sPlayerControlStickAngle;
 
+    this->quickspinCount = (this->quickspinCount + 1) % 5;
     this->unk_ADE = (this->unk_ADE + 1) % ARRAY_COUNT(this->unk_ADF);
 
     if (sPlayerControlStickMagnitude < 55.0f) {
@@ -2047,6 +2051,15 @@ void Player_ProcessControlStick(PlayState* play, Player* this) {
     } else {
         var_v1 = ((u16)(sPlayerControlStickAngle + 0x2000)) >> 9;
         var_v0 = ((u16)(BINANG_SUB(D_80862B02, this->actor.shape.rot.y) + 0x2000)) >> 14;
+    }
+
+    if(
+        CVarGetInteger("gEnhancements.Mouse.Enabled", 0)
+        && CVarGetInteger("gEnhancements.Mouse.Quickspin", 1)
+        && SDL_GetRelativeMouseMode() == SDL_TRUE
+    ) {
+        this->mouseQuickspinX[this->quickspinCount] = (f32) sPlayerControlInput->cur.touch_x;
+        this->mouseQuickspinY[this->quickspinCount] = (f32) sPlayerControlInput->cur.touch_y;
     }
 
     this->unk_ADF[this->unk_ADE] = var_v1;
@@ -5301,6 +5314,7 @@ void func_808332A0(PlayState* play, Player* this, s32 magicCost, s32 isSwordBeam
 s32 func_808333CC(Player* this) {
     s8 sp3C[4];
     s8* iter;
+    s8 iterMouse;
     s8* iter2;
     s8 temp1;
     s8 temp2;
@@ -5309,6 +5323,45 @@ s32 func_808333CC(Player* this) {
     if (this->heldItemAction == PLAYER_IA_DEKU_STICK) {
         return false;
     }
+
+    if(
+        CVarGetInteger("gEnhancements.Mouse.Enabled", 0)
+        && CVarGetInteger("gEnhancements.Mouse.Quickspin", 1)
+        && SDL_GetRelativeMouseMode() == SDL_TRUE
+    ){ //mouse quickspin
+        iter2 = &sp3C[0];
+        u32 willSpin = 1;
+        for (i = 0; i < 4; i++, iter2++){
+            f32 relY = this->mouseQuickspinY[i + 1] - this->mouseQuickspinY[i];
+            f32 relX = this->mouseQuickspinX[i + 1] - this->mouseQuickspinX[i];
+            s16 aTan = Math_Atan2S(relY, -relX);
+            iterMouse = (u16)(aTan + 0x2000) >> 9;
+            if ((*iter2 = iterMouse) < 0) {
+                willSpin = 0;
+                break;
+            }
+            *iter2 *= 2;
+        }
+        temp1 = sp3C[0] - sp3C[1];
+        if (ABS(temp1) < 10) {
+            willSpin = 0;
+        }
+        iter2 = &sp3C[1];
+        for (i = 1; i < 3; i++, iter2++) {
+            temp2 = *iter2 - *(iter2 + 1);
+            if ((ABS(temp2) < 10) || (temp2 * temp1 < 0)) {
+                willSpin = 0;
+                break;
+            }
+        }
+        if (willSpin){
+            return 1;
+        }
+    }
+    sp3C[0] = 0;
+    sp3C[1] = 0;
+    sp3C[2] = 0;
+    sp3C[3] = 0;
 
     iter = &this->unk_ADF[0];
     iter2 = &sp3C[0];
@@ -8169,6 +8222,14 @@ s32 Player_ActionChange_11(Player* this, PlayState* play) {
                     if (!Player_IsGoronOrDeku(this)) {
                         Player_SetModelsForHoldingShield(this);
                         anim = D_8085BE84[PLAYER_ANIMGROUP_19][this->modelAnimType];
+
+                        /* MOD: move cursor to the middle on shield pull (RR) */
+                        if (CVarGetInteger("gEnhancements.Mouse.Enabled", 0) && SDL_GetRelativeMouseMode() == SDL_TRUE) {
+                            u32 width = OTRGetCurrentWidth();
+                            u32 height = OTRGetCurrentHeight();
+                            OTRMoveCursor(width/2, height/2);
+                        }
+                        /* */
                     } else {
                         anim = (this->transformation == PLAYER_FORM_DEKU) ? &gPlayerAnim_pn_gurd
                                                                           : &gPlayerAnim_clink_normal_defense_ALL;
@@ -13041,6 +13102,22 @@ s32 Ship_HandleFirstPersonAiming(PlayState* play, Player* this, s32 arg2) {
     float gyroX = 0.0f;
     float gyroY = 0.0f;
 
+    if(CVarGetInteger("gEnhancements.Mouse.Enabled", 0) && SDL_GetRelativeMouseMode() == SDL_TRUE) {
+        int mouseX, mouseY;
+        SDL_GetRelativeMouseState(&mouseX, &mouseY);
+
+        sPlayerControlInput->cur.mouse_move_x = mouseX;
+        sPlayerControlInput->cur.mouse_move_y = mouseY;
+        if (fabsf(sPlayerControlInput->cur.mouse_move_x) > 0) {
+            this->actor.focus.rot.y += (sPlayerControlInput->cur.mouse_move_x) * 12.0f * (CVarGetFloat("gEnhancements.Mouse.POVCameraSensitivity.X", 1.0f)) *\
+                                       -GameInteractor_InvertControl(GI_INVERT_FIRST_PERSON_MOUSE_X);
+        }
+        if (fabsf(sPlayerControlInput->cur.mouse_move_y) > 0) {
+            this->actor.focus.rot.x += (sPlayerControlInput->cur.mouse_move_y) * 12.0f * (CVarGetFloat("gEnhancements.Mouse.POVCameraSensitivity.Y", 1.0f)) *\
+                                       -GameInteractor_InvertControl(GI_INVERT_FIRST_PERSON_MOUSE_Y);
+        }
+    }
+
     if (!CVarGetInteger("gEnhancements.Camera.FirstPerson.MoveInFirstPerson", 0)) {
         s32 leftStickX = sPlayerControlInput->rel.stick_x; // -60 to 60
         s32 leftStickY = sPlayerControlInput->rel.stick_y; // -60 to 60
@@ -14775,6 +14852,10 @@ void Player_Action_18(Player* this, PlayState* play) {
         }
     }
 
+    const bool mouseEnabled = (
+        CVarGetInteger("gEnhancements.Mouse.Enabled", 0)
+        && SDL_GetRelativeMouseMode() == SDL_TRUE
+    );
     if (this->av2.actionVar2 != 0) {
         f32 yStick = sPlayerControlInput->rel.stick_y * 180;
         f32 xStick = sPlayerControlInput->rel.stick_x * -120;
@@ -14784,7 +14865,24 @@ void Player_Action_18(Player* this, PlayState* play) {
         s16 var_a2;
         s16 var_a3;
 
-        xStick *= GameInteractor_InvertControl(GI_INVERT_SHIELD_X);
+        int invertShield = GameInteractor_InvertControl(GI_INVERT_SHIELD_X);
+        xStick *= invertShield;
+        if (mouseEnabled) {
+            u32 width = OTRGetCurrentWidth();
+            u32 height = OTRGetCurrentHeight();
+            /*
+             * Y: -12800 ~ +12700
+             * X: -15360 ~ +15240
+             */
+            f32 xBound = 15360 / ((f32)width / 2);
+            f32 yBound = 12800 / ((f32)height / 2);
+            yStick += +(sPlayerControlInput->cur.touch_y - (height) / 2) * yBound;
+            xStick -= +(sPlayerControlInput->cur.touch_x - (width) / 2) * xBound * invertShield;
+
+            // Plain shield movement instead of camera-relative one
+            temp_a0 = 0;
+        }
+
         var_a1 = (yStick * Math_CosS(temp_a0)) + (Math_SinS(temp_a0) * xStick);
         temp_ft5 = (xStick * Math_CosS(temp_a0)) - (Math_SinS(temp_a0) * yStick);
 

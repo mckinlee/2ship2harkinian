@@ -1602,6 +1602,10 @@ extern "C" uint32_t OTRGetCurrentHeight() {
     return OTRGlobals::Instance->context->GetWindow()->GetHeight();
 }
 
+extern "C" void OTRMoveCursor(uint32_t x, uint32_t y) {
+    OTRGlobals::Instance->context->GetWindow()->MoveCursor(x, y);
+}
+
 Color_RGB8 GetColorForControllerLED() {
 #if 0
     auto brightness = CVarGetFloat("gLedBrightness", 1.0f) / 1.0f;
