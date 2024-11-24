@@ -2053,13 +2053,10 @@ void Player_ProcessControlStick(PlayState* play, Player* this) {
         var_v0 = ((u16)(BINANG_SUB(D_80862B02, this->actor.shape.rot.y) + 0x2000)) >> 14;
     }
 
-    if(
-        CVarGetInteger("gEnhancements.Mouse.Enabled", 0)
-        && CVarGetInteger("gEnhancements.Mouse.Quickspin", 1)
-        && SDL_GetRelativeMouseMode() == SDL_TRUE
-    ) {
-        this->mouseQuickspinX[this->quickspinCount] = (f32) sPlayerControlInput->cur.touch_x;
-        this->mouseQuickspinY[this->quickspinCount] = (f32) sPlayerControlInput->cur.touch_y;
+    if (CVarGetInteger("gEnhancements.Mouse.Enabled", 0) && CVarGetInteger("gEnhancements.Mouse.Quickspin", 1) &&
+        SDL_GetRelativeMouseMode() == SDL_TRUE) {
+        this->mouseQuickspinX[this->quickspinCount] = (f32)sPlayerControlInput->cur.touch_x;
+        this->mouseQuickspinY[this->quickspinCount] = (f32)sPlayerControlInput->cur.touch_y;
     }
 
     this->unk_ADF[this->unk_ADE] = var_v1;
@@ -5324,14 +5321,11 @@ s32 func_808333CC(Player* this) {
         return false;
     }
 
-    if(
-        CVarGetInteger("gEnhancements.Mouse.Enabled", 0)
-        && CVarGetInteger("gEnhancements.Mouse.Quickspin", 1)
-        && SDL_GetRelativeMouseMode() == SDL_TRUE
-    ){ //mouse quickspin
+    if (CVarGetInteger("gEnhancements.Mouse.Enabled", 0) && CVarGetInteger("gEnhancements.Mouse.Quickspin", 1) &&
+        SDL_GetRelativeMouseMode() == SDL_TRUE) { // mouse quickspin
         iter2 = &sp3C[0];
         u32 willSpin = 1;
-        for (i = 0; i < 4; i++, iter2++){
+        for (i = 0; i < 4; i++, iter2++) {
             f32 relY = this->mouseQuickspinY[i + 1] - this->mouseQuickspinY[i];
             f32 relX = this->mouseQuickspinX[i + 1] - this->mouseQuickspinX[i];
             s16 aTan = Math_Atan2S(relY, -relX);
@@ -5354,7 +5348,7 @@ s32 func_808333CC(Player* this) {
                 break;
             }
         }
-        if (willSpin){
+        if (willSpin) {
             return 1;
         }
     }
@@ -8224,10 +8218,11 @@ s32 Player_ActionChange_11(Player* this, PlayState* play) {
                         anim = D_8085BE84[PLAYER_ANIMGROUP_19][this->modelAnimType];
 
                         /* MOD: move cursor to the middle on shield pull (RR) */
-                        if (CVarGetInteger("gEnhancements.Mouse.Enabled", 0) && SDL_GetRelativeMouseMode() == SDL_TRUE) {
+                        if (CVarGetInteger("gEnhancements.Mouse.Enabled", 0) &&
+                            SDL_GetRelativeMouseMode() == SDL_TRUE) {
                             u32 width = OTRGetCurrentWidth();
                             u32 height = OTRGetCurrentHeight();
-                            OTRMoveCursor(width/2, height/2);
+                            OTRMoveCursor(width / 2, height / 2);
                         }
                         /* */
                     } else {
@@ -13102,18 +13097,20 @@ s32 Ship_HandleFirstPersonAiming(PlayState* play, Player* this, s32 arg2) {
     float gyroX = 0.0f;
     float gyroY = 0.0f;
 
-    if(CVarGetInteger("gEnhancements.Mouse.Enabled", 0) && SDL_GetRelativeMouseMode() == SDL_TRUE) {
+    if (CVarGetInteger("gEnhancements.Mouse.Enabled", 0) && SDL_GetRelativeMouseMode() == SDL_TRUE) {
         int mouseX, mouseY;
         SDL_GetRelativeMouseState(&mouseX, &mouseY);
 
         sPlayerControlInput->cur.mouse_move_x = mouseX;
         sPlayerControlInput->cur.mouse_move_y = mouseY;
         if (fabsf(sPlayerControlInput->cur.mouse_move_x) > 0) {
-            this->actor.focus.rot.y += (sPlayerControlInput->cur.mouse_move_x) * 12.0f * (CVarGetFloat("gEnhancements.Mouse.POVCameraSensitivity.X", 1.0f)) *\
+            this->actor.focus.rot.y += (sPlayerControlInput->cur.mouse_move_x) * 12.0f *
+                                       (CVarGetFloat("gEnhancements.Mouse.POVCameraSensitivity.X", 1.0f)) *
                                        -GameInteractor_InvertControl(GI_INVERT_FIRST_PERSON_MOUSE_X);
         }
         if (fabsf(sPlayerControlInput->cur.mouse_move_y) > 0) {
-            this->actor.focus.rot.x += (sPlayerControlInput->cur.mouse_move_y) * 12.0f * (CVarGetFloat("gEnhancements.Mouse.POVCameraSensitivity.Y", 1.0f)) *\
+            this->actor.focus.rot.x += (sPlayerControlInput->cur.mouse_move_y) * 12.0f *
+                                       (CVarGetFloat("gEnhancements.Mouse.POVCameraSensitivity.Y", 1.0f)) *
                                        -GameInteractor_InvertControl(GI_INVERT_FIRST_PERSON_MOUSE_Y);
         }
     }
@@ -14852,10 +14849,8 @@ void Player_Action_18(Player* this, PlayState* play) {
         }
     }
 
-    const bool mouseEnabled = (
-        CVarGetInteger("gEnhancements.Mouse.Enabled", 0)
-        && SDL_GetRelativeMouseMode() == SDL_TRUE
-    );
+    const bool mouseEnabled =
+        (CVarGetInteger("gEnhancements.Mouse.Enabled", 0) && SDL_GetRelativeMouseMode() == SDL_TRUE);
     if (this->av2.actionVar2 != 0) {
         f32 yStick = sPlayerControlInput->rel.stick_y * 180;
         f32 xStick = sPlayerControlInput->rel.stick_x * -120;
