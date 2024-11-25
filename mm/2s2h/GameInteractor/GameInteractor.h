@@ -82,6 +82,7 @@ typedef enum {
     VB_DAMAGE_EFFECT,
     VB_DRAW_DAMAGE_EFFECT,
     VB_CHECK_BUMPER_COLLISION,
+    VB_DISPLAY_SONG_OF_DOUBLE_TIME_PROMPT,
 } GIVanillaBehavior;
 
 typedef enum {

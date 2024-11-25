@@ -66,6 +66,7 @@ void InitEnhancements() {
     RegisterManualJump();
 
     // Songs
+    RegisterBetterSongOfDoubleTime();
     RegisterEnableSunsSong();
     RegisterFasterSongPlayback();
     RegisterPauseOwlWarp();
