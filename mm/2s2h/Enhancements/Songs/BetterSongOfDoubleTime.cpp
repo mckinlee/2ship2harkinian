@@ -10,12 +10,12 @@ extern SaveContext gSaveContext;
 }
 
 static bool activelyChangingTime = false;
-static u32 originalTime = CLOCK_TIME(0, 0);
-static u32 originalDay = 0;
+static u16 originalTime = CLOCK_TIME(0, 0);
+static s32 originalDay = 0;
 
 extern void UpdateGameTime(u16 gameTime);
 
-const u32 INTERVAL = (CLOCK_TIME_MINUTE * 30);
+const u16 INTERVAL = (CLOCK_TIME_MINUTE * 30);
 
 static const char* sDoWeekTableCopy[] = {
     gClockDay1stTex,
@@ -28,6 +28,7 @@ static HOOK_ID onPlayerUpdateHookId = 0;
 void OnPlayerUpdate(Actor* actor) {
     if (!activelyChangingTime) {
         GameInteractor::Instance->UnregisterGameHookForID<GameInteractor::OnActorUpdate>(onPlayerUpdateHookId);
+        onPlayerUpdateHookId = 0;
         return;
     }
 
@@ -62,7 +63,7 @@ void OnPlayerUpdate(Actor* actor) {
 
     // Analog stick should change the time
     if (input->cur.stick_x > 0) { // Advance time
-        u16 newTime = CLAMP(gSaveContext.save.time + INTERVAL, 0,
+        u16 newTime = CLAMP(gSaveContext.save.time + INTERVAL, -INFINITY,
                             (gSaveContext.save.day == 3 && gSaveContext.save.time < CLOCK_TIME(6, 0))
                                 ? (CLOCK_TIME(6, 0) - CLOCK_TIME_HOUR)
                                 : INFINITY);
@@ -78,7 +79,7 @@ void OnPlayerUpdate(Actor* actor) {
                              ((gSaveContext.save.time > CLOCK_TIME(6, 0) && originalTime > CLOCK_TIME(6, 0)) ||
                               (gSaveContext.save.time < CLOCK_TIME(6, 0) && originalTime < CLOCK_TIME(6, 0))))
                                 ? originalTime
-                                : 0,
+                                : -INFINITY,
                             INFINITY);
         if (newTime < CLOCK_TIME(6, 0) && gSaveContext.save.time > CLOCK_TIME(6, 0)) {
             gSaveContext.save.day = CLAMP(gSaveContext.save.day - 1, originalDay, 3);
