@@ -1426,16 +1426,7 @@ void AddEnhancements() {
                 "Requires a scene reload to take effect",
                 WIDGET_CVAR_CHECKBOX,
                 {},
-                [](widgetInfo& info) { RegisterWoodfallMountainAppearance(); } },
-              { "Deku Guard Search Balls",
-                "gEnhancements.Restorations.DekuGuardSearchBalls",
-                "Choose when to show the Deku Palace Guards' search balls\n"
-                "- Never: Never show the search balls. This matches Majora's Mask 3D behaviour\n"
-                "- Night Only: Only show the search balls at night. This matches original N64 behaviour.\n"
-                "- Always: Always show the search balls.",
-                WIDGET_CVAR_COMBOBOX,
-                { .defaultVariant = DEKU_GUARD_SEARCH_BALLS_NIGHT_ONLY,
-                  .comboBoxOptions = dekuGuardSearchBallsOptions } } } } });
+                [](widgetInfo& info) { RegisterWoodfallMountainAppearance(); } } } } });
 
     enhancementsSidebar.push_back(
         { "Difficulty Options",
@@ -1446,6 +1437,15 @@ void AddEnhancements() {
                 WIDGET_CVAR_CHECKBOX,
                 {},
                 [](widgetInfo& info) { RegisterDisableTakkuriSteal(); } },
+              { "Deku Guard Search Balls",
+                "gEnhancements.Cheats.DekuGuardSearchBalls",
+                "Choose when to show the Deku Palace Guards' search balls\n"
+                "- Never: Never show the search balls. This matches Majora's Mask 3D behaviour\n"
+                "- Night Only: Only show the search balls at night. This matches original N64 behaviour.\n"
+                "- Always: Always show the search balls.",
+                WIDGET_CVAR_COMBOBOX,
+                { .defaultVariant = DEKU_GUARD_SEARCH_BALLS_NIGHT_ONLY,
+                  .comboBoxOptions = dekuGuardSearchBallsOptions } },
               { "Receive Oceanside Spider House Wallet Reward Any Day", "gEnhancements.Cheats.OceansideWalletAnyDay",
                 "The wallet reward for clearing the oceanside spider house can be received on any day.",
                 WIDGET_CVAR_CHECKBOX } } } });

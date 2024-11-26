@@ -9,7 +9,7 @@ extern "C" {
 void RegisterShowDekuGuardSearchBalls() {
     REGISTER_VB_SHOULD(VB_DEKU_GUARD_SHOW_SEARCH_BALLS, {
         uint8_t selectedOption =
-            CVarGetInteger("gEnhancements.Restorations.DekuGuardSearchBalls", DEKU_GUARD_SEARCH_BALLS_NIGHT_ONLY);
+            CVarGetInteger("gEnhancements.Cheats.DekuGuardSearchBalls", DEKU_GUARD_SEARCH_BALLS_NIGHT_ONLY);
         switch (selectedOption) {
             case DEKU_GUARD_SEARCH_BALLS_NEVER:
                 *should = false;

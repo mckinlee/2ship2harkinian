@@ -79,7 +79,6 @@ void InitEnhancements() {
     RegisterTatlISG();
     RegisterVariableFlipHop();
     RegisterWoodfallMountainAppearance();
-    RegisterShowDekuGuardSearchBalls();
 
     // Cutscenes
     RegisterCutscenes();
@@ -91,4 +90,5 @@ void InitEnhancements() {
 
     // Difficulty Options
     RegisterDisableTakkuriSteal();
+    RegisterShowDekuGuardSearchBalls();
 }

@@ -356,8 +356,7 @@ void EnLookNuts_Update(Actor* thisx, PlayState* play) {
             if (!this->isPlayerDetected) {
                 s16 effectFlags = SOLDERSRCHBALL_INVISIBLE;
 
-                if (GameInteractor_Should(VB_DEKU_GUARD_SHOW_SEARCH_BALLS, gSaveContext.save.isNight,
-                                          gSaveContext.save.isNight)) {
+                if (GameInteractor_Should(VB_DEKU_GUARD_SHOW_SEARCH_BALLS, gSaveContext.save.isNight)) {
                     effectFlags = 0;
                 }
 
