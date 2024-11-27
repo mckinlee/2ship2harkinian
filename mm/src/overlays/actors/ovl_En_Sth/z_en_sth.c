@@ -369,34 +369,34 @@ void EnSth_HandleOceansideSpiderHouseConversation(EnSth* this, PlayState* play) 
                         // This flag prevents multiple rewards, switching to secondary dialogue after
                         SET_WEEKEVENTREG(WEEKEVENTREG_OCEANSIDE_SPIDER_HOUSE_COLLECTED_REWARD);
 
-                        switch (day) {
-                            case 0: // first day
-                                if (CHECK_WEEKEVENTREG(WEEKEVENTREG_RECEIVED_OCEANSIDE_WALLET_UPGRADE)) {
+                        if (!CHECK_WEEKEVENTREG(WEEKEVENTREG_RECEIVED_OCEANSIDE_WALLET_UPGRADE) &&
+                            (day == 0 || CVarGetInteger("gEnhancements.Cheats.OceansideWalletAnyDay", 0))) {
+                            // This flag prevents getting two wallets from the same place.
+                            //   Instead, getting a rupee award below.
+                            SET_WEEKEVENTREG(WEEKEVENTREG_RECEIVED_OCEANSIDE_WALLET_UPGRADE);
+                            switch (CUR_UPG_VALUE(UPG_WALLET)) {
+                                case 0:
+                                    STH_GI_ID(&this->actor) = GI_WALLET_ADULT;
+                                    break;
+
+                                case 1:
+                                    STH_GI_ID(&this->actor) = GI_WALLET_GIANT;
+                                    break;
+                            }
+                        } else {
+                            switch (day) {
+                                case 0: // first day
                                     STH_GI_ID(&this->actor) = GI_RUPEE_SILVER;
-                                } else {
-                                    // This flag prevents getting two wallets from the same place.
-                                    //   Instead, getting silver rupee above.
-                                    SET_WEEKEVENTREG(WEEKEVENTREG_RECEIVED_OCEANSIDE_WALLET_UPGRADE);
-                                    switch (CUR_UPG_VALUE(UPG_WALLET)) {
-                                        case 0:
-                                            STH_GI_ID(&this->actor) = GI_WALLET_ADULT;
-                                            break;
-
-                                        case 1:
-                                            STH_GI_ID(&this->actor) = GI_WALLET_GIANT;
-                                            break;
-                                    }
-                                }
-                                break;
-
-                            case 1: // second day
-                                STH_GI_ID(&this->actor) = GI_RUPEE_PURPLE;
-                                break;
-
-                            default: // final day
-                                STH_GI_ID(&this->actor) = GI_RUPEE_RED;
-                                break;
+                                    break;
+                                case 1: // second day
+                                    STH_GI_ID(&this->actor) = GI_RUPEE_PURPLE;
+                                    break;
+                                default: // final day
+                                    STH_GI_ID(&this->actor) = GI_RUPEE_RED;
+                                    break;
+                            }
                         }
+
                         Message_CloseTextbox(play);
                         this->actionFunc = EnSth_GiveOceansideSpiderHouseReward;
                         EnSth_GiveOceansideSpiderHouseReward(this, play);

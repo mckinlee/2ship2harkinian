@@ -266,7 +266,7 @@ typedef struct SavePlayerData {
     // 2S2H [Comment] These char[] are not null-terminated, they will not work correctly in string functions
     /* 0x00 */ char newf[6];                          // "newf"               Will always be "ZELDA3 for a valid save
     /* 0x06 */ u16 threeDayResetCount;                // "savect"
-    /* 0x08 */ char playerName[8];                    // "player_name"
+    /* 0x08 */ u8 playerName[8];                    // "player_name"
     /* 0x10 */ s16 healthCapacity;                    // "max_life"
     /* 0x12 */ s16 health;                            // "now_life"
     /* 0x14 */ s8 magicLevel; // 0 for no magic/new load, 1 for magic, 2 for double magic "magic_max"
@@ -407,7 +407,8 @@ typedef struct SaveContext {
     /* 0x3EF8 */ s16 timerX[TIMER_ID_MAX];              // "event_xp"
     /* 0x3F06 */ s16 timerY[TIMER_ID_MAX];              // "event_yp"
     /* 0x3F14 */ s16 unk_3F14;                          // "character_change"
-    /* 0x3F16 */ u8 seqId;                              // "old_bgm"
+    // 2S2H [Custom Audio]. Was originally u8 seqId. Made 16 bit to allow for more than 255 sequences.
+    /* 0x3F16 */ u16 seqId;                              // "old_bgm"
     /* 0x3F17 */ u8 ambienceId;                         // "old_env"
     /* 0x3F18 */ u8 buttonStatus[6];                    // "button_item"
     /* 0x3F1E */ u8 hudVisibilityForceButtonAlphasByStatus; // if btn alphas are updated through Interface_UpdateButtonAlphas, instead update them through Interface_UpdateButtonAlphasByStatus "ck_fg"

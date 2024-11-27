@@ -13,10 +13,12 @@
 #include "Minigames/Minigames.h"
 #include "Modes/Modes.h"
 #include "Player/Player.h"
+#include "Player/ManualJump.h"
 #include "Restorations/Restorations.h"
 #include "Saving/SavingEnhancements.h"
 #include "Songs/Songs.h"
 #include "DifficultyOptions/DifficultyOptions.h"
+#include "Modes/InvisibleEnemies.h"
 
 enum AlwaysWinDoggyRaceOptions {
     ALWAYS_WIN_DOGGY_RACE_OFF,
@@ -40,6 +42,12 @@ enum CremiaRewardsOptions {
     CREMIA_REWARD_RANDOM,
     CREMIA_REWARD_ALWAYS_HUG,
     CREMIA_REWARD_ALWAYS_RUPEE,
+};
+
+enum DekuGuardSearchBallsOptions {
+    DEKU_GUARD_SEARCH_BALLS_NIGHT_ONLY,
+    DEKU_GUARD_SEARCH_BALLS_NEVER,
+    DEKU_GUARD_SEARCH_BALLS_ALWAYS,
 };
 
 #ifdef __cplusplus

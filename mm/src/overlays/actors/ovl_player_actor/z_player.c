@@ -4,12 +4,15 @@
  * Description: Player
  */
 
+#include <SDL2/SDL.h> //TODO (RR): don't import SDL in game code
+
 #include "prevent_bss_reordering.h"
 #include "global.h"
 #include "z64horse.h"
 #include "z64quake.h"
 #include "z64rumble.h"
 #include "z64shrink_window.h"
+#include "BenPort.h"
 #include <string.h>
 
 #include "overlays/actors/ovl_Arms_Hook/z_arms_hook.h"
@@ -1631,7 +1634,7 @@ PlayerAnimationHeader* D_8085BE84[PLAYER_ANIMGROUP_MAX][PLAYER_ANIMTYPE_MAX] = {
         &gPlayerAnim_sude_nwait,
     }
 };
-
+// Animations while on Z-Target
 struct_8085C2A4 D_8085C2A4[] = {
     /* 0 / Forward */
     {
@@ -2039,6 +2042,7 @@ void Player_ProcessControlStick(PlayState* play, Player* this) {
 
     D_80862B02 = Camera_GetInputDirYaw(GET_ACTIVE_CAM(play)) + sPlayerControlStickAngle;
 
+    this->quickspinCount = (this->quickspinCount + 1) % 5;
     this->unk_ADE = (this->unk_ADE + 1) % ARRAY_COUNT(this->unk_ADF);
 
     if (sPlayerControlStickMagnitude < 55.0f) {
@@ -2047,6 +2051,12 @@ void Player_ProcessControlStick(PlayState* play, Player* this) {
     } else {
         var_v1 = ((u16)(sPlayerControlStickAngle + 0x2000)) >> 9;
         var_v0 = ((u16)(BINANG_SUB(D_80862B02, this->actor.shape.rot.y) + 0x2000)) >> 14;
+    }
+
+    if (CVarGetInteger("gEnhancements.Mouse.Enabled", 0) && CVarGetInteger("gEnhancements.Mouse.Quickspin", 1) &&
+        SDL_GetRelativeMouseMode() == SDL_TRUE) {
+        this->mouseQuickspinX[this->quickspinCount] = (f32)sPlayerControlInput->cur.touch_x;
+        this->mouseQuickspinY[this->quickspinCount] = (f32)sPlayerControlInput->cur.touch_y;
     }
 
     this->unk_ADF[this->unk_ADE] = var_v1;
@@ -3730,8 +3740,11 @@ void Player_ProcessItemButtons(Player* this, PlayState* play) {
                 if ((maskIdMinusOne < PLAYER_MASK_TRUTH - 1) || (maskIdMinusOne >= PLAYER_MASK_MAX - 1)) {
                     maskIdMinusOne = this->currentMask - 1;
                 }
-                Player_UseItem(play, this, Player_MaskIdToItemId(maskIdMinusOne));
-                return;
+
+                if (GameInteractor_Should(VB_ALLOW_EQUIP_MASK, false)) {
+                    Player_UseItem(play, this, Player_MaskIdToItemId(maskIdMinusOne));
+                    return;
+                }
             }
 
             if ((this->currentMask == PLAYER_MASK_GIANT) && (gSaveContext.save.saveInfo.playerData.magic == 0)) {
@@ -4613,7 +4626,7 @@ void func_80831F34(PlayState* play, Player* this, PlayerAnimationHeader* anim) {
             play->gameOverCtx.state = GAMEOVER_DEATH_START;
             Audio_StopFanfare(0);
             Audio_PlayFanfare(NA_BGM_GAME_OVER);
-            gSaveContext.seqId = (u8)NA_BGM_DISABLED;
+            gSaveContext.seqId = NA_BGM_DISABLED;
             gSaveContext.ambienceId = AMBIENCE_ID_DISABLED;
         }
 
@@ -5298,6 +5311,7 @@ void func_808332A0(PlayState* play, Player* this, s32 magicCost, s32 isSwordBeam
 s32 func_808333CC(Player* this) {
     s8 sp3C[4];
     s8* iter;
+    s8 iterMouse;
     s8* iter2;
     s8 temp1;
     s8 temp2;
@@ -5306,6 +5320,42 @@ s32 func_808333CC(Player* this) {
     if (this->heldItemAction == PLAYER_IA_DEKU_STICK) {
         return false;
     }
+
+    if (CVarGetInteger("gEnhancements.Mouse.Enabled", 0) && CVarGetInteger("gEnhancements.Mouse.Quickspin", 1) &&
+        SDL_GetRelativeMouseMode() == SDL_TRUE) { // mouse quickspin
+        iter2 = &sp3C[0];
+        u32 willSpin = 1;
+        for (i = 0; i < 4; i++, iter2++) {
+            f32 relY = this->mouseQuickspinY[i + 1] - this->mouseQuickspinY[i];
+            f32 relX = this->mouseQuickspinX[i + 1] - this->mouseQuickspinX[i];
+            s16 aTan = Math_Atan2S(relY, -relX);
+            iterMouse = (u16)(aTan + 0x2000) >> 9;
+            if ((*iter2 = iterMouse) < 0) {
+                willSpin = 0;
+                break;
+            }
+            *iter2 *= 2;
+        }
+        temp1 = sp3C[0] - sp3C[1];
+        if (ABS(temp1) < 10) {
+            willSpin = 0;
+        }
+        iter2 = &sp3C[1];
+        for (i = 1; i < 3; i++, iter2++) {
+            temp2 = *iter2 - *(iter2 + 1);
+            if ((ABS(temp2) < 10) || (temp2 * temp1 < 0)) {
+                willSpin = 0;
+                break;
+            }
+        }
+        if (willSpin) {
+            return 1;
+        }
+    }
+    sp3C[0] = 0;
+    sp3C[1] = 0;
+    sp3C[2] = 0;
+    sp3C[3] = 0;
 
     iter = &this->unk_ADF[0];
     iter2 = &sp3C[0];
@@ -6239,7 +6289,7 @@ s32 Player_HandleExitsAndVoids(PlayState* play, Player* this, CollisionPoly* pol
                 if ((this->stateFlags1 & PLAYER_STATE1_8000000) && (this->floorProperty == FLOOR_PROPERTY_5)) {
                     Audio_PlaySfx_2(NA_SE_OC_TUNAMI);
                     Audio_MuteAllSeqExceptSystemAndOcarina(5);
-                    gSaveContext.seqId = (u8)NA_BGM_DISABLED;
+                    gSaveContext.seqId = NA_BGM_DISABLED;
                     gSaveContext.ambienceId = AMBIENCE_ID_DISABLED;
                 } else if (!(this->actor.bgCheckFlags & BGCHECKFLAG_GROUND) &&
                            (this->floorProperty == FLOOR_PROPERTY_12)) {
@@ -6261,7 +6311,7 @@ s32 Player_HandleExitsAndVoids(PlayState* play, Player* this, CollisionPoly* pol
                 if (floorType == FLOOR_TYPE_11) {
                     Audio_PlaySfx_2(NA_SE_OC_SECRET_HOLE_OUT);
                     Audio_MuteAllSeqExceptSystemAndOcarina(5);
-                    gSaveContext.seqId = (u8)NA_BGM_DISABLED;
+                    gSaveContext.seqId = NA_BGM_DISABLED;
                     gSaveContext.ambienceId = AMBIENCE_ID_DISABLED;
                 } else {
                     func_8085B74C(play);
@@ -7915,7 +7965,7 @@ s32 func_80839800(Player* this, PlayState* play) {
     }
     return false;
 }
-
+// Side Hops and Backflip
 void func_80839860(Player* this, PlayState* play, s32 arg2) {
     s32 pad;
     f32 speed = (!(arg2 & 1) ? 5.8f : 3.5f);
@@ -7977,12 +8027,13 @@ s32 func_80839A84(PlayState* play, Player* this) {
     return true;
 }
 
+// Z target but doesn't activate when you're swimming
 s32 Player_ActionChange_10(Player* this, PlayState* play) {
     if (CHECK_BTN_ALL(sPlayerControlInput->press.button, BTN_A) &&
         (play->roomCtx.curRoom.behaviorType1 != ROOM_BEHAVIOR_TYPE1_2) && (sPlayerFloorType != FLOOR_TYPE_7) &&
         (sPlayerFloorEffect != FLOOR_EFFECT_1)) {
         s32 temp_a2 = this->unk_AE3[this->unk_ADE];
-
+        // covers when link is staying put and when link is moving forward
         if (temp_a2 <= 0) {
             if (func_8082FBE8(this)) {
                 if (this->actor.category != ACTORCAT_PLAYER) {
@@ -7991,16 +8042,34 @@ s32 Player_ActionChange_10(Player* this, PlayState* play) {
                     } else {
                         func_80836B3C(play, this, 0.0f);
                     }
-                } else if (!(this->stateFlags1 & PLAYER_STATE1_8000000) &&
-                           (Player_GetMeleeWeaponHeld(this) != PLAYER_MELEEWEAPON_NONE) &&
-                           Player_CanUpdateItems(this) && (this->transformation != PLAYER_FORM_GORON)) {
-                    func_808395F0(play, this, PLAYER_MWA_JUMPSLASH_START, 5.0f, 5.0f);
+                }
+                // Jump/Leap (Was jump slash)
+                else if (!(this->stateFlags1 & PLAYER_STATE1_8000000) &&
+                         (Player_GetMeleeWeaponHeld(this) != PLAYER_MELEEWEAPON_NONE) && Player_CanUpdateItems(this) &&
+                         (this->transformation != PLAYER_FORM_GORON)) {
+                    if (!GameInteractor_Should(GI_VB_MANUAL_JUMP, true, NULL)) {
+                        if (this->transformation == PLAYER_FORM_ZORA) {
+                            func_808395F0(play, this, PLAYER_MWA_JUMPSLASH_START, 5.0f, 5.0f);
+                        }
+                        // Leap
+                        else if (temp_a2 == 0) {
+                            func_80834D50(play, this, D_8085C2A4[0].unk_0, 5.8f, NA_SE_VO_LI_SWORD_N);
+                        }
+                        // Jump
+                        else {
+                            func_80834DB8(this, &gPlayerAnim_link_normal_jump, REG(69) / 100.0f, play);
+                        }
+                    } else {
+                        func_808395F0(play, this, PLAYER_MWA_JUMPSLASH_START, 5.0f, 5.0f);
+                    }
+
                 } else if (!func_80839A84(play, this)) {
                     func_80836B3C(play, this, 0.0f);
                 }
 
                 return true;
             }
+            // covers when link is backflipping or sidehopping
         } else {
             func_80839860(this, play, temp_a2);
             return true;
@@ -8147,6 +8216,15 @@ s32 Player_ActionChange_11(Player* this, PlayState* play) {
                     if (!Player_IsGoronOrDeku(this)) {
                         Player_SetModelsForHoldingShield(this);
                         anim = D_8085BE84[PLAYER_ANIMGROUP_19][this->modelAnimType];
+
+                        /* MOD: move cursor to the middle on shield pull (RR) */
+                        if (CVarGetInteger("gEnhancements.Mouse.Enabled", 0) &&
+                            SDL_GetRelativeMouseMode() == SDL_TRUE) {
+                            u32 width = OTRGetCurrentWidth();
+                            u32 height = OTRGetCurrentHeight();
+                            OTRMoveCursor(width / 2, height / 2);
+                        }
+                        /* */
                     } else {
                         anim = (this->transformation == PLAYER_FORM_DEKU) ? &gPlayerAnim_pn_gurd
                                                                           : &gPlayerAnim_clink_normal_defense_ALL;
@@ -12210,7 +12288,7 @@ void Player_UpdateCommon(Player* this, PlayState* play, Input* input) {
 
         this->actor.shape.face = ((play->gameplayFrames & 0x20) ? 0 : 3) + this->blinkInfo.eyeTexIndex;
 
-        if (GameInteractor_Should(VB_CONSIDER_BUNNY_HOOD_EQUIPPED, this->currentMask == PLAYER_MASK_BUNNY, this)) {
+        if (GameInteractor_Should(VB_CONSIDER_BUNNY_HOOD_EQUIPPED, this->currentMask == PLAYER_MASK_BUNNY)) {
             Player_UpdateBunnyEars(this);
         }
 
@@ -13019,6 +13097,24 @@ s32 Ship_HandleFirstPersonAiming(PlayState* play, Player* this, s32 arg2) {
     float gyroX = 0.0f;
     float gyroY = 0.0f;
 
+    if (CVarGetInteger("gEnhancements.Mouse.Enabled", 0) && SDL_GetRelativeMouseMode() == SDL_TRUE) {
+        int mouseX, mouseY;
+        SDL_GetRelativeMouseState(&mouseX, &mouseY);
+
+        sPlayerControlInput->cur.mouse_move_x = mouseX;
+        sPlayerControlInput->cur.mouse_move_y = mouseY;
+        if (fabsf(sPlayerControlInput->cur.mouse_move_x) > 0) {
+            this->actor.focus.rot.y += (sPlayerControlInput->cur.mouse_move_x) * 12.0f *
+                                       (CVarGetFloat("gEnhancements.Mouse.POVCameraSensitivity.X", 1.0f)) *
+                                       -GameInteractor_InvertControl(GI_INVERT_FIRST_PERSON_MOUSE_X);
+        }
+        if (fabsf(sPlayerControlInput->cur.mouse_move_y) > 0) {
+            this->actor.focus.rot.x += (sPlayerControlInput->cur.mouse_move_y) * 12.0f *
+                                       (CVarGetFloat("gEnhancements.Mouse.POVCameraSensitivity.Y", 1.0f)) *
+                                       -GameInteractor_InvertControl(GI_INVERT_FIRST_PERSON_MOUSE_Y);
+        }
+    }
+
     if (!CVarGetInteger("gEnhancements.Camera.FirstPerson.MoveInFirstPerson", 0)) {
         s32 leftStickX = sPlayerControlInput->rel.stick_x; // -60 to 60
         s32 leftStickY = sPlayerControlInput->rel.stick_y; // -60 to 60
@@ -13088,10 +13184,14 @@ s32 Ship_HandleFirstPersonAiming(PlayState* play, Player* this, s32 arg2) {
         this->actor.focus.rot.y = CLAMP(var_s0 + gyroX, -0x4AAA, 0x4AAA) + this->actor.shape.rot.y;
     }
 
-    if (CVarGetInteger("gEnhancements.Camera.FirstPerson.MoveInFirstPerson", 0) &&
+    bool playerMovementLocked = (this->actionFunc == Player_Action_52) || // Riding on Epona
+                                (this->actionFunc == Player_Action_80) || // Riding swamp boat (non-archery)
+                                (this->actionFunc == Player_Action_81);   // Bow minigames
+
+    if (!playerMovementLocked && CVarGetInteger("gEnhancements.Camera.FirstPerson.MoveInFirstPerson", 0) &&
         CVarGetInteger("gEnhancements.Camera.FirstPerson.RightStickEnabled", 0)) {
         f32 movementSpeed = 8.25f; // account for form
-        if (this->currentMask == PLAYER_MASK_BUNNY) {
+        if (GameInteractor_Should(VB_CONSIDER_BUNNY_HOOD_EQUIPPED, this->currentMask == PLAYER_MASK_BUNNY)) {
             movementSpeed *= 1.5f;
         }
 
@@ -13532,7 +13632,7 @@ s32 func_808482E0(PlayState* play, Player* this) {
                     ((this->getItemId >= GI_RUPEE_PURPLE) && (this->getItemId <= GI_RUPEE_HUGE))) {
                     var_v1 = NA_BGM_GET_SMALL_ITEM;
                 } else {
-                    var_v1 = NA_BGM_GET_ITEM | 0x900;
+                    var_v1 = NA_BGM_GET_ITEM;
                 }
                 seqId = var_v1;
             }
@@ -13605,7 +13705,12 @@ void func_80848640(PlayState* play, Player* this) {
         Math_Vec3f_Copy(&torch2->actor.home.pos, &this->actor.world.pos);
         torch2->actor.home.rot.y = this->actor.shape.rot.y;
         torch2->state = 0;
-        torch2->framesUntilNextState = 20;
+        if (CVarGetInteger("gEnhancements.Playback.FastSongPlayback",
+                           0)) { // Speeds up the spawning of the elegy statue
+            torch2->framesUntilNextState = 1;
+        } else {
+            torch2->framesUntilNextState = 20;
+        }
     } else {
         torch2 = (EnTorch2*)Actor_Spawn(&play->actorCtx, play, ACTOR_EN_TORCH2, this->actor.world.pos.x,
                                         this->actor.world.pos.y, this->actor.world.pos.z, 0, this->actor.shape.rot.y, 0,
@@ -14593,7 +14698,7 @@ void Player_Action_13(Player* this, PlayState* play) {
 
     Player_GetMovementSpeedAndYaw(this, &speedTarget, &yawTarget, SPEED_MODE_CURVED, play);
 
-    if (GameInteractor_Should(VB_CONSIDER_BUNNY_HOOD_EQUIPPED, this->currentMask == PLAYER_MASK_BUNNY, this)) {
+    if (GameInteractor_Should(VB_CONSIDER_BUNNY_HOOD_EQUIPPED, this->currentMask == PLAYER_MASK_BUNNY)) {
         speedTarget *= 1.5f;
     }
 
@@ -14748,6 +14853,8 @@ void Player_Action_18(Player* this, PlayState* play) {
         }
     }
 
+    const bool mouseEnabled =
+        (CVarGetInteger("gEnhancements.Mouse.Enabled", 0) && SDL_GetRelativeMouseMode() == SDL_TRUE);
     if (this->av2.actionVar2 != 0) {
         f32 yStick = sPlayerControlInput->rel.stick_y * 180;
         f32 xStick = sPlayerControlInput->rel.stick_x * -120;
@@ -14757,7 +14864,24 @@ void Player_Action_18(Player* this, PlayState* play) {
         s16 var_a2;
         s16 var_a3;
 
-        xStick *= GameInteractor_InvertControl(GI_INVERT_SHIELD_X);
+        int invertShield = GameInteractor_InvertControl(GI_INVERT_SHIELD_X);
+        xStick *= invertShield;
+        if (mouseEnabled) {
+            u32 width = OTRGetCurrentWidth();
+            u32 height = OTRGetCurrentHeight();
+            /*
+             * Y: -12800 ~ +12700
+             * X: -15360 ~ +15240
+             */
+            f32 xBound = 15360 / ((f32)width / 2);
+            f32 yBound = 12800 / ((f32)height / 2);
+            yStick += +(sPlayerControlInput->cur.touch_y - (height) / 2) * yBound;
+            xStick -= +(sPlayerControlInput->cur.touch_x - (width) / 2) * xBound * invertShield;
+
+            // Plain shield movement instead of camera-relative one
+            temp_a0 = 0;
+        }
+
         var_a1 = (yStick * Math_CosS(temp_a0)) + (Math_SinS(temp_a0) * xStick);
         temp_ft5 = (xStick * Math_CosS(temp_a0)) - (Math_SinS(temp_a0) * yStick);
 
@@ -17255,13 +17379,28 @@ void Player_Action_63(Player* this, PlayState* play) {
                 (play->msgCtx.ocarinaMode == OCARINA_MODE_APPLY_INV_SOT_SLOW)) {
                 if (play->msgCtx.ocarinaMode == OCARINA_MODE_APPLY_SOT) {
                     if (!func_8082DA90(play)) {
-                        if (gSaveContext.save.saveInfo.playerData.threeDayResetCount == 1) {
+                        if (CVarGetInteger("gEnhancements.Playback.FastSongPlayback",
+                                           0)) { // Ensures proper time reset whenever fast playback is active. Probably
+                                                 // a better way to do this.
+                            play->nextEntrance = ENTRANCE(SOUTH_CLOCK_TOWN, 0);
+                            gSaveContext.save.timeSpeedOffset = 0;
+                            gSaveContext.save.eventDayCount = 0;
+                            gSaveContext.save.day = 0;
+                            gSaveContext.save.time = CLOCK_TIME(6, 0) - 1;
+
+                        } else if (gSaveContext.save.saveInfo.playerData.threeDayResetCount == 1) {
                             play->nextEntrance = ENTRANCE(CUTSCENE, 1);
                         } else {
                             play->nextEntrance = ENTRANCE(CUTSCENE, 0);
                         }
 
-                        gSaveContext.nextCutsceneIndex = 0xFFF7;
+                        if (CVarGetInteger("gEnhancements.Playback.FastSongPlayback",
+                                           0)) { // Ensures the player spawns back at the door of the clock tower when
+                                                 // fast playback is active.
+                            gSaveContext.nextCutsceneIndex = 0;
+                        } else {
+                            gSaveContext.nextCutsceneIndex = 0xFFF7;
+                        }
                         play->transitionTrigger = TRANS_TRIGGER_START;
                     }
                 } else {
@@ -17598,7 +17737,7 @@ void Player_Action_68(Player* this, PlayState* play) {
             if (this->av2.actionVar2 == 0) {
                 Message_StartTextbox(play, D_8085D798[this->av1.actionVar1 - 1].textId, &this->actor);
 
-                Audio_PlayFanfare(NA_BGM_GET_ITEM | 0x900);
+                Audio_PlayFanfare(NA_BGM_GET_ITEM);
                 this->av2.actionVar2 = 1;
             } else if (Message_GetState(&play->msgCtx) == TEXT_STATE_CLOSING) {
                 Actor* talkActor;
@@ -17994,7 +18133,7 @@ void Player_Action_77(Player* this, PlayState* play) {
         } else {
             play->transitionType = TRANS_TYPE_FADE_BLACK;
             gSaveContext.nextTransitionType = TRANS_TYPE_FADE_BLACK;
-            gSaveContext.seqId = (u8)NA_BGM_DISABLED;
+            gSaveContext.seqId = NA_BGM_DISABLED;
             gSaveContext.ambienceId = AMBIENCE_ID_DISABLED;
         }
 
@@ -18549,7 +18688,15 @@ void Player_Action_87(Player* this, PlayState* play) {
 }
 
 void Player_Action_88(Player* this, PlayState* play) {
-    if (this->av2.actionVar2++ > 90) {
+    if (CVarGetInteger("gEnhancements.Playback.FastSongPlayback",
+                       0)) { // Speeds up the ocarina waiting timer, allowing the player to move sooner
+        if (this->av2.actionVar2++ > 1) {
+            play->msgCtx.ocarinaMode = OCARINA_MODE_END;
+            func_8085B384(this, play);
+        } else if (this->av2.actionVar2 == 1) {
+            func_80848640(play, this);
+        }
+    } else if (this->av2.actionVar2++ > 90) {
         play->msgCtx.ocarinaMode = OCARINA_MODE_END;
         func_8085B384(this, play);
     } else if (this->av2.actionVar2 == 10) {

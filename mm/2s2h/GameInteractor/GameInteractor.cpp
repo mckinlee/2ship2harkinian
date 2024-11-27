@@ -38,6 +38,10 @@ void GameInteractor_ExecuteAfterKaleidoDrawPage(PauseContext* pauseCtx, u16 paus
     GameInteractor::Instance->ExecuteHooksForID<GameInteractor::AfterKaleidoDrawPage>(pauseIndex, pauseCtx, pauseIndex);
 }
 
+void GameInteractor_ExecuteOnKaleidoClose() {
+    GameInteractor::Instance->ExecuteHooks<GameInteractor::OnKaleidoClose>();
+}
+
 void GameInteractor_ExecuteOnSaveInit(s16 fileNum) {
     GameInteractor::Instance->ExecuteHooks<GameInteractor::OnSaveInit>(fileNum);
 }
@@ -293,6 +297,16 @@ int GameInteractor_InvertControl(GIInvertType type) {
             break;
         case GI_INVERT_FIRST_PERSON_RIGHT_STICK_Y:
             if (CVarGetInteger("gEnhancements.Camera.FirstPerson.RightStickInvertY", 1)) {
+                result *= -1;
+            }
+            break;
+        case GI_INVERT_FIRST_PERSON_MOUSE_X:
+            if (CVarGetInteger("gEnhancements.Mouse.POVCameraInvert.X", 0)) {
+                result *= -1;
+            }
+            break;
+        case GI_INVERT_FIRST_PERSON_MOUSE_Y:
+            if (CVarGetInteger("gEnhancements.Mouse.POVCameraInvert.Y", 1)) {
                 result *= -1;
             }
             break;

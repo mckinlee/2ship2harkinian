@@ -10,7 +10,11 @@
 #include "2s2h/Enhancements/Enhancements.h"
 #include "2s2h/Enhancements/GfxPatcher/AuthenticGfxPatches.h"
 #include "2s2h/DeveloperTools/DeveloperTools.h"
+#include "2s2h/Enhancements/Cheats/Cheats.h"
+#include "2s2h/Enhancements/Player/Player.h"
+#include "2s2h/Enhancements/Audio/AudioEditor.h"
 #include "HudEditor.h"
+#include <Enhancements/ResolutionEditor/ResolutionEditor.h>
 
 #include "2s2h/Enhancements/Trackers/ItemTracker.h"
 #include "2s2h/Enhancements/Trackers/ItemTrackerSettings.h"
@@ -66,6 +70,12 @@ static const std::unordered_map<int32_t, const char*> timeStopOptions = {
     { TIME_STOP_OFF, "Off" },
     { TIME_STOP_TEMPLES, "Temples" },
     { TIME_STOP_TEMPLES_DUNGEONS, "Temples + Mini Dungeons" },
+};
+
+static const std::unordered_map<int32_t, const char*> dekuGuardSearchBallsOptions = {
+    { DEKU_GUARD_SEARCH_BALLS_NEVER, "Never" },
+    { DEKU_GUARD_SEARCH_BALLS_NIGHT_ONLY, "Night Only" },
+    { DEKU_GUARD_SEARCH_BALLS_ALWAYS, "Always" },
 };
 
 namespace BenGui {
@@ -158,6 +168,7 @@ void DrawBenMenu() {
 }
 
 extern std::shared_ptr<BenInputEditorWindow> mBenInputEditorWindow;
+extern std::shared_ptr<AdvancedResolutionSettings::AdvancedResolutionSettingsWindow> mAdvancedResolutionSettingsWindow;
 
 void DrawSettingsMenu() {
     if (UIWidgets::BeginMenu("Settings")) {
@@ -201,7 +212,12 @@ void DrawSettingsMenu() {
         if (UIWidgets::BeginMenu("Graphics")) {
 
 #ifndef __APPLE__
-            if (UIWidgets::CVarSliderFloat("Internal Resolution: %f %%", CVAR_INTERNAL_RESOLUTION, 0.5f, 2.0f, 1.0f)) {
+            const bool disabled_resolutionSlider =
+                (CVarGetInteger(CVAR_PREFIX_ADVANCED_RESOLUTION ".VerticalResolutionToggle", 0) &&
+                 CVarGetInteger(CVAR_PREFIX_ADVANCED_RESOLUTION ".Enabled", 0)) ||
+                CVarGetInteger("gLowResMode", 0);
+            if (UIWidgets::CVarSliderFloat("Internal Resolution: %f %%", CVAR_INTERNAL_RESOLUTION, 0.5f, 2.0f, 1.0f,
+                                           { .disabled = disabled_resolutionSlider })) {
                 Ship::Context::GetInstance()->GetWindow()->SetResolutionMultiplier(
                     CVarGetFloat(CVAR_INTERNAL_RESOLUTION, 1));
             };
@@ -310,6 +326,11 @@ void DrawSettingsMenu() {
 
             // Currently this only has "Overlays Text Font", it doesn't use our new UIWidgets so it stands out
             // Ship::Context::GetInstance()->GetWindow()->GetGui()->GetGameOverlay()->DrawSettings();
+
+            if (mAdvancedResolutionSettingsWindow) {
+                UIWidgets::WindowButton("Advanced Resolution", "gWindows.gAdvancedResolutionEditor",
+                                        mAdvancedResolutionSettingsWindow); //, { .tooltip = "" });
+            }
 
             ImGui::EndMenu();
         }
@@ -435,6 +456,32 @@ void DrawEnhancementsMenu() {
                 CVarSetFloat("gEnhancements.Camera.FreeLook.MaxPitch", std::max(maxY, minY));
                 CVarSetFloat("gEnhancements.Camera.FreeLook.MinPitch", std::min(maxY, minY));
             }
+
+            ImGui::SeparatorText("Mouse");
+            UIWidgets::CVarCheckbox("Mouse/Touch Enabled", "gEnhancements.Mouse.Enabled", { .defaultValue = false });
+            UIWidgets::CVarCheckbox(
+                "Mouse Quickspin Inputs", "gEnhancements.Mouse.Quickspin",
+                { .tooltip = "Enables quickspin attack trigger via mouse inputs", .defaultValue = true });
+            // no clue, no glue
+            // UIWidgets::CVarCheckbox(
+            //     "Apply walk speed modifier to raw player inputs if less than 100%",
+            //     "gEnhancements.Mouse.WalkModifierToInputs",
+            //     {
+            //         .tooltip = "If selected, the walk speed modifier will be taken into account for all player
+            //         controls that relies on stick magnitude.\n"
+            //                    "This allows, for example, to put away your sword while moving, easily achieving ESS
+            //                    position, or a quick adjustment of aim sensitivity.\n"
+            //                    "(May not working properly for now)",
+            //         .defaultValue = true
+            //     }
+            // );
+            UIWidgets::CVarSliderFloat("First-Person Horizontal Sensitivity: %.0f",
+                                       "gEnhancements.Mouse.POVCameraSensitivity.X", 0.01f, 5.0f, 1.0f);
+            UIWidgets::CVarSliderFloat("First-Person Vertical Sensitivity: %.0f",
+                                       "gEnhancements.Mouse.POVCameraSensitivity.Y", 0.01f, 5.0f, 1.0f);
+            UIWidgets::CVarCheckbox("First-Person invert X Axis", "gEnhancements.Mouse.POVCameraInvert.X");
+            UIWidgets::CVarCheckbox("First-Person invert Y Axis", "gEnhancements.Mouse.POVCameraInvert.Y",
+                                    { .defaultValue = true });
 
             ImGui::SeparatorText("'Debug' Camera");
             if (UIWidgets::CVarCheckbox(
@@ -579,6 +626,12 @@ void DrawEnhancementsMenu() {
             UIWidgets::CVarCheckbox("Fast Magic Arrow Equip Animation", "gEnhancements.Equipment.MagicArrowEquipSpeed",
                                     { .tooltip = "Removes the animation for equipping Magic Arrows." });
 
+            if (UIWidgets::CVarCheckbox(
+                    "Great Fairy Sword on B", "gEnhancements.Equipment.GreatFairySwordB.Enabled",
+                    { .tooltip = "Press A on the Great Fairy Sword in the pause menu to equip/unequip it to B." })) {
+                UpdateGreatFairySwordState();
+            }
+
             UIWidgets::CVarCheckbox(
                 "Instant Fin Boomerangs Recall", "gEnhancements.PlayerActions.InstantRecall",
                 { .tooltip =
@@ -685,6 +738,9 @@ void DrawEnhancementsMenu() {
                                                      "'A' on it in the mask menu." })) {
                 UpdatePersistentMasksState();
             }
+            UIWidgets::CVarCheckbox(
+                "Easy Mask Equip", "gEnhancements.Masks.EasyMaskEquip",
+                { .tooltip = "Allows you to equip masks directly from the pause menu by pressing A." });
 
             ImGui::EndMenu();
         }
@@ -706,8 +762,16 @@ void DrawEnhancementsMenu() {
         }
 
         if (UIWidgets::BeginMenu("Modes")) {
+            if (UIWidgets::CVarCheckbox("Invisible Enemies", "gModes.InvisibleEnemies",
+                                        { .tooltip = "Enemies will appear invisible without using the Lens of Truth. "
+                                                     "Requires scene reload to take effect." })) {
+                RegisterInvisibleEnemies();
+            }
             UIWidgets::CVarCheckbox("Play As Kafei", "gModes.PlayAsKafei",
                                     { .tooltip = "Requires scene reload to take effect." });
+            UIWidgets::CVarCheckbox("Hyrule Warriors Young Link", "gModes.HyruleWarriorsStyledLink",
+                                    { .tooltip = "When acquired, places the Keaton and Fierce Deity masks on Link "
+                                                 "similarly to how he wears them in Hyrule Warriors" });
             if (UIWidgets::CVarCheckbox("Time Moves When You Move", "gModes.TimeMovesWhenYouMove")) {
                 RegisterTimeMovesWhenYouMove();
             }
@@ -735,6 +799,8 @@ void DrawEnhancementsMenu() {
                                     { .tooltip = "Allows Link to instantly puts away held item without waiting." });
             UIWidgets::CVarCheckbox("Fierce Deity Putaway", "gEnhancements.Player.FierceDeityPutaway",
                                     { .tooltip = "Allows Fierce Deity Link to put away his sword." });
+            UIWidgets::CVarCheckbox("Manual Jump", "gEnhancements.Player.ManualJump",
+                                    { .tooltip = "Z + A to Jump and B while midair to Jump Attack" });
             ImGui::EndMenu();
         }
 
@@ -789,6 +855,21 @@ void DrawEnhancementsMenu() {
                                                      "swords. It may still steal other items." })) {
                 RegisterDisableTakkuriSteal();
             }
+
+            UIWidgets::CVarCheckbox(
+                "Receive Oceanside Spider House Wallet Reward Any Day", "gEnhancements.Cheats.OceansideWalletAnyDay",
+                { .tooltip = "The wallet reward for clearing the oceanside spider house can be received on any day." });
+            UIWidgets::CVarCheckbox("Faster song playbacks", "gEnhancements.Playback.FastSongPlayback",
+                                    { .tooltip = "Makes song playback faster" });
+
+
+            UIWidgets::CVarCombobox(
+                "Deku Guard Search Balls", "gEnhancements.Cheats.DekuGuardSearchBalls", dekuGuardSearchBallsOptions,
+                { .tooltip = "Choose when to show the Deku Palace Guards' search balls\n"
+                             "- Never: Never show the search balls. This matches Majora's Mask 3D behaviour\n"
+                             "- Night Only: Only show the search balls at night. This matches original N64 behaviour.\n"
+                             "- Always: Always show the search balls.",
+                  .defaultIndex = DEKU_GUARD_SEARCH_BALLS_NIGHT_ONLY });
             ImGui::EndMenu();
         }
 
@@ -853,6 +934,8 @@ extern std::shared_ptr<SaveEditorWindow> mSaveEditorWindow;
 extern std::shared_ptr<ActorViewerWindow> mActorViewerWindow;
 extern std::shared_ptr<CollisionViewerWindow> mCollisionViewerWindow;
 extern std::shared_ptr<EventLogWindow> mEventLogWindow;
+
+extern std::shared_ptr<AudioEditor> mAudioEditorWindow;
 
 const char* logLevels[] = {
     "trace", "debug", "info", "warn", "error", "critical", "off",
@@ -979,6 +1062,11 @@ void DrawDeveloperToolsMenu() {
         if (mEventLogWindow) {
             UIWidgets::WindowButton("Event Log", "gWindows.EventLog", mEventLogWindow);
         }
+
+        if (mAudioEditorWindow) {
+            UIWidgets::WindowButton("Audio Editor", "gWindows.AudioEditor", mAudioEditorWindow);
+        }
+
         ImGui::EndMenu();
     }
 }

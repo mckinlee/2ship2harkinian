@@ -31,6 +31,7 @@ void InitEnhancements() {
 
     // Equipment
     RegisterSkipMagicArrowEquip();
+    RegisterGreatFairySwordOnB();
     RegisterInstantRecall();
 
     // Fixes
@@ -40,6 +41,7 @@ void InitEnhancements() {
 
     // Graphics
     RegisterDisableBlackBars();
+    RegisterHyruleWarriorsStyledLink();
     Register3DItemDrops();
 
     // Masks
@@ -48,19 +50,23 @@ void InitEnhancements() {
     RegisterBlastMaskKeg();
     RegisterNoBlastMaskCooldown();
     RegisterPersistentMasks();
+    RegisterEasyMaskEquip();
 
     // Minigames
     RegisterAlwaysWinDoggyRace();
     RegisterCremiaHugs();
     RegisterSwordsmanSchool();
+    RegisterCuccoShackCuccoCount();
 
     // Player
     RegisterClimbSpeed();
     RegisterFastFlowerLaunch();
     RegisterInstantPutaway();
     RegisterFierceDeityPutaway();
+    RegisterManualJump();
 
     // Songs
+    RegisterBetterSongOfDoubleTime();
     RegisterEnableSunsSong();
     RegisterFasterSongPlayback();
     RegisterPauseOwlWarp();
@@ -78,9 +84,11 @@ void InitEnhancements() {
     RegisterCutscenes();
 
     // Modes
+    RegisterInvisibleEnemies();
     RegisterPlayAsKafei();
     RegisterTimeMovesWhenYouMove();
 
     // Difficulty Options
     RegisterDisableTakkuriSteal();
+    RegisterShowDekuGuardSearchBalls();
 }

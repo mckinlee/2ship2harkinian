@@ -2,6 +2,9 @@
 #include "2s2h/GameInteractor/GameInteractor.h"
 #include "CameraUtils.h"
 
+#include "BenPort.h"
+#include <SDL2/SDL.h> //TODO (RR): don't import SDL in game code
+
 extern "C" {
 #include <macros.h>
 #include <functions.h>
@@ -91,9 +94,20 @@ bool Camera_FreeLook(Camera* camera) {
 
     Camera_ResetActionFuncState(camera, camera->mode);
 
-    f32 yawDiff = -sCamPlayState->state.input[0].cur.right_stick_x * 10.0f *
+    int mouseX, mouseY;
+    mouseX = sCamPlayState->state.input[0].cur.mouse_move_x;
+    mouseY = sCamPlayState->state.input[0].cur.mouse_move_y;
+
+    if (CVarGetInteger("gEnhancements.Mouse.Enabled", 0) != 1 || SDL_GetRelativeMouseMode() == SDL_FALSE ||
+        /* Disable mouse movement when holding down the shield */
+        player->stateFlags1 & 0x400000) {
+        mouseX = 0.0f;
+        mouseY = 0.0f;
+    }
+
+    f32 yawDiff = (-sCamPlayState->state.input[0].cur.right_stick_x * 10.0f - (mouseX * 40.0f)) *
                   (CVarGetFloat("gEnhancements.Camera.RightStick.CameraSensitivity.X", 1.0f));
-    f32 pitchDiff = sCamPlayState->state.input[0].cur.right_stick_y * 10.0f *
+    f32 pitchDiff = (+sCamPlayState->state.input[0].cur.right_stick_y * 10.0f + (mouseY * 40.0f)) *
                     (CVarGetFloat("gEnhancements.Camera.RightStick.CameraSensitivity.Y", 1.0f));
 
     yaw += yawDiff * GameInteractor_InvertControl(GI_INVERT_CAMERA_RIGHT_STICK_X);
@@ -139,6 +153,20 @@ bool Camera_FreeLook(Camera* camera) {
 bool Camera_CanFreeLook(Camera* camera) {
     f32 camX = sCamPlayState->state.input[0].cur.right_stick_x * 10.0f;
     f32 camY = sCamPlayState->state.input[0].cur.right_stick_y * 10.0f;
+
+    int mouseX, mouseY;
+    SDL_GetRelativeMouseState(&mouseX, &mouseY);
+    sCamPlayState->state.input[0].cur.mouse_move_x = mouseX;
+    sCamPlayState->state.input[0].cur.mouse_move_y = mouseY;
+
+    if (CVarGetInteger("gEnhancements.Mouse.Enabled", 0) != 1 || SDL_GetRelativeMouseMode() == SDL_FALSE) {
+        mouseX = 0.0f;
+        mouseY = 0.0f;
+    }
+
+    camX -= mouseX * 40.0f;
+    camY += mouseY * 40.0f;
+
     if (!sCanFreeLook && (fabsf(camX) >= 15.0f || fabsf(camY) >= 15.0f)) {
         sCanFreeLook = true;
     }
@@ -173,6 +201,7 @@ void RegisterCameraFreeLook() {
     if (CVarGetInteger("gEnhancements.Camera.FreeLook.Enable", 0)) {
         freeLookCameraVBHookId = REGISTER_VB_SHOULD(VB_USE_CUSTOM_CAMERA, {
             Camera* camera = va_arg(args, Camera*);
+            static bool isTriggered = false;
             switch (sCameraSettings[camera->setting].cameraModes[camera->mode].funcId) {
                 case CAM_FUNC_NORMAL0:
                 case CAM_FUNC_NORMAL1:
@@ -184,11 +213,25 @@ void RegisterCameraFreeLook() {
                 case CAM_FUNC_UNIQUE2:
                 case CAM_FUNC_UNIQUE3:
                     if (Camera_CanFreeLook(camera)) {
-                        Camera_FreeLook(camera);
+                        /* MOD: move cursor to the middle on free look enter */
+                        if (!isTriggered) {
+                            if (CVarGetInteger("gEnhancements.Mouse.Enabled", 0) &&
+                                SDL_GetRelativeMouseMode() == SDL_TRUE) {
+                                u32 width = OTRGlobals::Instance->context->GetWindow()->GetWidth();
+                                u32 height = OTRGlobals::Instance->context->GetWindow()->GetHeight();
+                                OTRGlobals::Instance->context->GetWindow()->MoveCursor(width / 2, height / 2);
+                            }
+                            isTriggered = true;
+                        } else {
+                            Camera_FreeLook(camera);
+                        }
                         *should = false;
+                    } else {
+                        isTriggered = false;
                     }
                     break;
                 default:
+                    isTriggered = false;
                     break;
             }
         });

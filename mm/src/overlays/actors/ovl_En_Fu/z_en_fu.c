@@ -11,6 +11,8 @@
 #include "overlays/actors/ovl_En_Bom/z_en_bom.h"
 #include "objects/gameplay_keep/gameplay_keep.h"
 
+#include "2s2h/Enhancements/FrameInterpolation/FrameInterpolation.h"
+
 #define FLAGS \
     (ACTOR_FLAG_TARGETABLE | ACTOR_FLAG_FRIENDLY | ACTOR_FLAG_10 | ACTOR_FLAG_2000000 | ACTOR_FLAG_CANT_LOCK_ON)
 
@@ -824,7 +826,9 @@ void func_80962F4C(EnFu* this, PlayState* play) {
             Audio_StopSubBgm();
             gSaveContext.timerCurTimes[TIMER_ID_MINIGAME_2] = SECONDS_TO_TIMER(0);
             gSaveContext.timerStates[TIMER_ID_MINIGAME_2] = TIMER_STATE_STOP;
-            Audio_PlayFanfare(NA_BGM_GET_ITEM | 0x900);
+            // BENTODO This had | 0x900 which interfered with the 16 bit sequence IDs. Removing it doesn't seem to do
+            // anything bad.
+            Audio_PlayFanfare(NA_BGM_GET_ITEM);
             Interface_SetPerfectLetters(play, PERFECT_LETTERS_TYPE_1);
             this->unk_54A = 3;
             func_809632D0(this);
@@ -1490,6 +1494,7 @@ void func_80964950(PlayState* play, EnFuUnkStruct* ptr, s32 len) {
 
     for (i = 0; i < len; i++, ptr++) {
         if (ptr->unk_36 == 1) {
+            FrameInterpolation_RecordOpenChild(ptr, i);
             if (!flag) {
                 gSPDisplayList(POLY_OPA_DISP++, gHoneyAndDarlingHeartMaterialDL);
                 flag = true;
@@ -1501,6 +1506,7 @@ void func_80964950(PlayState* play, EnFuUnkStruct* ptr, s32 len) {
             gSPSegment(POLY_OPA_DISP++, 0x08, Lib_SegmentedToVirtual(gDropRecoveryHeartTex));
             gSPMatrix(POLY_OPA_DISP++, Matrix_NewMtx(play->state.gfxCtx), G_MTX_NOPUSH | G_MTX_LOAD | G_MTX_MODELVIEW);
             gSPDisplayList(POLY_OPA_DISP++, gHoneyAndDarlingHeartModelDL);
+            FrameInterpolation_RecordCloseChild();
         }
     }
 

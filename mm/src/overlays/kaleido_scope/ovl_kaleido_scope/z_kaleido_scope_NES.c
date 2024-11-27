@@ -110,6 +110,89 @@ TexturePtr sQuestPageBgTextures[] = {
     gPauseQuestStatus24Tex,
 };
 
+#define GET_REGION_TEX(x) (ResourceMgr_GetGameDefaultLanguage(0) == LANGUAGE_JPN ? x##JP : x)
+
+TexturePtr sMaskPageBgTexturesJP[] = {
+    // Column 0
+    gPauseMasks00Tex,
+    gPauseMasks01Tex,
+    gPauseMasks02Tex,
+    gPauseMasks03Tex,
+    gPauseMasks04Tex,
+    // Column 1
+    gPauseMasks10JPNTex,
+    gPauseMasks11Tex,
+    gPauseMasks12Tex,
+    gPauseMasks13Tex,
+    gPauseMasks14Tex,
+    // Column 2
+    gPauseMasks20Tex,
+    gPauseMasks21Tex,
+    gPauseMasks22Tex,
+    gPauseMasks23Tex,
+    gPauseMasks24Tex,
+};
+TexturePtr sItemPageBgTexturesJP[] = {
+    // Column 0
+    gPauseSelectItem00JPNTex,
+    gPauseSelectItem01Tex,
+    gPauseSelectItem02Tex,
+    gPauseSelectItem03Tex,
+    gPauseSelectItem04Tex,
+    // Column 1
+    gPauseSelectItem10JPNTex,
+    gPauseSelectItem11Tex,
+    gPauseSelectItem12Tex,
+    gPauseSelectItem13Tex,
+    gPauseSelectItem14Tex,
+    // Column 2
+    gPauseSelectItem20JPNTex,
+    gPauseSelectItem21Tex,
+    gPauseSelectItem22Tex,
+    gPauseSelectItem23Tex,
+    gPauseSelectItem24Tex,
+};
+TexturePtr sMapPageBgTexturesJP[] = {
+    // Column 0
+    gPauseMap00Tex,
+    gPauseMap01Tex,
+    gPauseMap02Tex,
+    gPauseMap03Tex,
+    gPauseMap04Tex,
+    // Column 1
+    gPauseMap10JPNTex,
+    gPauseMap11Tex,
+    gPauseMap12Tex,
+    gPauseMap13Tex,
+    gPauseMap14Tex,
+    // Column 2
+    gPauseMap20Tex,
+    gPauseMap21Tex,
+    gPauseMap22Tex,
+    gPauseMap23Tex,
+    gPauseMap24Tex,
+};
+TexturePtr sQuestPageBgTexturesJP[] = {
+    // Column 0
+    gPauseQuestStatus00JPNTex,
+    gPauseQuestStatus01Tex,
+    gPauseQuestStatus02Tex,
+    gPauseQuestStatus03Tex,
+    gPauseQuestStatus04Tex,
+    // Column 1
+    gPauseQuestStatus10JPNTex,
+    gPauseQuestStatus11Tex,
+    gPauseQuestStatus12Tex,
+    gPauseQuestStatus13Tex,
+    gPauseQuestStatus14Tex,
+    // Column 2
+    gPauseQuestStatus20JPNTex,
+    gPauseQuestStatus21Tex,
+    gPauseQuestStatus22Tex,
+    gPauseQuestStatus23Tex,
+    gPauseQuestStatus24Tex,
+};
+
 s16 gVtxPageMapWorldQuadsWidth[VTX_PAGE_MAP_WORLD_QUADS] = {
     80,  // mapPageVtx[60]  clouds Clock Town 1
     64,  // mapPageVtx[64]  clouds Clock Town 2
@@ -738,9 +821,12 @@ void KaleidoScope_DrawPages(PlayState* play, GraphicsContext* gfxCtx) {
 
             gSPMatrix(POLY_OPA_DISP++, Matrix_NewMtx(gfxCtx), G_MTX_NOPUSH | G_MTX_LOAD | G_MTX_MODELVIEW);
 
-            POLY_OPA_DISP = KaleidoScope_DrawPageSections(POLY_OPA_DISP, pauseCtx->itemPageVtx, sItemPageBgTextures);
+            POLY_OPA_DISP = KaleidoScope_DrawPageSections(POLY_OPA_DISP, pauseCtx->itemPageVtx,
+                                                          GET_REGION_TEX(sItemPageBgTextures));
 
+            GameInteractor_ExecuteBeforeKaleidoDrawPage(pauseCtx, PAUSE_ITEM);
             KaleidoScope_DrawItemSelect(play);
+            GameInteractor_ExecuteAfterKaleidoDrawPage(pauseCtx, PAUSE_ITEM);
         }
 
         if ((pauseCtx->pageIndex != PAUSE_MAP) && (pauseCtx->pageIndex != PAUSE_MASK)) {
@@ -758,8 +844,10 @@ void KaleidoScope_DrawPages(PlayState* play, GraphicsContext* gfxCtx) {
 
             gSPMatrix(POLY_OPA_DISP++, Matrix_NewMtx(gfxCtx), G_MTX_NOPUSH | G_MTX_LOAD | G_MTX_MODELVIEW);
 
-            POLY_OPA_DISP = KaleidoScope_DrawPageSections(POLY_OPA_DISP, pauseCtx->mapPageVtx, sMapPageBgTextures);
+            POLY_OPA_DISP =
+                KaleidoScope_DrawPageSections(POLY_OPA_DISP, pauseCtx->mapPageVtx, GET_REGION_TEX(sMapPageBgTextures));
 
+            GameInteractor_ExecuteBeforeKaleidoDrawPage(pauseCtx, PAUSE_MAP);
             if (sInDungeonScene) {
                 KaleidoScope_DrawDungeonMap(play);
                 Gfx_SetupDL42_Opa(gfxCtx);
@@ -768,6 +856,7 @@ void KaleidoScope_DrawPages(PlayState* play, GraphicsContext* gfxCtx) {
             } else {
                 KaleidoScope_DrawWorldMap(play);
             }
+            GameInteractor_ExecuteAfterKaleidoDrawPage(pauseCtx, PAUSE_MAP);
         }
 
         if ((pauseCtx->pageIndex != PAUSE_QUEST) && (pauseCtx->pageIndex != PAUSE_ITEM)) {
@@ -787,9 +876,12 @@ void KaleidoScope_DrawPages(PlayState* play, GraphicsContext* gfxCtx) {
 
             gSPMatrix(POLY_OPA_DISP++, Matrix_NewMtx(gfxCtx), G_MTX_NOPUSH | G_MTX_LOAD | G_MTX_MODELVIEW);
 
-            POLY_OPA_DISP = KaleidoScope_DrawPageSections(POLY_OPA_DISP, pauseCtx->questPageVtx, sQuestPageBgTextures);
+            POLY_OPA_DISP = KaleidoScope_DrawPageSections(POLY_OPA_DISP, pauseCtx->questPageVtx,
+                                                          GET_REGION_TEX(sQuestPageBgTextures));
 
+            GameInteractor_ExecuteBeforeKaleidoDrawPage(pauseCtx, PAUSE_QUEST);
             KaleidoScope_DrawQuestStatus(play);
+            GameInteractor_ExecuteAfterKaleidoDrawPage(pauseCtx, PAUSE_QUEST);
         }
 
         if ((pauseCtx->pageIndex != PAUSE_MASK) && (pauseCtx->pageIndex != PAUSE_MAP)) {
@@ -809,9 +901,12 @@ void KaleidoScope_DrawPages(PlayState* play, GraphicsContext* gfxCtx) {
 
             gSPMatrix(POLY_OPA_DISP++, Matrix_NewMtx(gfxCtx), G_MTX_NOPUSH | G_MTX_LOAD | G_MTX_MODELVIEW);
 
-            POLY_OPA_DISP = KaleidoScope_DrawPageSections(POLY_OPA_DISP, pauseCtx->maskPageVtx, sMaskPageBgTextures);
+            POLY_OPA_DISP = KaleidoScope_DrawPageSections(POLY_OPA_DISP, pauseCtx->maskPageVtx,
+                                                          GET_REGION_TEX(sMaskPageBgTextures));
 
+            GameInteractor_ExecuteBeforeKaleidoDrawPage(pauseCtx, PAUSE_MASK);
             KaleidoScope_DrawMaskSelect(play);
+            GameInteractor_ExecuteAfterKaleidoDrawPage(pauseCtx, PAUSE_MASK);
         }
 
         switch (pauseCtx->pageIndex) {
@@ -831,8 +926,8 @@ void KaleidoScope_DrawPages(PlayState* play, GraphicsContext* gfxCtx) {
 
                     gSPMatrix(POLY_OPA_DISP++, Matrix_NewMtx(gfxCtx), G_MTX_NOPUSH | G_MTX_LOAD | G_MTX_MODELVIEW);
 
-                    POLY_OPA_DISP =
-                        KaleidoScope_DrawPageSections(POLY_OPA_DISP, pauseCtx->itemPageVtx, sItemPageBgTextures);
+                    POLY_OPA_DISP = KaleidoScope_DrawPageSections(POLY_OPA_DISP, pauseCtx->itemPageVtx,
+                                                                  GET_REGION_TEX(sItemPageBgTextures));
 
                     GameInteractor_ExecuteBeforeKaleidoDrawPage(pauseCtx, pauseCtx->pageIndex);
                     KaleidoScope_DrawItemSelect(play);
@@ -855,7 +950,8 @@ void KaleidoScope_DrawPages(PlayState* play, GraphicsContext* gfxCtx) {
 
                 gSPMatrix(POLY_OPA_DISP++, Matrix_NewMtx(gfxCtx), G_MTX_NOPUSH | G_MTX_LOAD | G_MTX_MODELVIEW);
 
-                POLY_OPA_DISP = KaleidoScope_DrawPageSections(POLY_OPA_DISP, pauseCtx->mapPageVtx, sMapPageBgTextures);
+                POLY_OPA_DISP = KaleidoScope_DrawPageSections(POLY_OPA_DISP, pauseCtx->mapPageVtx,
+                                                              GET_REGION_TEX(sMapPageBgTextures));
 
                 GameInteractor_ExecuteBeforeKaleidoDrawPage(pauseCtx, pauseCtx->pageIndex);
                 if (sInDungeonScene) {
@@ -907,8 +1003,8 @@ void KaleidoScope_DrawPages(PlayState* play, GraphicsContext* gfxCtx) {
 
                 gSPMatrix(POLY_OPA_DISP++, Matrix_NewMtx(gfxCtx), G_MTX_NOPUSH | G_MTX_LOAD | G_MTX_MODELVIEW);
 
-                POLY_OPA_DISP =
-                    KaleidoScope_DrawPageSections(POLY_OPA_DISP, pauseCtx->questPageVtx, sQuestPageBgTextures);
+                POLY_OPA_DISP = KaleidoScope_DrawPageSections(POLY_OPA_DISP, pauseCtx->questPageVtx,
+                                                              GET_REGION_TEX(sQuestPageBgTextures));
 
                 GameInteractor_ExecuteBeforeKaleidoDrawPage(pauseCtx, pauseCtx->pageIndex);
                 KaleidoScope_DrawQuestStatus(play);
@@ -930,8 +1026,8 @@ void KaleidoScope_DrawPages(PlayState* play, GraphicsContext* gfxCtx) {
 
                 gSPMatrix(POLY_OPA_DISP++, Matrix_NewMtx(gfxCtx), G_MTX_NOPUSH | G_MTX_LOAD | G_MTX_MODELVIEW);
 
-                POLY_OPA_DISP =
-                    KaleidoScope_DrawPageSections(POLY_OPA_DISP, pauseCtx->maskPageVtx, sMaskPageBgTextures);
+                POLY_OPA_DISP = KaleidoScope_DrawPageSections(POLY_OPA_DISP, pauseCtx->maskPageVtx,
+                                                              GET_REGION_TEX(sMaskPageBgTextures));
 
                 GameInteractor_ExecuteBeforeKaleidoDrawPage(pauseCtx, pauseCtx->pageIndex);
                 KaleidoScope_DrawMaskSelect(play);
@@ -1497,7 +1593,8 @@ void KaleidoScope_DrawOwlWarpMapPage(PlayState* play) {
 
     gSPMatrix(POLY_OPA_DISP++, Matrix_NewMtx(play->state.gfxCtx), G_MTX_NOPUSH | G_MTX_LOAD | G_MTX_MODELVIEW);
 
-    POLY_OPA_DISP = KaleidoScope_DrawPageSections(POLY_OPA_DISP, pauseCtx->mapPageVtx, sMapPageBgTextures);
+    POLY_OPA_DISP =
+        KaleidoScope_DrawPageSections(POLY_OPA_DISP, pauseCtx->mapPageVtx, GET_REGION_TEX(sMapPageBgTextures));
 
     Matrix_RotateYF(R_PAUSE_WORLD_MAP_YAW / 1000.0f, MTXMODE_NEW);
 
@@ -3682,7 +3779,7 @@ void KaleidoScope_Update(PlayState* play) {
                             STOP_GAMESTATE(&play->state);
                             SET_NEXT_GAMESTATE(&play->state, TitleSetup_Init, sizeof(TitleSetupState));
                             Audio_MuteAllSeqExceptSystemAndOcarina(20);
-                            gSaveContext.seqId = (u8)NA_BGM_DISABLED;
+                            gSaveContext.seqId = NA_BGM_DISABLED;
                             gSaveContext.ambienceId = AMBIENCE_ID_DISABLED;
                         }
                     }
@@ -4138,6 +4235,7 @@ void KaleidoScope_Update(PlayState* play) {
             gSaveContext.hudVisibility = HUD_VISIBILITY_IDLE;
             Interface_SetHudVisibility(sUnpausedHudVisibility);
             Audio_SetPauseState(false);
+            GameInteractor_ExecuteOnKaleidoClose();
             break;
 
         default:

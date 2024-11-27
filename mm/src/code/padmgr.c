@@ -473,6 +473,9 @@ void PadMgr_UpdateInputs(void) {
                         sPadMgrInstance->pakType[i] = CONT_PAK_NONE;
                         sPadMgrInstance->rumbleTimer[i] = 0xFF;
                     }
+
+                    input->cur.left_click = 0;
+                    input->cur.right_click = 0;
                     break;
 
                 default:
@@ -502,6 +505,12 @@ void PadMgr_UpdateInputs(void) {
 
         if (1) {}
         PadMgr_AdjustInput(input);
+
+        diff = input->prev.left_click != input->cur.left_click;
+        input->press.left_click = diff;
+
+        diff = input->prev.right_click != input->cur.right_click;
+        input->press.right_click = diff;
     }
 }
 

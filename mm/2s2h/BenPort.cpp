@@ -14,6 +14,7 @@
 #include "z64animation.h"
 #include "z64bgcheck.h"
 #include <libultraship/libultra/gbi.h>
+#include "stb_image.h"
 #include <Fonts.h>
 #ifdef _WIN32
 #include <Windows.h>
@@ -55,6 +56,7 @@ CrowdControl* CrowdControl::Instance;
 #include "2s2h/DeveloperTools/DebugConsole.h"
 #include "2s2h/DeveloperTools/DeveloperTools.h"
 #include "2s2h/SaveManager/SaveManager.h"
+#include "2s2h/Enhancements/Audio/AudioCollection.h"
 #include "2s2h/ShipUtils.h"
 
 // Resource Types/Factories
@@ -102,6 +104,7 @@ CrowdControl* CrowdControl::Instance;
 
 OTRGlobals* OTRGlobals::Instance;
 GameInteractor* GameInteractor::Instance;
+AudioCollection* AudioCollection::Instance;
 
 extern "C" char** cameraStrings;
 bool prevAltAssets = false;
@@ -113,6 +116,7 @@ Color_RGB8 zoraColor = { 0x00, 0xEC, 0x64 };
 
 OTRGlobals::OTRGlobals() {
     std::vector<std::string> archiveFiles;
+    std::vector<std::string> patchFiles;
     std::string mmPathO2R = Ship::Context::LocateFileAcrossAppDirs("mm.o2r", appShortName);
     std::string mmPathZIP = Ship::Context::LocateFileAcrossAppDirs("mm.zip", appShortName);
     if (std::filesystem::exists(mmPathO2R)) {
@@ -136,18 +140,27 @@ OTRGlobals::OTRGlobals() {
         if (std::filesystem::is_directory(patchesPath)) {
             for (const auto& p : std::filesystem::recursive_directory_iterator(patchesPath)) {
                 if (StringHelper::IEquals(p.path().extension().string(), ".o2r")) {
-                    archiveFiles.push_back(p.path().generic_string());
+                    patchFiles.push_back(p.path().generic_string());
                 } else if (StringHelper::IEquals(p.path().extension().string(), ".zip")) {
-                    archiveFiles.push_back(p.path().generic_string());
+                    patchFiles.push_back(p.path().generic_string());
                 } else if (StringHelper::IEquals(p.path().extension().string(), ".otr")) {
-                    archiveFiles.push_back(p.path().generic_string());
+                    patchFiles.push_back(p.path().generic_string());
                 }
             }
         }
     }
 
-    std::unordered_set<uint32_t> validHashes = { MM_NTSC_US_10, MM_NTSC_US_GC };
+    // Sort all patch files from the mods directory lexigraphically to guarantee sort order across all platforms
+    std::sort(patchFiles.begin(), patchFiles.end(), [](const std::string& a, const std::string& b) {
+        // Sort based on file name alone, excluding file extension, so that order is not impacted by archive format
+        const std::string aFileName = a.substr(0, a.find_last_of("."));
+        const std::string bFileName = b.substr(0, b.find_last_of("."));
+        return std::lexicographical_compare(aFileName.begin(), aFileName.end(), bFileName.begin(), bFileName.end(),
+                                            [](char c1, char c2) { return std::tolower(c1) < std::tolower(c2); });
+    });
 
+    archiveFiles.insert(archiveFiles.end(), patchFiles.begin(), patchFiles.end());
+    std::unordered_set<uint32_t> ValidHashes = { MM_NTSC_US_10, MM_NTSC_US_GC, MM_NTSC_JP_GC };
     // tell LUS to reserve 3 SoH specific threads (Game, Audio, Save)
     context =
         Ship::Context::CreateInstance("2 Ship 2 Harkinian", appShortName, "2ship2harkinian.json", archiveFiles, {}, 3,
@@ -206,14 +219,24 @@ OTRGlobals::OTRGlobals() {
                                     "Cutscene", static_cast<uint32_t>(SOH::ResourceType::SOH_Cutscene), 0);
     loader->RegisterResourceFactory(std::make_shared<SOH::ResourceFactoryBinaryTextMMV0>(), RESOURCE_FORMAT_BINARY,
                                     "TextMM", static_cast<uint32_t>(SOH::ResourceType::TSH_TextMM), 0);
+
     loader->RegisterResourceFactory(std::make_shared<SOH::ResourceFactoryBinaryAudioSampleV2>(), RESOURCE_FORMAT_BINARY,
                                     "AudioSample", static_cast<uint32_t>(SOH::ResourceType::SOH_AudioSample), 2);
+    loader->RegisterResourceFactory(std::make_shared<SOH::ResourceFactoryXMLAudioSampleV0>(), RESOURCE_FORMAT_XML,
+                                    "Sample", static_cast<uint32_t>(SOH::ResourceType::SOH_AudioSample), 0);
+
     loader->RegisterResourceFactory(std::make_shared<SOH::ResourceFactoryBinaryAudioSoundFontV2>(),
                                     RESOURCE_FORMAT_BINARY, "AudioSoundFont",
                                     static_cast<uint32_t>(SOH::ResourceType::SOH_AudioSoundFont), 2);
+    loader->RegisterResourceFactory(std::make_shared<SOH::ResourceFactoryXMLSoundFontV0>(), RESOURCE_FORMAT_XML,
+                                    "SoundFont", static_cast<uint32_t>(SOH::ResourceType::SOH_AudioSoundFont), 0);
+
     loader->RegisterResourceFactory(std::make_shared<SOH::ResourceFactoryBinaryAudioSequenceV2>(),
                                     RESOURCE_FORMAT_BINARY, "AudioSequence",
                                     static_cast<uint32_t>(SOH::ResourceType::SOH_AudioSequence), 2);
+    loader->RegisterResourceFactory(std::make_shared<SOH::ResourceFactoryXMLAudioSequenceV0>(), RESOURCE_FORMAT_XML,
+                                    "Sequence", static_cast<uint32_t>(SOH::ResourceType::SOH_AudioSequence), 0);
+
     loader->RegisterResourceFactory(std::make_shared<SOH::ResourceFactoryBinaryBackgroundV0>(), RESOURCE_FORMAT_BINARY,
                                     "Background", static_cast<uint32_t>(SOH::ResourceType::SOH_Background), 0);
     loader->RegisterResourceFactory(std::make_shared<SOH::ResourceFactoryBinaryTextureAnimationV0>(),
@@ -230,7 +253,7 @@ OTRGlobals::OTRGlobals() {
 
     auto versions = context->GetResourceManager()->GetArchiveManager()->GetGameVersions();
     for (uint32_t version : versions) {
-        if (!validHashes.contains(version)) {
+        if (!ValidHashes.contains(version)) {
 #if defined(__SWITCH__)
             SPDLOG_ERROR("Invalid O2R File!");
 #elif defined(__WIIU__)
@@ -267,6 +290,10 @@ uint32_t OTRGlobals::GetInterpolationFPS() {
 
     return std::min<uint32_t>(Ship::Context::GetInstance()->GetWindow()->GetCurrentRefreshRate(),
                               CVarGetInteger("gInterpolationFPS", 20));
+}
+
+extern "C" uint32_t Ship_GetInterpolationFPS() {
+    return OTRGlobals::Instance->GetInterpolationFPS();
 }
 
 struct ExtensionEntry {
@@ -634,6 +661,7 @@ extern "C" void InitOTR() {
 
     OTRGlobals::Instance = new OTRGlobals();
     GameInteractor::Instance = new GameInteractor();
+    AudioCollection::Instance = new AudioCollection();
     LoadGuiTextures();
     BenGui::SetupGuiElements();
     InitEnhancements();
@@ -686,6 +714,7 @@ extern "C" void DeinitOTR() {
     BenGui::Destroy();
 
     OTRGlobals::Instance->context = nullptr;
+    delete AudioCollection::Instance;
 }
 
 #ifdef _WIN32
@@ -963,6 +992,7 @@ extern "C" uint32_t ResourceMgr_GetGamePlatform(int index) {
         case MM_NTSC_US_10:
             return GAME_PLATFORM_N64;
         case MM_NTSC_US_GC:
+        case MM_NTSC_JP_GC:
             return GAME_PLATFORM_GC;
     }
 }
@@ -974,7 +1004,21 @@ extern "C" uint32_t ResourceMgr_GetGameRegion(int index) {
     switch (version) {
         case MM_NTSC_US_10:
         case MM_NTSC_US_GC:
+        case MM_NTSC_JP_GC:
             return GAME_REGION_NTSC;
+    }
+}
+
+extern "C" uint32_t ResourceMgr_GetGameDefaultLanguage(int index) {
+    uint32_t version =
+        Ship::Context::GetInstance()->GetResourceManager()->GetArchiveManager()->GetGameVersions()[index];
+
+    switch (version) {
+        case MM_NTSC_US_10:
+        case MM_NTSC_US_GC:
+            return LANGUAGE_ENG;
+        case MM_NTSC_JP_GC:
+            return LANGUAGE_JPN;
     }
 }
 
@@ -1280,6 +1324,10 @@ extern "C" SequenceData ResourceMgr_LoadSeqByName(const char* path) {
     SequenceData* sequence = (SequenceData*)ResourceGetDataByName(path);
     return *sequence;
 }
+extern "C" SequenceData* ResourceMgr_LoadSeqPtrByName(const char* path) {
+    SequenceData* sequence = (SequenceData*)ResourceGetDataByName(path);
+    return sequence;
+}
 extern "C" KeyFrameSkeleton* ResourceMgr_LoadKeyFrameSkelByName(const char* path) {
     return (KeyFrameSkeleton*)ResourceGetDataByName(path);
 }
@@ -1350,9 +1398,14 @@ extern "C" SoundFontSample* ResourceMgr_LoadAudioSample(const char* path) {
 }
 #endif
 
-extern "C" SoundFont* ResourceMgr_LoadAudioSoundFont(const char* path) {
+extern "C" SoundFont* ResourceMgr_LoadAudioSoundFontByName(const char* path) {
     return (SoundFont*)ResourceGetDataByName(path);
 }
+
+extern "C" SoundFont* ResourceMgr_LoadAudioSoundFontByCRC(uint64_t crc) {
+    return (SoundFont*)ResourceGetDataByCrc(crc);
+}
+
 extern "C" int ResourceMgr_OTRSigCheck(char* imgData) {
     uintptr_t i = (uintptr_t)(imgData);
 
@@ -1561,6 +1614,10 @@ extern "C" uint32_t OTRGetCurrentHeight() {
     return OTRGlobals::Instance->context->GetWindow()->GetHeight();
 }
 
+extern "C" void OTRMoveCursor(uint32_t x, uint32_t y) {
+    OTRGlobals::Instance->context->GetWindow()->MoveCursor(x, y);
+}
+
 Color_RGB8 GetColorForControllerLED() {
 #if 0
     auto brightness = CVarGetFloat("gLedBrightness", 1.0f) / 1.0f;
@@ -1749,4 +1806,8 @@ extern "C" int Controller_ShouldRumble(size_t slot) {
     }
 
     return 0;
+}
+
+extern "C" void Messagebox_ShowErrorBox(char* title, char* body) {
+    Extractor::ShowErrorBox(title, body);
 }

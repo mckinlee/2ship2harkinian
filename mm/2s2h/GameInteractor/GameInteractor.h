@@ -74,6 +74,16 @@ typedef enum {
     VB_TRANSFORM_THUNDER_MATRIX,
     VB_PLAY_HEART_CONTAINER_GET_FANFARE,
     VB_BE_HOOKSHOT_SURFACE,
+    VB_DEKU_GUARD_SHOW_SEARCH_BALLS,
+    VB_ALLOW_EQUIP_MASK,
+    VB_DRAW_MASK_ITEM,
+    GI_VB_MANUAL_JUMP,
+    VB_DAMAGE_MULTIPLIER,
+    VB_DAMAGE_EFFECT,
+    VB_DRAW_DAMAGE_EFFECT,
+    VB_USE_NULL_FOR_DRAW_DAMAGE_EFFECTS,
+    VB_CHECK_BUMPER_COLLISION,
+    VB_DISPLAY_SONG_OF_DOUBLE_TIME_PROMPT,
 } GIVanillaBehavior;
 
 typedef enum {
@@ -93,6 +103,8 @@ typedef enum {
     GI_INVERT_FIRST_PERSON_RIGHT_STICK_X,
     GI_INVERT_FIRST_PERSON_RIGHT_STICK_Y,
     GI_INVERT_FIRST_PERSON_MOVING_X,
+    GI_INVERT_FIRST_PERSON_MOUSE_X,
+    GI_INVERT_FIRST_PERSON_MOUSE_Y
 } GIInvertType;
 
 typedef enum {
@@ -294,6 +306,7 @@ class GameInteractor {
     DEFINE_HOOK(OnKaleidoUpdate, (PauseContext * pauseCtx));
     DEFINE_HOOK(BeforeKaleidoDrawPage, (PauseContext * pauseCtx, u16 pauseIndex));
     DEFINE_HOOK(AfterKaleidoDrawPage, (PauseContext * pauseCtx, u16 pauseIndex));
+    DEFINE_HOOK(OnKaleidoClose, ());
     DEFINE_HOOK(OnSaveInit, (s16 fileNum));
     DEFINE_HOOK(BeforeEndOfCycleSave, ());
     DEFINE_HOOK(AfterEndOfCycleSave, ());
@@ -344,6 +357,7 @@ void GameInteractor_ExecuteOnConsoleLogoUpdate();
 void GameInteractor_ExecuteOnKaleidoUpdate(PauseContext* pauseCtx);
 void GameInteractor_ExecuteBeforeKaleidoDrawPage(PauseContext* pauseCtx, u16 pauseIndex);
 void GameInteractor_ExecuteAfterKaleidoDrawPage(PauseContext* pauseCtx, u16 pauseIndex);
+void GameInteractor_ExecuteOnKaleidoClose();
 void GameInteractor_ExecuteOnSaveInit(s16 fileNum);
 void GameInteractor_ExecuteBeforeEndOfCycleSave();
 void GameInteractor_ExecuteAfterEndOfCycleSave();

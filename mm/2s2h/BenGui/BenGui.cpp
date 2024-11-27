@@ -8,7 +8,9 @@
 #include <Fast3D/gfx_pc.h>
 #include "UIWidgets.hpp"
 #include "HudEditor.h"
+#include "2s2h/Enhancements/Audio/AudioEditor.h"
 #include "Notification.h"
+#include <Enhancements/ResolutionEditor/ResolutionEditor.h>
 
 #ifdef __APPLE__
 #include "graphic/Fast3D/gfx_metal.h"
@@ -38,11 +40,13 @@ std::shared_ptr<HudEditorWindow> mHudEditorWindow;
 std::shared_ptr<ActorViewerWindow> mActorViewerWindow;
 std::shared_ptr<CollisionViewerWindow> mCollisionViewerWindow;
 std::shared_ptr<EventLogWindow> mEventLogWindow;
+std::shared_ptr<AudioEditor> mAudioEditorWindow;
 std::shared_ptr<BenMenu> mBenMenu;
 std::shared_ptr<BenInputEditorWindow> mBenInputEditorWindow;
 std::shared_ptr<Notification::Window> mNotificationWindow;
 std::shared_ptr<ItemTrackerWindow> mItemTrackerWindow;
 std::shared_ptr<ItemTrackerSettingsWindow> mItemTrackerSettingsWindow;
+std::shared_ptr<AdvancedResolutionSettings::AdvancedResolutionSettingsWindow> mAdvancedResolutionSettingsWindow;
 
 void SetupGuiElements() {
     auto gui = Ship::Context::GetInstance()->GetWindow()->GetGui();
@@ -100,17 +104,25 @@ void SetupGuiElements() {
     mEventLogWindow = std::make_shared<EventLogWindow>("gWindows.EventLog", "Event Log", ImVec2(520, 600));
     gui->AddGuiWindow(mEventLogWindow);
 
+    mAudioEditorWindow = std::make_shared<AudioEditor>("gWindows.AudioEditor", "Audio Editor");
+    gui->AddGuiWindow(mAudioEditorWindow);
+
     mItemTrackerWindow = std::make_shared<ItemTrackerWindow>("gWindows.ItemTracker", "Item Tracker");
     gui->AddGuiWindow(mItemTrackerWindow);
 
     mItemTrackerSettingsWindow = std::make_shared<ItemTrackerSettingsWindow>("gWindows.ItemTrackerSettings",
                                                                              "Item Tracker Settings", ImVec2(800, 400));
     gui->AddGuiWindow(mItemTrackerSettingsWindow);
+
     gui->SetPadBtnTogglesMenu();
 
     mNotificationWindow = std::make_shared<Notification::Window>("gWindows.Notifications", "Notifications Window");
     gui->AddGuiWindow(mNotificationWindow);
     mNotificationWindow->Show();
+
+    mAdvancedResolutionSettingsWindow = std::make_shared<AdvancedResolutionSettings::AdvancedResolutionSettingsWindow>(
+        "gWindows.gAdvancedResolutionEditor", "Advanced Resolution Settings");
+    gui->AddGuiWindow(mAdvancedResolutionSettingsWindow);
 }
 
 void Destroy() {
@@ -129,7 +141,9 @@ void Destroy() {
     mSaveEditorWindow = nullptr;
     mHudEditorWindow = nullptr;
     mActorViewerWindow = nullptr;
+    mAudioEditorWindow = nullptr;
     mItemTrackerWindow = nullptr;
     mItemTrackerSettingsWindow = nullptr;
+    mAdvancedResolutionSettingsWindow = nullptr;
 }
 } // namespace BenGui
