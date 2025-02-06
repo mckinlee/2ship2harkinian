@@ -94,6 +94,11 @@ typedef enum {
     VB_GORON_ROLL_DISABLE_SPIKE_MODE,
     VB_DEKU_LINK_SPIN_ON_LAST_HOP,
     VB_CLAMP_ANIMATION_SPEED,
+    VB_GIBDO_TRADE_SEQUENCE_SUFFICIENT_QUANTITY_PRESENTED,
+    VB_GIBDO_TRADE_SEQUENCE_ACCEPT_RED_POTION,
+    VB_GIBDO_TRADE_SEQUENCE_TAKE_MORE_THAN_ONE_ITEM,
+    VB_GIBDO_TRADE_SEQUENCE_DO_TRADE,
+    VB_GET_ITEM_ACTION_FROM_MASK,
 } GIVanillaBehavior;
 
 typedef enum {
@@ -319,6 +324,8 @@ class GameInteractor {
     DEFINE_HOOK(BeforeEndOfCycleSave, ());
     DEFINE_HOOK(AfterEndOfCycleSave, ());
     DEFINE_HOOK(BeforeMoonCrashSaveReset, ());
+    DEFINE_HOOK(AfterInterfaceClockDraw, ());
+    DEFINE_HOOK(BeforeInterfaceClockDraw, ());
 
     DEFINE_HOOK(OnSceneInit, (s8 sceneId, s8 spawnNum));
     DEFINE_HOOK(OnRoomInit, (s8 sceneId, s8 roomNum));
@@ -370,6 +377,8 @@ void GameInteractor_ExecuteOnSaveInit(s16 fileNum);
 void GameInteractor_ExecuteBeforeEndOfCycleSave();
 void GameInteractor_ExecuteAfterEndOfCycleSave();
 void GameInteractor_ExecuteBeforeMoonCrashSaveReset();
+void GameInteractor_ExecuteAfterInterfaceClockDraw();
+void GameInteractor_ExecuteBeforeInterfaceClockDraw();
 
 void GameInteractor_ExecuteOnSceneInit(s16 sceneId, s8 spawnNum);
 void GameInteractor_ExecuteOnRoomInit(s16 sceneId, s8 roomNum);
