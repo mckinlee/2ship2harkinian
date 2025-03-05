@@ -19,11 +19,35 @@ static HOOK_ID killSkipEntranceCutsceneHookId = 0;
 
 // Used for saving through Autosaves and Pause Menu saves.
 extern "C" int SavingEnhancements_GetSaveEntrance() {
-    // Maintain respawn information, used for grottos
-    for (int i = 0; i < RESPAWN_MODE_MAX; i++) {
-        gSaveContext.save.shipSaveInfo.respawn[i] = gSaveContext.respawn[i];
+    if (CVarGetInteger("gEnhancements.Saving.RememberSaveLocation", 0)) {
+        // Maintain respawn information, used for grottos
+        for (int i = 0; i < RESPAWN_MODE_MAX; i++) {
+            gSaveContext.save.shipSaveInfo.respawn[i] = gSaveContext.respawn[i];
+        }
+        return gSaveContext.save.entrance;
+    } else {
+        switch (gPlayState->sceneId) {
+            // Woodfall Temple + Odolwa
+            case SCENE_MITURIN:
+            case SCENE_MITURIN_BS:
+                return ENTRANCE(WOODFALL_TEMPLE, 0);
+            // Snowhead Temple + Goht
+            case SCENE_HAKUGIN:
+            case SCENE_HAKUGIN_BS:
+                return ENTRANCE(SNOWHEAD_TEMPLE, 0);
+            // Great Bay Temple + Gyorg
+            case SCENE_SEA:
+            case SCENE_SEA_BS:
+                return ENTRANCE(GREAT_BAY_TEMPLE, 0);
+            // Stone Tower Temple (+ inverted) + Twinmold
+            case SCENE_INISIE_N:
+            case SCENE_INISIE_R:
+            case SCENE_INISIE_BS:
+                return ENTRANCE(STONE_TOWER_TEMPLE, 0);
+            default:
+                return ENTRANCE(SOUTH_CLOCK_TOWN, 0);
+        }
     }
-    return gSaveContext.save.entrance;
 }
 
 extern "C" bool SavingEnhancements_CanSave() {
