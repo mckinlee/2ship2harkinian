@@ -230,8 +230,7 @@ static void DrawItemsTab() {
                  CheckboxOptions({ { .disabled = true, .disabledTooltip = "Coming Soon" } }));
     CVarCheckbox("Inverted Song of Time", "gPlaceholderBool",
                  CheckboxOptions({ { .disabled = true, .disabledTooltip = "Coming Soon" } }));
-    CVarCheckbox("Saria's Song", "gPlaceholderBool",
-                 CheckboxOptions({ { .disabled = true, .disabledTooltip = "Coming Soon" } }));
+    CVarCheckbox("Saria's Song", Rando::StaticData::Options[RO_SHUFFLE_SARIAS_SONG].cvar);
     CVarCheckbox("Sun's Song", "gPlaceholderBool",
                  CheckboxOptions({ { .disabled = true, .disabledTooltip = "Coming Soon" } }));
     ImGui::EndChild();
@@ -376,8 +375,6 @@ static void DrawHintsTab() {
                             .disabledTooltip = "Soon you will be able to disable these. Currently hinted:\n- Bomb Shop "
                                                "4th Item\n- Lottery\n- Great Fairy Fountains\n- Mountain Smithy" } })
             .DefaultValue(true));
-    CVarCheckbox("Saria's Song", "gPlaceholderBool",
-                 CheckboxOptions({ { .disabled = true, .disabledTooltip = "Coming Soon" } }));
     CVarCheckbox("Song of Soaring", "gPlaceholderBool",
                  CheckboxOptions({ { .disabled = true, .disabledTooltip = "Coming Soon" } }));
     CVarCheckbox(

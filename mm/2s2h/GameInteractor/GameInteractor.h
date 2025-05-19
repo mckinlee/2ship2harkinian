@@ -240,6 +240,7 @@ typedef enum {
     VB_SETUP_TRANSITION,
     VB_BE_NEAR_DOOR,
     VB_LOAD_PLAYER_ANIMATION_FRAME,
+    VB_MSGMODE_TEXT_DONE_CAPTURE_DEBUG_END,
 } GIVanillaBehavior;
 
 typedef enum {

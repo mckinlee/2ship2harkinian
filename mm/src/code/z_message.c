@@ -5863,16 +5863,17 @@ void Message_Update(PlayState* play) {
                             }
                             Message_CloseTextbox(play);
                         }
-                    } else if ((msgCtx->textboxEndType == TEXTBOX_ENDTYPE_60) ||
-                               (msgCtx->textboxEndType == TEXTBOX_ENDTYPE_61) ||
-                               (msgCtx->textboxEndType == TEXTBOX_ENDTYPE_10) ||
-                               (msgCtx->textboxEndType == TEXTBOX_ENDTYPE_11) ||
-                               (msgCtx->textboxEndType == TEXTBOX_ENDTYPE_50) ||
-                               (msgCtx->textboxEndType == TEXTBOX_ENDTYPE_52) ||
-                               (msgCtx->textboxEndType == TEXTBOX_ENDTYPE_55) ||
-                               (msgCtx->textboxEndType == TEXTBOX_ENDTYPE_56) ||
-                               (msgCtx->textboxEndType == TEXTBOX_ENDTYPE_57) ||
-                               (msgCtx->textboxEndType == TEXTBOX_ENDTYPE_62)) {
+                    } else if (GameInteractor_Should(VB_MSGMODE_TEXT_DONE_CAPTURE_DEBUG_END,
+                                                     (msgCtx->textboxEndType == TEXTBOX_ENDTYPE_60) ||
+                                                         (msgCtx->textboxEndType == TEXTBOX_ENDTYPE_61) ||
+                                                         (msgCtx->textboxEndType == TEXTBOX_ENDTYPE_10) ||
+                                                         (msgCtx->textboxEndType == TEXTBOX_ENDTYPE_11) ||
+                                                         (msgCtx->textboxEndType == TEXTBOX_ENDTYPE_50) ||
+                                                         (msgCtx->textboxEndType == TEXTBOX_ENDTYPE_52) ||
+                                                         (msgCtx->textboxEndType == TEXTBOX_ENDTYPE_55) ||
+                                                         (msgCtx->textboxEndType == TEXTBOX_ENDTYPE_56) ||
+                                                         (msgCtx->textboxEndType == TEXTBOX_ENDTYPE_57) ||
+                                                         (msgCtx->textboxEndType == TEXTBOX_ENDTYPE_62))) {
                         //! FAKE: debug?
                         if (msgCtx->textboxEndType == TEXTBOX_ENDTYPE_50) {}
                     } else if (pauseCtx->itemDescriptionOn) {
@@ -6058,6 +6059,9 @@ void Message_Update(PlayState* play) {
                         Message_StartTextbox(play, 0x1B95, NULL);
                         play->msgCtx.ocarinaMode = OCARINA_MODE_PROCESS_RESTRICTED_SONG;
                     }
+                } else if (sLastPlayedSong == OCARINA_SONG_SARIAS) {
+                    Message_StartTextbox(play, 0x1B95, NULL);
+                    play->msgCtx.ocarinaMode = OCARINA_MODE_PROCESS_RESTRICTED_SONG;
                 } else if ((msgCtx->ocarinaAction == OCARINA_ACTION_FREE_PLAY_DONE) &&
                            ((play->msgCtx.ocarinaMode == OCARINA_MODE_ACTIVE) ||
                             (play->msgCtx.ocarinaMode == OCARINA_MODE_EVENT) ||
