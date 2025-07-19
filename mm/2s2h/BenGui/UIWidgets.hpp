@@ -216,7 +216,8 @@ using ComboVec_t = std::vector<const char*>*;
     };
 
     struct IntSliderOptions : WidgetOptions {
-        bool showButtons = true;
+        bool showAdjustmentButtons = true;
+        bool showResetButton = true;
         const char* format = "%d";
         int32_t step = 1;
         int32_t min = 1;
@@ -228,8 +229,12 @@ using ComboVec_t = std::vector<const char*>*;
         Colors color = Colors::Gray;
         ImGuiSliderFlags flags = 0;
 
-        IntSliderOptions& ShowButtons(bool showButtons_) {
-            showButtons = showButtons_;
+        IntSliderOptions& ShowAdjustmentButtons(bool showAdjustmentButtons_) {
+            showAdjustmentButtons = showAdjustmentButtons_;
+            return *this;
+        }
+        IntSliderOptions& ShowResetButton(bool showResetButton_) {
+            showResetButton = showResetButton_;
             return *this;
         }
         IntSliderOptions& Format(const char* format_) {
@@ -275,7 +280,8 @@ using ComboVec_t = std::vector<const char*>*;
     };
 
     struct FloatSliderOptions : WidgetOptions {
-        bool showButtons = true;
+        bool showAdjustmentButtons = true;
+        bool showResetButton = true;
         const char* format = "%f";
         float step = 0.01f;
         float min = 0.01f;
@@ -288,8 +294,12 @@ using ComboVec_t = std::vector<const char*>*;
         Colors color = Colors::Gray;
         ImGuiSliderFlags flags = 0;
 
-        FloatSliderOptions& ShowButtons(bool showButtons_) {
-            showButtons = showButtons_;
+        FloatSliderOptions& ShowAdjustmentButtons(bool showAdjustmentButtons_) {
+            showAdjustmentButtons = showAdjustmentButtons_;
+            return *this;
+        }
+        FloatSliderOptions& ShowResetButton(bool showResetButton_) {
+            showResetButton = showResetButton_;
             return *this;
         }
         FloatSliderOptions& Format(const char* format_) {

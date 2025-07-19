@@ -354,7 +354,7 @@ void BenMenu::AddSettings() {
         .CVar("gSettings.Audio.MasterVolume")
         .Options(FloatSliderOptions()
                      .Tooltip("Adjust the overall sound volume.")
-                     .ShowButtons(false)
+                     .ShowAdjustmentButtons(false)
                      .Format("")
                      .IsPercentage());
     AddWidget(path, "Main Music Volume: %.0f%%", WIDGET_CVAR_SLIDER_FLOAT)
@@ -364,7 +364,7 @@ void BenMenu::AddSettings() {
         })
         .Options(FloatSliderOptions()
                      .Tooltip("Adjust the background music volume.")
-                     .ShowButtons(false)
+                     .ShowAdjustmentButtons(false)
                      .Format("")
                      .IsPercentage());
     AddWidget(path, "Sub Music Volume: %.0f%%", WIDGET_CVAR_SLIDER_FLOAT)
@@ -373,7 +373,7 @@ void BenMenu::AddSettings() {
             AudioSeq_SetPortVolumeScale(SEQ_PLAYER_BGM_SUB, CVarGetFloat("gSettings.Audio.SubMusicVolume", 1.0f));
         })
         .Options(
-            FloatSliderOptions().Tooltip("Adjust the sub music volume.").ShowButtons(false).Format("").IsPercentage());
+            FloatSliderOptions().Tooltip("Adjust the sub music volume.").ShowAdjustmentButtons(false).Format("").IsPercentage());
     AddWidget(path, "Sound Effects Volume: %.0f%%", WIDGET_CVAR_SLIDER_FLOAT)
         .CVar("gSettings.Audio.SoundEffectsVolume")
         .Callback([](WidgetInfo& info) {
@@ -381,7 +381,8 @@ void BenMenu::AddSettings() {
         })
         .Options(FloatSliderOptions()
                      .Tooltip("Adjust the sound effects volume.")
-                     .ShowButtons(false)
+                     .ShowAdjustmentButtons(true)
+                     .ShowResetButton(false)
                      .Format("")
                      .IsPercentage());
     AddWidget(path, "Fanfare Volume: %.0f%%", WIDGET_CVAR_SLIDER_FLOAT)
@@ -390,7 +391,7 @@ void BenMenu::AddSettings() {
             AudioSeq_SetPortVolumeScale(SEQ_PLAYER_FANFARE, CVarGetFloat("gSettings.Audio.FanfareVolume", 1.0f));
         })
         .Options(
-            FloatSliderOptions().Tooltip("Adjust the fanfare volume.").ShowButtons(false).Format("").IsPercentage());
+            FloatSliderOptions().Tooltip("Adjust the fanfare volume.").ShowAdjustmentButtons(false).Format("").IsPercentage());
     AddWidget(path, "Ambience Volume: %.0f%%", WIDGET_CVAR_SLIDER_FLOAT)
         .CVar("gSettings.Audio.AmbienceVolume")
         .Callback([](WidgetInfo& info) {
@@ -398,7 +399,7 @@ void BenMenu::AddSettings() {
         })
         .Options(FloatSliderOptions()
                      .Tooltip("Adjust the ambient sound volume.")
-                     .ShowButtons(false)
+                     .ShowAdjustmentButtons(false)
                      .Format("")
                      .IsPercentage());
     AddWidget(path, "Audio API", WIDGET_AUDIO_BACKEND);
@@ -428,7 +429,7 @@ void BenMenu::AddSettings() {
             FloatSliderOptions()
                 .Tooltip("Multiplies your output resolution by the value inputted, as a more intensive but effective "
                          "form of anti-aliasing.")
-                .ShowButtons(false)
+                .ShowAdjustmentButtons(false)
                 .IsPercentage()
                 .Format("")
                 .Min(0.5f)
