@@ -349,6 +349,7 @@ void BenMenu::AddSettings() {
 
     // Audio Settings
     path.sidebarName = "Audio";
+    path.column = SECTION_COLUMN_1;
     AddSidebarEntry("Settings", "Audio", 3);
     AddWidget(path, "Master Volume: %.0f%%", WIDGET_CVAR_SLIDER_FLOAT)
         .CVar("gSettings.Audio.MasterVolume")
