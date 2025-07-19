@@ -409,7 +409,7 @@ bool SliderInt(const char* label, int32_t* value, const IntSliderOptions& option
     if (options.showResetButton) {
         ImGui::SameLine(0, 3.0f);
         ImGui::SetNextItemWidth(ImGui::GetContentRegionAvail().x);
-        if (Button(ICON_FA_UNDO, ButtonOptions{ .color = options.color }.Size(Sizes::Inline)) && *value < options.max) {
+        if (Button(ICON_FA_UNDO, ButtonOptions{ .color = options.color }.Size(Sizes::Inline))) {
             *value = options.defaultValue;
             dirty = true;
         }
@@ -542,7 +542,7 @@ bool SliderFloat(const char* label, float* value, const FloatSliderOptions& opti
     if (options.showResetButton) {
         ImGui::SameLine(0, 3.0f);
         ImGui::SetNextItemWidth(ImGui::GetContentRegionAvail().x);
-        if (Button(ICON_FA_UNDO, ButtonOptions{ .color = options.color }.Size(Sizes::Inline)) && *value < options.max) {
+        if (Button(ICON_FA_UNDO, ButtonOptions{ .color = options.color }.Size(Sizes::Inline))) {
             *value = options.defaultValue;
             dirty = true;
         }
