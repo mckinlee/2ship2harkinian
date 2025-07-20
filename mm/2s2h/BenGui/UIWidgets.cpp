@@ -370,13 +370,16 @@ bool SliderInt(const char* label, int32_t* value, const IntSliderOptions& option
         }
         ImGui::SameLine(0, 3.0f);
         if (options.showResetButton) {
-            ImGui::SetNextItemWidth(ImGui::GetContentRegionAvail().x - ((ImGui::CalcTextSize("+").x + 20.0f + 3.0f) + (ImGui::CalcTextSize(ICON_FA_UNDO).x + 20.0f + 3.0f)));
+            ImGui::SetNextItemWidth(
+                ImGui::GetContentRegionAvail().x -
+                ((ImGui::CalcTextSize("+").x + 20.0f + 3.0f) + (ImGui::CalcTextSize(ICON_FA_UNDO).x + 20.0f + 3.0f)));
         } else {
             ImGui::SetNextItemWidth(ImGui::GetContentRegionAvail().x - (ImGui::CalcTextSize("+").x + 20.0f + 3.0f));
         }
     } else {
         if (options.showResetButton) {
-            ImGui::SetNextItemWidth(ImGui::GetContentRegionAvail().x - (ImGui::CalcTextSize(ICON_FA_UNDO).x + 20.0f + 3.0f));
+            ImGui::SetNextItemWidth(ImGui::GetContentRegionAvail().x -
+                                    (ImGui::CalcTextSize(ICON_FA_UNDO).x + 20.0f + 3.0f));
         } else {
             ImGui::SetNextItemWidth(ImGui::GetContentRegionAvail().x);
         }
@@ -509,13 +512,16 @@ bool SliderFloat(const char* label, float* value, const FloatSliderOptions& opti
         }
         ImGui::SameLine(0, 3.0f);
         if (options.showResetButton) {
-            ImGui::SetNextItemWidth(ImGui::GetContentRegionAvail().x - ((ImGui::CalcTextSize("+").x + 20.0f + 3.0f) + (ImGui::CalcTextSize(ICON_FA_UNDO).x + 20.0f + 3.0f)));
+            ImGui::SetNextItemWidth(
+                ImGui::GetContentRegionAvail().x -
+                ((ImGui::CalcTextSize("+").x + 20.0f + 3.0f) + (ImGui::CalcTextSize(ICON_FA_UNDO).x + 20.0f + 3.0f)));
         } else {
             ImGui::SetNextItemWidth(ImGui::GetContentRegionAvail().x - (ImGui::CalcTextSize("+").x + 20.0f + 3.0f));
         }
     } else {
         if (options.showResetButton) {
-            ImGui::SetNextItemWidth(ImGui::GetContentRegionAvail().x - (ImGui::CalcTextSize(ICON_FA_UNDO).x + 20.0f + 3.0f));
+            ImGui::SetNextItemWidth(ImGui::GetContentRegionAvail().x -
+                                    (ImGui::CalcTextSize(ICON_FA_UNDO).x + 20.0f + 3.0f));
         } else {
             ImGui::SetNextItemWidth(ImGui::GetContentRegionAvail().x);
         }
