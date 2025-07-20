@@ -382,8 +382,7 @@ void BenMenu::AddSettings() {
         })
         .Options(FloatSliderOptions()
                      .Tooltip("Adjust the sound effects volume.")
-                     .ShowAdjustmentButtons(true)
-                     .ShowResetButton(false)
+                     .ShowAdjustmentButtons(false)
                      .Format("")
                      .IsPercentage());
     AddWidget(path, "Fanfare Volume: %.0f%%", WIDGET_CVAR_SLIDER_FLOAT)
