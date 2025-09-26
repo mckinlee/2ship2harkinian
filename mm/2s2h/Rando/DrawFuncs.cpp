@@ -27,6 +27,20 @@ s32 EnMinifrog_OverrideLimbDraw(PlayState* play, s32 limbIndex, Gfx** dList, Vec
 // clang-format on
 }
 
+// Clock Functions
+#define DEG_TO_BINANG(deg) (s16)((deg) * (0x10000 / 360.0f))
+#define GET_GAME_HOUR() ((gSaveContext.save.time * 24) / 0x10000)
+#define GET_GAME_MINUTES() ((gSaveContext.save.time * 1440) / 0x10000 % 60)
+
+static inline s16 GetClockHourRotation(s32 hours, s32 minutes) {
+    f32 totalHours = hours % 12 + (minutes / 60.0f);
+    return DEG_TO_BINANG(totalHours * (360.0f / 12.0f));
+}
+
+static inline s16 GetClockMinuteRotation(s32 minutes) {
+    return DEG_TO_BINANG(minutes * (360.0f / 60.0f));
+}
+
 // Soul Effects
 void DrawEnLight(Color_RGB8 flameColor, Vec3f flameSize) {
     Gfx* sp68;
@@ -267,6 +281,8 @@ extern void DrawMinifrog(RandoItemId randoItemId, Actor* actor) {
 
 // Clock function implementation
 extern void DrawClock(RandoItemId randoItemId) {
+    static u32 lastUpdate = 0;
+
     OPEN_DISPS(gPlayState->state.gfxCtx);
     Gfx_SetupDL25_Opa(gPlayState->state.gfxCtx);
 
@@ -278,11 +294,28 @@ extern void DrawClock(RandoItemId randoItemId) {
         (randoItemId == RI_CLOCK_NIGHT_1 || randoItemId == RI_CLOCK_NIGHT_2 || randoItemId == RI_CLOCK_NIGHT_3);
     s16 sunMoonRotation = isNightClock ? 0x8000 : 0; // Moon for night, sun for day
     s32 hour = isNightClock ? 18 : 12;               // 6 PM for night, 12 PM for day
-    s16 clockRotation = (s16)(s32)(hour * (0x10000 / 24.0f));
+    static s16 clockRotation = GetClockHourRotation(GET_GAME_HOUR(), GET_GAME_MINUTES());
+    static s16 minuteRingRotation = GetClockMinuteRotation(GET_GAME_MINUTES());
+
+    if (gPlayState != NULL) {
+        if (lastUpdate == gPlayState->state.frames - 3) {
+            minuteRingRotation -= 360;
+            //clockRotation += 0x3C;
+        }
+        if (lastUpdate == gPlayState->state.frames - 6) {
+            minuteRingRotation += 360;
+            //clockRotation -= 0x3C;
+        }
+        if (lastUpdate <= gPlayState->state.frames - 34) {
+            lastUpdate = gPlayState->state.frames;
+            clockRotation = GetClockHourRotation(GET_GAME_HOUR(), GET_GAME_MINUTES());
+            minuteRingRotation = GetClockMinuteRotation(GET_GAME_MINUTES());
+        }
+    }
 
     // Minute ring (rotates with clock face)
     Matrix_Push();
-    Matrix_RotateZS(-clockRotation * 2, MTXMODE_APPLY);
+    Matrix_RotateZS(-minuteRingRotation, MTXMODE_APPLY);
     gSPMatrix(POLY_OPA_DISP++, Matrix_NewMtx(gPlayState->state.gfxCtx), G_MTX_NOPUSH | G_MTX_LOAD | G_MTX_MODELVIEW);
     gSPDisplayList(POLY_OPA_DISP++, (Gfx*)gClockTowerMinuteRingDL);
     Matrix_Pop();
@@ -292,7 +325,7 @@ extern void DrawClock(RandoItemId randoItemId) {
     gSPDisplayList(POLY_OPA_DISP++, (Gfx*)gClockTowerClockCenterAndHandDL);
 
     // Clock face with rotation and colors
-    Matrix_RotateZS(-clockRotation * 2, MTXMODE_APPLY);
+    Matrix_RotateZS(-clockRotation, MTXMODE_APPLY);
     gSPMatrix(POLY_OPA_DISP++, Matrix_NewMtx(gPlayState->state.gfxCtx), G_MTX_NOPUSH | G_MTX_LOAD | G_MTX_MODELVIEW);
     gDPSetPrimColor(POLY_OPA_DISP++, 0, 0xFF, 255, 255, 255, 255);
     gDPSetEnvColor(POLY_OPA_DISP++, 100, 100, 120, 255);
