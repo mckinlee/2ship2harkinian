@@ -3,11 +3,6 @@
 
 #include "Rando/Types.h"
 
-extern "C" {
-#include "variables.h"
-#include "functions.h"
-}
-
 namespace Rando {
 namespace ClockItems {
 
