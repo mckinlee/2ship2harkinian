@@ -3,6 +3,7 @@
 #include "2s2h/GameInteractor/GameInteractor.h"
 
 extern "C" {
+#include "functions.h"
 #include "z64game.h"
 }
 
@@ -163,10 +164,69 @@ static bool sIsRedirecting = false;
 static int sRedirectTarget = -1;
 static HOOK_ID sPlayDestroyHook = 0;
 static u8 sPreservedHopCounter = 0;
+static bool sQueuedDayTelop = false;
+static bool sQueuedDayTelopHasRespawn = false;
+static bool sQueuedDayTelopFromInitialLoad = false;
+static RespawnData sQueuedDayTelopRespawn = {};
+static bool sSuppressNextDayIncrement = false;
+static HOOK_ID sSuppressDayIncrementHook = 0;
 
 // ============================================================================
 // TIME DETECTION AND CONFIGURATION
 // ============================================================================
+
+bool IsDayHalf(int halfDayIndex) {
+    return (halfDayIndex >= 0) && (halfDayIndex < ClockItems::HALF_COUNT) && ((halfDayIndex % 2) == 0);
+}
+
+void EnsureSuppressDayIncrementHook() {
+    if (sSuppressDayIncrementHook == 0) {
+        sSuppressDayIncrementHook =
+            GameInteractor::Instance->RegisterGameHookForID<GameInteractor::ShouldVanillaBehavior>(
+                VB_SUPPRESS_DAY_INCREMENT,
+                [](GIVanillaBehavior, bool* should, va_list) {
+                    if (sSuppressNextDayIncrement) {
+                        *should = true;
+                        sSuppressNextDayIncrement = false;
+                    }
+                });
+    }
+}
+
+void QueueDayTelop(const RespawnData* respawnData, bool fromInitialLoad) {
+    sQueuedDayTelop = true;
+    sQueuedDayTelopFromInitialLoad = fromInitialLoad;
+    sQueuedDayTelopHasRespawn = respawnData != nullptr;
+
+    if (respawnData != nullptr) {
+        sQueuedDayTelopRespawn = *respawnData;
+    }
+
+    sSuppressNextDayIncrement = true;
+    EnsureSuppressDayIncrementHook();
+}
+
+void ApplyQueuedDayTelop() {
+    if (!sQueuedDayTelop) {
+        return;
+    }
+
+    if (sQueuedDayTelopHasRespawn) {
+        gSaveContext.respawn[RESPAWN_MODE_DOWN] = sQueuedDayTelopRespawn;
+        gSaveContext.respawn[RESPAWN_MODE_RETURN] = sQueuedDayTelopRespawn;
+    } else if (sQueuedDayTelopFromInitialLoad) {
+        gSaveContext.respawn[RESPAWN_MODE_RETURN] = gSaveContext.respawn[RESPAWN_MODE_DOWN];
+    } else {
+        gSaveContext.respawn[RESPAWN_MODE_RETURN] = gSaveContext.respawn[RESPAWN_MODE_DOWN];
+    }
+
+    gSaveContext.respawnFlag = -4;
+    SET_EVENTINF(EVENTINF_TRIGGER_DAYTELOP);
+
+    sQueuedDayTelop = false;
+    sQueuedDayTelopHasRespawn = false;
+    sQueuedDayTelopFromInitialLoad = false;
+}
 
 const HalfDayTimeConfig* GetHalfDayTimeConfig(int halfDayIndex) {
     if (halfDayIndex < 0 || halfDayIndex >= ClockItems::HALF_COUNT) {
@@ -251,7 +311,7 @@ void SetTimeToHalfDayStart(int halfDayIndex) {
 }
 
 // Force a scene transition to reload the current area
-void ForceSceneReload() {
+void ForceSceneReload(bool queueDayTelop) {
     Player* player = GET_PLAYER(gPlayState);
 
     // Set up the transition parameters
@@ -259,14 +319,18 @@ void ForceSceneReload() {
     gPlayState->transitionTrigger = TRANS_TRIGGER_START;
     gPlayState->transitionType = TRANS_TYPE_FADE_BLACK_FAST;
 
-    // Set up respawn data to return to the same location
-    Play_SetRespawnData(&gPlayState->state, RESPAWN_MODE_RETURN, gSaveContext.save.entrance,
-                        gPlayState->roomCtx.curRoom.num, PLAYER_PARAMS(0xFF, PLAYER_INITMODE_B),
-                        &player->actor.world.pos, player->actor.world.rot.y);
+    if ((player != nullptr) && !queueDayTelop) {
+        // Set up respawn data to return to the same location
+        Play_SetRespawnData(&gPlayState->state, RESPAWN_MODE_RETURN, gSaveContext.save.entrance,
+                            gPlayState->roomCtx.curRoom.num, PLAYER_PARAMS(0xFF, PLAYER_INITMODE_B),
+                            &player->actor.world.pos, player->actor.world.rot.y);
+    }
 
     // Configure the transition
     gSaveContext.nextTransitionType = TRANS_TYPE_FADE_BLACK;
-    gSaveContext.respawnFlag = 2;
+    if (!queueDayTelop) {
+        gSaveContext.respawnFlag = 2;
+    }
 }
 
 // ============================================================================
@@ -296,6 +360,26 @@ void ProcessHalfDayTransition(Actor* timeActor, int fromHalfDay, int toHalfDay) 
     // Get all owned half-days and find the next one after the source half day
     const u8 ownedHalfDaysMask = ClockItems::GetAllOwnedHalfDaysMask();
     int nextOwnedHalfDay = ClockItems::FindNextOwnedHalfDayAfter(fromHalfDay, ownedHalfDaysMask);
+    const bool shouldQueueDayTelop =
+        (nextOwnedHalfDay != ClockItems::TERMINAL_STATE) && IsDayHalf(nextOwnedHalfDay);
+
+    if (shouldQueueDayTelop) {
+        RespawnData respawnData = {};
+        bool hasRespawnData = false;
+
+        if (player != nullptr) {
+            Vec3f respawnPos = player->actor.world.pos;
+            s16 respawnYaw = player->actor.world.rot.y;
+
+            Play_SetRespawnData(&gPlayState->state, RESPAWN_MODE_DOWN, gSaveContext.save.entrance,
+                                gPlayState->roomCtx.curRoom.num, PLAYER_PARAMS(0xFF, PLAYER_INITMODE_B), &respawnPos,
+                                respawnYaw);
+            respawnData = gSaveContext.respawn[RESPAWN_MODE_DOWN];
+            hasRespawnData = true;
+        }
+
+        QueueDayTelop(hasRespawnData ? &respawnData : nullptr, false);
+    }
 
     // Set up redirect state using simple globals
     sIsRedirecting = true;
@@ -313,6 +397,8 @@ void ProcessHalfDayTransition(Actor* timeActor, int fromHalfDay, int toHalfDay) 
             SetTimeToHalfDayStart(nextOwnedHalfDay);
         }
 
+        ApplyQueuedDayTelop();
+
         // Update global tracking to the target half-day after the time change
         sLastKnownHalfDay = nextOwnedHalfDay;
         sIsRedirecting = false;
@@ -324,7 +410,7 @@ void ProcessHalfDayTransition(Actor* timeActor, int fromHalfDay, int toHalfDay) 
     });
 
     // Force a scene transition to apply the time change
-    ForceSceneReload();
+    ForceSceneReload(shouldQueueDayTelop);
 }
 
 // ============================================================================
@@ -387,6 +473,10 @@ void OnFileLoad() {
         const int earliestOwnedHalfDay = ClockItems::FindEarliestOwnedHalfDay(false);
         if (earliestOwnedHalfDay != -1) {
             SetTimeToHalfDayStart(earliestOwnedHalfDay);
+            if (IsDayHalf(earliestOwnedHalfDay)) {
+                QueueDayTelop(nullptr, true);
+                ApplyQueuedDayTelop();
+            }
         }
     }
 
@@ -398,6 +488,10 @@ void OnFileLoad() {
                 const int earliestOwnedHalfDay = ClockItems::FindEarliestOwnedHalfDay(false);
                 if (earliestOwnedHalfDay != -1) {
                     SetTimeToHalfDayStart(earliestOwnedHalfDay);
+                    if (IsDayHalf(earliestOwnedHalfDay)) {
+                        QueueDayTelop(nullptr, false);
+                        ApplyQueuedDayTelop();
+                    }
                 }
             }
         }
