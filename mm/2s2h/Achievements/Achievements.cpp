@@ -241,7 +241,6 @@ void Init() {
     if (CVarGetInteger("gEnhancements.Achievements.Enabled", 0)) {
         std::lock_guard<std::mutex> lock(achievementDataMutex);
         FileStorage::LoadAchievementsData(achievementData);
-        RegisterAchievementTracker();
     }
 }
 
@@ -252,7 +251,6 @@ void EnableAchievements() {
         std::lock_guard<std::mutex> lock(achievementDataMutex);
         FileStorage::LoadAchievementsData(achievementData);
     }
-    RegisterAchievementTracker();
 }
 
 bool IsUnlocked(AchievementId achievementId) {

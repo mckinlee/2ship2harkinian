@@ -173,6 +173,7 @@ void LoadAchievementsData(AchievementData& data) {
 
         // Load counters
         if (fileData.contains("counters") && fileData["counters"].is_object()) {
+            data.counters.clear();
             for (auto& [key, value] : fileData["counters"].items()) {
                 if (value.is_number_unsigned()) {
                     data.counters[key] = value.get<uint32_t>();
