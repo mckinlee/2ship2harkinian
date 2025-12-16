@@ -1,12 +1,14 @@
 // Local includes
 #include "Achievements.h"
 #include "AchievementIntegration.h"
+#include "AchievementFileStorage.h"
 #include "StaticData/Registry.h"
 
 // Standard library
 #include <cstring>
 #include <functional>
 #include <map>
+#include <mutex>
 #include <string>
 #include <vector>
 
@@ -23,6 +25,7 @@ extern "C" {
 
 // 2s2h
 #include "2s2h/BenGui/Notification.h"
+#include "2s2h/BenPort.h"
 #include "2s2h/GameInteractor/GameInteractor.h"
 #include "2s2h/ShipInit.hpp"
 
@@ -42,6 +45,9 @@ struct AchievementQueueEvent {
 
 std::vector<AchievementQueueEvent> achievementQueue;
 bool processing = false;
+FileStorage::AchievementData achievementData;
+static std::mutex achievementDataMutex;
+static std::mutex achievementQueueMutex;
 
 inline bool IsValidAchievementId(AchievementId achievementId) {
     const int idIndex = static_cast<int>(achievementId);
@@ -53,13 +59,112 @@ inline bool IsValidEventId(AchievementEvent achievementEventId) {
     return eventIndex >= 0 && eventIndex < static_cast<int>(AchievementEvent::ACHIEVEMENT_EVENT_MAX);
 }
 
+void EnsureVectorsSized(FileStorage::AchievementData& data) {
+    if (data.unlocked.size() < static_cast<size_t>(AchievementId::ACHIEVEMENT_ID_MAX)) {
+        data.unlocked.resize(static_cast<size_t>(AchievementId::ACHIEVEMENT_ID_MAX), false);
+    }
+    if (data.events.size() < static_cast<size_t>(AchievementEvent::ACHIEVEMENT_EVENT_MAX)) {
+        data.events.resize(static_cast<size_t>(AchievementEvent::ACHIEVEMENT_EVENT_MAX), false);
+    }
+}
+
+std::string GetEventCounterKey(AchievementEvent eventId) {
+    return std::to_string(static_cast<int>(eventId));
+}
+
+uint32_t GetEventCounter(AchievementEvent eventId) {
+    std::lock_guard<std::mutex> lock(achievementDataMutex);
+    EnsureVectorsSized(achievementData);
+    std::string key = GetEventCounterKey(eventId);
+    auto it = achievementData.counters.find(key);
+    return (it != achievementData.counters.end()) ? it->second : 0;
+}
+
+uint32_t GetEventCounterUnlocked(AchievementEvent eventId, const FileStorage::AchievementData& data) {
+    // Assumes mutex is already held
+    std::string key = GetEventCounterKey(eventId);
+    auto it = data.counters.find(key);
+    return (it != data.counters.end()) ? it->second : 0;
+}
+
+void IncrementEventCounter(AchievementEvent eventId) {
+    if (!IsValidEventId(eventId)) {
+        return;
+    }
+
+    FileStorage::AchievementData dataCopy;
+    {
+        std::lock_guard<std::mutex> lock(achievementDataMutex);
+        EnsureVectorsSized(achievementData);
+        std::string key = GetEventCounterKey(eventId);
+        achievementData.counters[key]++;
+        // Also update boolean flag for backward compatibility
+        const int eventIndex = static_cast<int>(eventId);
+        achievementData.events[eventIndex] = true;
+        dataCopy = achievementData;
+    }
+    FileStorage::SaveAchievementsData(dataCopy);
+}
+
+void ResetEventCounter(AchievementEvent eventId) {
+    if (!IsValidEventId(eventId)) {
+        return;
+    }
+
+    FileStorage::AchievementData dataCopy;
+    {
+        std::lock_guard<std::mutex> lock(achievementDataMutex);
+        EnsureVectorsSized(achievementData);
+        std::string key = GetEventCounterKey(eventId);
+        achievementData.counters[key] = 0;
+        // Also update boolean flag for backward compatibility
+        const int eventIndex = static_cast<int>(eventId);
+        achievementData.events[eventIndex] = false;
+        dataCopy = achievementData;
+    }
+    FileStorage::SaveAchievementsData(dataCopy);
+}
+
+void SetEventCounterValue(AchievementEvent eventId, uint32_t count) {
+    if (!IsValidEventId(eventId)) {
+        return;
+    }
+
+    FileStorage::AchievementData dataCopy;
+    {
+        std::lock_guard<std::mutex> lock(achievementDataMutex);
+        EnsureVectorsSized(achievementData);
+        std::string key = GetEventCounterKey(eventId);
+        achievementData.counters[key] = count;
+        // Also update boolean flag for backward compatibility
+        const int eventIndex = static_cast<int>(eventId);
+        achievementData.events[eventIndex] = (count > 0);
+        dataCopy = achievementData;
+    }
+    FileStorage::SaveAchievementsData(dataCopy);
+}
+
 bool IsAchievementComplete(const Achievement* achievement) {
     if (!achievement) {
         return false;
     }
 
+    std::lock_guard<std::mutex> lock(achievementDataMutex);
+    EnsureVectorsSized(achievementData);
+
     for (const AchievementEvent requiredEvent : achievement->requiredEvents) {
-        if (!IsEventTriggered(requiredEvent)) {
+        // Get required count (defaults to 1 if not specified)
+        uint32_t requiredCount = 1;
+        auto it = achievement->eventCounts.find(requiredEvent);
+        if (it != achievement->eventCounts.end()) {
+            requiredCount = it->second;
+        }
+
+        // Get current counter value (using unlocked version since we already hold the lock)
+        uint32_t currentCount = GetEventCounterUnlocked(requiredEvent, achievementData);
+
+        // Check if we've met the required count
+        if (currentCount < requiredCount) {
             return false;
         }
     }
@@ -76,13 +181,25 @@ void UnlockAchievement(AchievementId achievementId, bool fromEditor) {
         return;
     }
 
-    const int idIndex = static_cast<int>(achievementId);
-    gSaveContext.save.shipSaveInfo.achievements.unlocked[idIndex] = true;
+    FileStorage::AchievementData dataCopy;
+    {
+        std::lock_guard<std::mutex> lock(achievementDataMutex);
+        const int idIndex = static_cast<int>(achievementId);
+
+        EnsureVectorsSized(achievementData);
+
+        achievementData.unlocked[idIndex] = true;
+        uint64_t timestamp = GetUnixTimestamp();
+        achievementData.unlockTimestamps[idIndex].push_back(timestamp);
+        dataCopy = achievementData;
+    }
+    FileStorage::SaveAchievementsData(dataCopy);
 
     if (fromEditor) {
         Notification::EmitAchievement(achievement->iconPath ? achievement->iconPath : "",
                                       std::string(achievement->name), achievement->harbourMastery);
     } else {
+        std::lock_guard<std::mutex> lock(achievementQueueMutex);
         achievementQueue.push_back({ SHOW_UNLOCK, AchievementEvent::ACHIEVEMENT_EVENT_MAX, achievementId, 0, 0,
                                      AchievementEvent::ACHIEVEMENT_EVENT_MAX });
     }
@@ -108,6 +225,7 @@ void ShowAchievementProgress(AchievementId achievementId, AchievementEvent trigg
         Notification::EmitAchievementProgressWithEvent(achievement->iconPath ? achievement->iconPath : "", eventName,
                                                        achievement->name, current, max);
     } else {
+        std::lock_guard<std::mutex> lock(achievementQueueMutex);
         achievementQueue.push_back(
             { SHOW_PROGRESS, AchievementEvent::ACHIEVEMENT_EVENT_MAX, achievementId, current, max, triggeringEventId });
     }
@@ -117,12 +235,22 @@ void ShowAchievementProgress(AchievementId achievementId, AchievementEvent trigg
 void Init() {
     StaticData::Init();
     Integration::Init();
+    FileStorage::InitializeAchievementsFile();
+
+    // Load achievement data if achievements are enabled
+    if (CVarGetInteger("gEnhancements.Achievements.Enabled", 0)) {
+        std::lock_guard<std::mutex> lock(achievementDataMutex);
+        FileStorage::LoadAchievementsData(achievementData);
+    }
 }
 
 void EnableAchievements() {
-    memset(&gSaveContext.save.shipSaveInfo.achievements, 0, sizeof(AchievementSaveData));
-    gSaveContext.save.shipSaveInfo.achievements.achievementsSystemEnabled = true;
-    RegisterAchievementTracker();
+    CVarSetInteger("gEnhancements.Achievements.Enabled", 1);
+    CVarSave();
+    {
+        std::lock_guard<std::mutex> lock(achievementDataMutex);
+        FileStorage::LoadAchievementsData(achievementData);
+    }
 }
 
 bool IsUnlocked(AchievementId achievementId) {
@@ -130,8 +258,10 @@ bool IsUnlocked(AchievementId achievementId) {
         return false;
     }
 
+    std::lock_guard<std::mutex> lock(achievementDataMutex);
+    EnsureVectorsSized(achievementData);
     const int idIndex = static_cast<int>(achievementId);
-    return gSaveContext.save.shipSaveInfo.achievements.unlocked[idIndex];
+    return achievementData.unlocked[idIndex];
 }
 
 bool IsEventTriggered(AchievementEvent achievementEventId) {
@@ -139,8 +269,10 @@ bool IsEventTriggered(AchievementEvent achievementEventId) {
         return false;
     }
 
+    std::lock_guard<std::mutex> lock(achievementDataMutex);
+    EnsureVectorsSized(achievementData);
     const int eventIndex = static_cast<int>(achievementEventId);
-    return gSaveContext.save.shipSaveInfo.achievements.events[eventIndex];
+    return achievementData.events[eventIndex];
 }
 
 void GetProgress(AchievementId achievementId, uint32_t& current, uint32_t& max) {
@@ -152,16 +284,131 @@ void GetProgress(AchievementId achievementId, uint32_t& current, uint32_t& max) 
         return;
     }
 
-    max = static_cast<uint32_t>(achievement->requiredEvents.size());
+    // Calculate max as sum of all required counts
+    max = 0;
+    for (const AchievementEvent requiredEvent : achievement->requiredEvents) {
+        uint32_t requiredCount = 1;
+        auto it = achievement->eventCounts.find(requiredEvent);
+        if (it != achievement->eventCounts.end()) {
+            requiredCount = it->second;
+        }
+        max += requiredCount;
+    }
+
     if (max == 0) {
         max = 1;
     }
 
-    for (const AchievementEvent requiredEvent : achievement->requiredEvents) {
-        if (IsEventTriggered(requiredEvent)) {
-            current++;
+    // Calculate current as sum of actual progress (capped at required count per event)
+    {
+        std::lock_guard<std::mutex> lock(achievementDataMutex);
+        EnsureVectorsSized(achievementData);
+        for (const AchievementEvent requiredEvent : achievement->requiredEvents) {
+            uint32_t requiredCount = 1;
+            auto it = achievement->eventCounts.find(requiredEvent);
+            if (it != achievement->eventCounts.end()) {
+                requiredCount = it->second;
+            }
+
+            uint32_t eventCurrent = GetEventCounterUnlocked(requiredEvent, achievementData);
+            // Cap at required count to avoid over-counting
+            current += (eventCurrent < requiredCount) ? eventCurrent : requiredCount;
         }
     }
+}
+
+void EnsureDataLoaded() {
+    std::lock_guard<std::mutex> lock(achievementDataMutex);
+    // Check if data is already loaded by checking if vectors are sized
+    if (achievementData.unlocked.size() < static_cast<size_t>(AchievementId::ACHIEVEMENT_ID_MAX) ||
+        achievementData.events.size() < static_cast<size_t>(AchievementEvent::ACHIEVEMENT_EVENT_MAX)) {
+        // Data not loaded, load it now
+        FileStorage::LoadAchievementsData(achievementData);
+    }
+}
+
+bool IsUnlockedReadOnly(AchievementId achievementId) {
+    if (!IsValidAchievementId(achievementId)) {
+        return false;
+    }
+
+    EnsureDataLoaded();
+
+    std::lock_guard<std::mutex> lock(achievementDataMutex);
+    EnsureVectorsSized(achievementData);
+    const int idIndex = static_cast<int>(achievementId);
+    return achievementData.unlocked[idIndex];
+}
+
+bool IsEventTriggeredReadOnly(AchievementEvent achievementEventId) {
+    if (!IsValidEventId(achievementEventId)) {
+        return false;
+    }
+
+    EnsureDataLoaded();
+
+    std::lock_guard<std::mutex> lock(achievementDataMutex);
+    EnsureVectorsSized(achievementData);
+    const int eventIndex = static_cast<int>(achievementEventId);
+    return achievementData.events[eventIndex];
+}
+
+void GetProgressReadOnly(AchievementId achievementId, uint32_t& current, uint32_t& max) {
+    current = 0;
+    max = 1;
+
+    const Achievement* achievement = StaticData::GetAchievement(achievementId);
+    if (!achievement) {
+        return;
+    }
+
+    EnsureDataLoaded();
+
+    // Calculate max as sum of all required counts
+    max = 0;
+    for (const AchievementEvent requiredEvent : achievement->requiredEvents) {
+        uint32_t requiredCount = 1;
+        auto it = achievement->eventCounts.find(requiredEvent);
+        if (it != achievement->eventCounts.end()) {
+            requiredCount = it->second;
+        }
+        max += requiredCount;
+    }
+
+    if (max == 0) {
+        max = 1;
+    }
+
+    // Calculate current as sum of actual progress (capped at required count per event)
+    {
+        std::lock_guard<std::mutex> lock(achievementDataMutex);
+        EnsureVectorsSized(achievementData);
+        for (const AchievementEvent requiredEvent : achievement->requiredEvents) {
+            uint32_t requiredCount = 1;
+            auto it = achievement->eventCounts.find(requiredEvent);
+            if (it != achievement->eventCounts.end()) {
+                requiredCount = it->second;
+            }
+
+            uint32_t eventCurrent = GetEventCounterUnlocked(requiredEvent, achievementData);
+            // Cap at required count to avoid over-counting
+            current += (eventCurrent < requiredCount) ? eventCurrent : requiredCount;
+        }
+    }
+}
+
+uint32_t GetEventCounterReadOnly(AchievementEvent achievementEventId) {
+    if (!IsValidEventId(achievementEventId)) {
+        return 0;
+    }
+
+    EnsureDataLoaded();
+
+    std::lock_guard<std::mutex> lock(achievementDataMutex);
+    EnsureVectorsSized(achievementData);
+    std::string key = GetEventCounterKey(achievementEventId);
+    auto it = achievementData.counters.find(key);
+    return (it != achievementData.counters.end()) ? it->second : 0;
 }
 
 void QueueEvent(AchievementEvent achievementEventId) {
@@ -169,32 +416,47 @@ void QueueEvent(AchievementEvent achievementEventId) {
         return;
     }
 
-    for (const auto& queuedEvent : achievementQueue) {
-        if (queuedEvent.type == QUEUE_ACHIEVEMENT && queuedEvent.achievementEventId == achievementEventId) {
-            return;
+    {
+        std::lock_guard<std::mutex> lock(achievementQueueMutex);
+        for (const auto& queuedEvent : achievementQueue) {
+            if (queuedEvent.type == QUEUE_ACHIEVEMENT && queuedEvent.achievementEventId == achievementEventId) {
+                return;
+            }
         }
-    }
 
-    achievementQueue.push_back({ QUEUE_ACHIEVEMENT, achievementEventId, AchievementId::ACHIEVEMENT_ID_MAX, 0, 0,
-                                 AchievementEvent::ACHIEVEMENT_EVENT_MAX });
+        achievementQueue.push_back({ QUEUE_ACHIEVEMENT, achievementEventId, AchievementId::ACHIEVEMENT_ID_MAX, 0, 0,
+                                     AchievementEvent::ACHIEVEMENT_EVENT_MAX });
+    }
 }
 
 void ProcessQueuedEvents() {
-    if (processing || achievementQueue.empty() || !IS_ACHIEVEMENTS)
+    if (!IS_ACHIEVEMENTS)
         return;
 
     Player* player = GET_PLAYER(gPlayState);
-    if (!player || gPlayState->msgCtx.msgMode != 0 || Player_InBlockingCsMode(gPlayState, player) ||
-        (player->stateFlags1 & PLAYER_STATE1_DEAD))
+    if (!player)
         return;
 
-    AchievementQueueEvent& nextEvent = achievementQueue.front();
-    if ((nextEvent.type == SHOW_UNLOCK || nextEvent.type == SHOW_PROGRESS) && Notification::IsNotificationActive())
-        return;
+    AchievementQueueEvent event;
+    bool hasEvent = false;
 
-    processing = true;
-    AchievementQueueEvent event = achievementQueue.front();
-    achievementQueue.erase(achievementQueue.begin());
+    {
+        std::lock_guard<std::mutex> lock(achievementQueueMutex);
+        if (processing || achievementQueue.empty())
+            return;
+
+        AchievementQueueEvent& nextEvent = achievementQueue.front();
+        if ((nextEvent.type == SHOW_UNLOCK || nextEvent.type == SHOW_PROGRESS) && Notification::IsNotificationActive())
+            return;
+
+        processing = true;
+        event = achievementQueue.front();
+        achievementQueue.erase(achievementQueue.begin());
+        hasEvent = true;
+    }
+
+    if (!hasEvent)
+        return;
 
     switch (event.type) {
         case QUEUE_ACHIEVEMENT:
@@ -227,7 +489,10 @@ void ProcessQueuedEvents() {
             break;
     }
 
-    processing = false;
+    {
+        std::lock_guard<std::mutex> lock(achievementQueueMutex);
+        processing = false;
+    }
 }
 
 void TriggerEvent(AchievementEvent achievementEventId, bool fromEditor) {
@@ -235,11 +500,12 @@ void TriggerEvent(AchievementEvent achievementEventId, bool fromEditor) {
         return;
     }
 
-    const bool wasAlreadyTriggered = IsEventTriggered(achievementEventId);
-    if (!wasAlreadyTriggered && IsValidEventId(achievementEventId)) {
-        const int eventIndex = static_cast<int>(achievementEventId);
-        gSaveContext.save.shipSaveInfo.achievements.events[eventIndex] = true;
+    if (!IsValidEventId(achievementEventId)) {
+        return;
     }
+
+    // Always increment counter (handles both single and multi-count events)
+    IncrementEventCounter(achievementEventId);
 
     const Event* event = StaticData::GetEvent(achievementEventId);
     if (!event) {
@@ -258,7 +524,10 @@ void TriggerEvent(AchievementEvent achievementEventId, bool fromEditor) {
 
         if (IsAchievementComplete(achievement)) {
             UnlockAchievement(achievementId, fromEditor);
-        } else if (!wasAlreadyTriggered) {
+        } else {
+            // Show progress for incomplete achievements
+            // IsAchievementComplete check above prevents showing progress when it would unlock
+            // ShowAchievementProgress filters out single-event achievements (max <= 1) to avoid spam
             ShowAchievementProgress(achievementId, achievementEventId, fromEditor);
         }
     }
@@ -269,8 +538,15 @@ void Lock(AchievementId achievementId) {
         return;
     }
 
-    const int idIndex = static_cast<int>(achievementId);
-    gSaveContext.save.shipSaveInfo.achievements.unlocked[idIndex] = false;
+    FileStorage::AchievementData dataCopy;
+    {
+        std::lock_guard<std::mutex> lock(achievementDataMutex);
+        const int idIndex = static_cast<int>(achievementId);
+        EnsureVectorsSized(achievementData);
+        achievementData.unlocked[idIndex] = false;
+        dataCopy = achievementData;
+    }
+    FileStorage::SaveAchievementsData(dataCopy);
 }
 
 void ResetEvent(AchievementEvent achievementEventId) {
@@ -279,8 +555,8 @@ void ResetEvent(AchievementEvent achievementEventId) {
     }
 
     if (IsValidEventId(achievementEventId)) {
-        const int eventIndex = static_cast<int>(achievementEventId);
-        gSaveContext.save.shipSaveInfo.achievements.events[eventIndex] = false;
+        // Reset counter (also handles boolean flag reset for backward compatibility)
+        ResetEventCounter(achievementEventId);
     }
 
     const Event* event = StaticData::GetEvent(achievementEventId);
@@ -290,6 +566,52 @@ void ResetEvent(AchievementEvent achievementEventId) {
 
     for (const AchievementId achievementId : event->dependentAchievements) {
         Lock(achievementId);
+    }
+}
+
+void SetEventCounter(AchievementEvent achievementEventId, uint32_t count, bool fromEditor) {
+    if (!IS_ACHIEVEMENTS) {
+        return;
+    }
+
+    if (!IsValidEventId(achievementEventId)) {
+        return;
+    }
+
+    // Set counter (also handles boolean flag update for backward compatibility)
+    SetEventCounterValue(achievementEventId, count);
+
+    const Event* event = StaticData::GetEvent(achievementEventId);
+    if (!event) {
+        return;
+    }
+
+    if (count > 0) {
+        // Check for achievement unlocks (like TriggerEvent)
+        for (const AchievementId achievementId : event->dependentAchievements) {
+            if (IsUnlocked(achievementId)) {
+                continue;
+            }
+
+            const Achievement* achievement = StaticData::GetAchievement(achievementId);
+            if (!achievement) {
+                continue;
+            }
+
+            if (IsAchievementComplete(achievement)) {
+                UnlockAchievement(achievementId, fromEditor);
+            } else {
+                // Show progress for incomplete achievements
+                // IsAchievementComplete check above prevents showing progress when it would unlock
+                // ShowAchievementProgress filters out single-event achievements (max <= 1) to avoid spam
+                ShowAchievementProgress(achievementId, achievementEventId, fromEditor);
+            }
+        }
+    } else {
+        // Lock dependent achievements (like ResetEvent)
+        for (const AchievementId achievementId : event->dependentAchievements) {
+            Lock(achievementId);
+        }
     }
 }
 
@@ -304,23 +626,13 @@ void RegisterAchievementTracker() {
         Achievements::Integration::OnSceneFlagSet(sceneId, flagType, flag);
     });
 
+    COND_HOOK(OnBossDefeated, IS_ACHIEVEMENTS, [](s16 actorId) { Achievements::Integration::OnBossDefeated(actorId); });
+
     for (const auto& [vbFlag, conditions] : Achievements::Integration::vanillaBehaviorMap) {
         COND_VB_SHOULD(vbFlag, IS_ACHIEVEMENTS, { Achievements::Integration::OnVanillaBehavior(_, should, args); });
     }
 }
 
-void RegisterAchievementCore() {
-    GameInteractor::Instance->RegisterGameHook<GameInteractor::OnSaveInit>([](s16 fileNum) {
-        if (CVarGetInteger("gEnhancements.Achievements.Enabled", 0)) {
-            memset(&gSaveContext.save.shipSaveInfo.achievements, 0, sizeof(AchievementSaveData));
-            gSaveContext.save.shipSaveInfo.achievements.achievementsSystemEnabled = true;
-        }
-    });
-
-    GameInteractor::Instance->RegisterGameHook<GameInteractor::OnSaveLoad>(
-        [](s16 fileNum) { RegisterAchievementTracker(); });
-}
-
-static RegisterShipInitFunc initFunc(RegisterAchievementCore, {});
+static RegisterShipInitFunc initFunc(RegisterAchievementTracker, { "gEnhancements.Achievements.Enabled" });
 
 } // namespace Achievements

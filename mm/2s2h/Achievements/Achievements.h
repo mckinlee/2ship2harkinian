@@ -8,23 +8,31 @@
 #include <cstdint>
 #include <vector>
 
+// Ship/libultraship
+#include <libultraship/bridge/consolevariablebridge.h>
+
 extern "C" {
 #include "variables.h"
-#include "z64save.h"
 }
 
 namespace Achievements {
 
 void Init();
 void RegisterAchievementTracker();
-void RegisterAchievementCore();
 
 bool IsUnlocked(AchievementId achievementId);
 bool IsEventTriggered(AchievementEvent achievementEventId);
 
 void GetProgress(AchievementId achievementId, uint32_t& current, uint32_t& max);
 
+// Read-only query functions for viewing achievements (bypass IS_ACHIEVEMENTS check)
+bool IsUnlockedReadOnly(AchievementId achievementId);
+bool IsEventTriggeredReadOnly(AchievementEvent achievementEventId);
+void GetProgressReadOnly(AchievementId achievementId, uint32_t& current, uint32_t& max);
+uint32_t GetEventCounterReadOnly(AchievementEvent achievementEventId);
+
 void TriggerEvent(AchievementEvent achievementEventId, bool fromEditor = false);
+void SetEventCounter(AchievementEvent achievementEventId, uint32_t count, bool fromEditor = false);
 void EnableAchievements();
 void Lock(AchievementId achievementId);
 void ResetEvent(AchievementEvent achievementEventId);
@@ -33,7 +41,7 @@ void ProcessQueuedEvents();
 
 } // namespace Achievements
 
-#define IS_ACHIEVEMENTS (gSaveContext.save.shipSaveInfo.achievements.achievementsSystemEnabled)
+#define IS_ACHIEVEMENTS (CVarGetInteger("gEnhancements.Achievements.Enabled", 0))
 
 #define QUEUE_ACHIEVEMENT(eventId)             \
     do {                                       \

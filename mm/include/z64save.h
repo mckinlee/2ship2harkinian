@@ -380,12 +380,6 @@ typedef struct RandoSaveCheck {
     u16 price; // Only applicable for shops/merchants
 } RandoSaveCheck;
 
-typedef struct AchievementSaveData {
-    bool achievementsSystemEnabled;
-    bool unlocked[ACHIEVEMENT_ID_MAX];
-    bool events[ACHIEVEMENT_EVENT_MAX];
-} AchievementSaveData;
-
 typedef struct RandoSaveInfo {
     u16 randoInf[(RANDO_INF_MAX + 15) / 16];
     u8 randoEvents[RE_MAX]; // This is purely for logic tracking, not to be used for anything else
@@ -408,7 +402,6 @@ typedef struct ShipSaveInfo {
     uint64_t filePlaytime;
     char commitHash[8];
     RandoSaveInfo rando;
-    AchievementSaveData achievements;
 } ShipSaveInfo;
 // #endregion
 

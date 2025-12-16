@@ -98,34 +98,12 @@ void AchievementEditor::DrawElement() {
 }
 
 void AchievementEditor::DrawSystemStatus() {
-    ImGui::SeparatorText("Achievement System Status");
-
-    ImGui::TextColored(UIWidgets::ColorValues.at(UIWidgets::Colors::Orange),
-                       ICON_FA_EXCLAMATION_TRIANGLE " Achievement System Inactive");
-    ImGui::Spacing();
-
-    ImGui::TextWrapped("The achievement system is not active for this save file. "
-                       "Achievements must be enabled when creating a save to use this editor.");
-
-    ImGui::Spacing();
-    ImGui::Separator();
-    ImGui::Spacing();
-
-    ImGui::Text("To enable achievements:");
-    ImGui::BulletText("Create a new save file");
-    ImGui::BulletText("Check the 'Enable Achievements' option");
-    ImGui::BulletText("Or use the main Achievements window to enable for existing saves");
-
-    ImGui::Spacing();
-
-    if (UIWidgets::Button(
-            "Open Achievements Window",
-            UIWidgets::ButtonOptions().Size(UIWidgets::Sizes::Inline).Color(UIWidgets::Colors::LightBlue))) {
-        auto achievementsWindow = Ship::Context::GetInstance()->GetWindow()->GetGui()->GetGuiWindow("Achievements");
-        if (achievementsWindow) {
-            achievementsWindow->Show();
-        }
-    }
+    const char* message =
+        ICON_FA_EXCLAMATION_TRIANGLE " Achievements are disabled. Enable them in the Enhancements menu.";
+    ImVec2 textSize = ImGui::CalcTextSize(message);
+    ImGui::SetCursorPos(
+        ImVec2((ImGui::GetWindowWidth() - textSize.x) / 2, (ImGui::GetWindowHeight() - textSize.y) / 2));
+    ImGui::TextColored(UIWidgets::ColorValues.at(UIWidgets::Colors::Orange), "%s", message);
 }
 
 void AchievementEditor::DrawAchievementBrowser() {
@@ -444,40 +422,46 @@ void AchievementEditor::DrawEventProgressDisplay() {
     ImGui::Text("Required Events (%zu):", achievement->requiredEvents.size());
     ImGui::Spacing();
 
-    uint32_t completedEvents = 0;
-    for (const AchievementEvent achievementEventId : achievement->requiredEvents) {
-        if (IS_ACH_TRIGGERED(achievementEventId)) {
-            completedEvents++;
-        }
-    }
+    // Use GetProgress for accurate progress calculation
+    uint32_t currentProgress = 0;
+    uint32_t maxProgress = 0;
+    Achievements::GetProgress(mSelectedAchievementId, currentProgress, maxProgress);
 
-    float progress = achievement->requiredEvents.size() > 0
-                         ? static_cast<float>(completedEvents) / achievement->requiredEvents.size()
-                         : 0.0f;
+    float progress = maxProgress > 0 ? static_cast<float>(currentProgress) / maxProgress : 0.0f;
 
-    ImGui::ProgressBar(
-        progress, ImVec2(-1, 0),
-        (std::to_string(completedEvents) + "/" + std::to_string(achievement->requiredEvents.size())).c_str());
+    ImGui::ProgressBar(progress, ImVec2(-1, 0),
+                       (std::to_string(currentProgress) + "/" + std::to_string(maxProgress)).c_str());
 
     ImGui::Spacing();
 
     if (ImGui::BeginChild("EventList", ImVec2(0, 150), true)) {
-        if (ImGui::BeginTable("EventTable", 3, ImGuiTableFlags_SizingFixedFit)) {
+        if (ImGui::BeginTable("EventTable", 4, ImGuiTableFlags_SizingFixedFit)) {
             ImGui::TableSetupColumn("Status", ImGuiTableColumnFlags_WidthFixed, 30.0f);
             ImGui::TableSetupColumn("Event", ImGuiTableColumnFlags_WidthStretch);
-            ImGui::TableSetupColumn("Action", ImGuiTableColumnFlags_WidthFixed, 90.0f);
+            ImGui::TableSetupColumn("Progress", ImGuiTableColumnFlags_WidthFixed, 100.0f);
+            ImGui::TableSetupColumn("Action", ImGuiTableColumnFlags_WidthFixed, 140.0f);
 
             for (size_t i = 0; i < achievement->requiredEvents.size(); i++) {
                 const AchievementEvent achievementEventId = achievement->requiredEvents[i];
-                const bool isTriggered = IS_ACH_TRIGGERED(achievementEventId);
+
+                // Get required count (defaults to 1 if not specified)
+                uint32_t requiredCount = 1;
+                auto it = achievement->eventCounts.find(achievementEventId);
+                if (it != achievement->eventCounts.end()) {
+                    requiredCount = it->second;
+                }
+
+                // Get current count using read-only function
+                uint32_t currentCount = Achievements::GetEventCounterReadOnly(achievementEventId);
+                bool isComplete = (currentCount >= requiredCount);
 
                 ImGui::PushID(static_cast<int>(i));
                 ImGui::TableNextRow();
 
                 ImGui::TableNextColumn();
-                ImGui::TextColored(isTriggered ? UIWidgets::ColorValues.at(UIWidgets::Colors::Green)
-                                               : UIWidgets::ColorValues.at(UIWidgets::Colors::Red),
-                                   "%s", isTriggered ? ICON_FA_CHECK_CIRCLE : ICON_FA_CIRCLE);
+                ImGui::TextColored(isComplete ? UIWidgets::ColorValues.at(UIWidgets::Colors::Green)
+                                              : UIWidgets::ColorValues.at(UIWidgets::Colors::Red),
+                                   "%s", isComplete ? ICON_FA_CHECK_CIRCLE : ICON_FA_CIRCLE);
 
                 ImGui::TableNextColumn();
                 const Event* event = Achievements::StaticData::GetEvent(achievementEventId);
@@ -485,23 +469,80 @@ void AchievementEditor::DrawEventProgressDisplay() {
                 ImGui::TextWrapped("%s", eventName);
 
                 ImGui::TableNextColumn();
-                if (UIWidgets::Button(isTriggered ? "Reset" : "Trigger",
-                                      UIWidgets::ButtonOptions()
-                                          .Size(UIWidgets::Sizes::Inline)
-                                          .Color(isTriggered ? UIWidgets::Colors::Orange : UIWidgets::Colors::Green))) {
-                    if (isTriggered) {
-                        Achievements::ResetEvent(achievementEventId);
-                    } else {
-                        Achievements::TriggerEvent(achievementEventId, true);
-                    }
-                    if (BenGui::mAchievementsWindow) {
-                        BenGui::mAchievementsWindow->InvalidateCache();
-                    }
-                }
-                if (isTriggered) {
-                    UIWidgets::Tooltip("Reset this event and lock all dependent achievements");
+                if (requiredCount > 1) {
+                    ImGui::Text("%u / %u", currentCount, requiredCount);
                 } else {
-                    UIWidgets::Tooltip("Trigger this event and check for achievement unlocks");
+                    ImGui::TextColored(isComplete ? UIWidgets::ColorValues.at(UIWidgets::Colors::Green)
+                                                  : UIWidgets::ColorValues.at(UIWidgets::Colors::Gray),
+                                       "%s", isComplete ? "Complete" : "Incomplete");
+                }
+
+                ImGui::TableNextColumn();
+                if (requiredCount > 1) {
+                    // Input box with decrement/increment buttons for multi-count events
+                    ImGui::BeginGroup();
+
+                    // Decrement button (left)
+                    if (UIWidgets::Button(
+                            "-",
+                            UIWidgets::ButtonOptions().Size(UIWidgets::Sizes::Inline).Color(UIWidgets::Colors::Gray)) &&
+                        currentCount > 0) {
+                        Achievements::SetEventCounter(achievementEventId, currentCount - 1, true);
+                        if (BenGui::mAchievementsWindow) {
+                            BenGui::mAchievementsWindow->InvalidateCache();
+                        }
+                    }
+                    UIWidgets::Tooltip("Decrement counter by 1");
+                    ImGui::SameLine(0, 3.0f);
+
+                    // Input box (middle)
+                    ImGui::PushItemWidth(60.0f);
+                    UIWidgets::PushStyleInput();
+                    uint32_t inputCount = currentCount;
+                    if (ImGui::InputScalar("##counterInput", ImGuiDataType_U32, &inputCount, nullptr, nullptr, "%u",
+                                           ImGuiInputTextFlags_CharsDecimal)) {
+                        // Clamp to reasonable bounds (0 minimum, no hard maximum for flexibility)
+                        Achievements::SetEventCounter(achievementEventId, inputCount, true);
+                        if (BenGui::mAchievementsWindow) {
+                            BenGui::mAchievementsWindow->InvalidateCache();
+                        }
+                    }
+                    UIWidgets::PopStyleInput();
+                    ImGui::PopItemWidth();
+                    ImGui::SameLine(0, 3.0f);
+
+                    // Increment button (right)
+                    if (UIWidgets::Button(
+                            "+",
+                            UIWidgets::ButtonOptions().Size(UIWidgets::Sizes::Inline).Color(UIWidgets::Colors::Gray))) {
+                        Achievements::SetEventCounter(achievementEventId, currentCount + 1, true);
+                        if (BenGui::mAchievementsWindow) {
+                            BenGui::mAchievementsWindow->InvalidateCache();
+                        }
+                    }
+                    UIWidgets::Tooltip("Increment counter by 1");
+                    ImGui::EndGroup();
+                } else {
+                    // Single-count events: just trigger/reset
+                    if (UIWidgets::Button(
+                            isComplete ? "Reset" : "Trigger",
+                            UIWidgets::ButtonOptions()
+                                .Size(UIWidgets::Sizes::Inline)
+                                .Color(isComplete ? UIWidgets::Colors::Orange : UIWidgets::Colors::Green))) {
+                        if (isComplete) {
+                            Achievements::ResetEvent(achievementEventId);
+                        } else {
+                            Achievements::TriggerEvent(achievementEventId, true);
+                        }
+                        if (BenGui::mAchievementsWindow) {
+                            BenGui::mAchievementsWindow->InvalidateCache();
+                        }
+                    }
+                    if (isComplete) {
+                        UIWidgets::Tooltip("Reset this event counter and lock all dependent achievements");
+                    } else {
+                        UIWidgets::Tooltip("Increment this event counter and check for achievement unlocks");
+                    }
                 }
 
                 ImGui::PopID();
@@ -540,13 +581,19 @@ void AchievementEditor::DrawAchievementActions() {
                 "Unlock Achievement",
                 UIWidgets::ButtonOptions().Size(UIWidgets::Sizes::Fill).Color(UIWidgets::Colors::Green))) {
             for (const AchievementEvent achievementEventId : achievement->requiredEvents) {
-                Achievements::TriggerEvent(achievementEventId, true);
+                // Get required count (defaults to 1 if not specified)
+                uint32_t requiredCount = 1;
+                auto it = achievement->eventCounts.find(achievementEventId);
+                if (it != achievement->eventCounts.end()) {
+                    requiredCount = it->second;
+                }
+                Achievements::SetEventCounter(achievementEventId, requiredCount, true);
             }
             if (BenGui::mAchievementsWindow) {
                 BenGui::mAchievementsWindow->InvalidateCache();
             }
         }
-        UIWidgets::Tooltip("Trigger all required events to unlock this achievement");
+        UIWidgets::Tooltip("Set all required events to their required counts to unlock this achievement");
     }
 }
 
@@ -572,17 +619,19 @@ void AchievementEditor::DrawEventStatusGrid() {
     ImGui::Spacing();
 
     if (ImGui::BeginChild("EventGrid", ImVec2(0, 0), true)) {
-        if (ImGui::BeginTable("AllEventsTable", 3,
+        if (ImGui::BeginTable("AllEventsTable", 4,
                               ImGuiTableFlags_Borders | ImGuiTableFlags_RowBg | ImGuiTableFlags_SizingFixedFit)) {
             ImGui::TableSetupColumn("ID", ImGuiTableColumnFlags_WidthFixed, 30.0f);
             ImGui::TableSetupColumn("Event Name", ImGuiTableColumnFlags_WidthStretch);
+            ImGui::TableSetupColumn("Counter", ImGuiTableColumnFlags_WidthFixed, 80.0f);
             ImGui::TableSetupColumn("Status", ImGuiTableColumnFlags_WidthFixed, 100.0f);
             ImGui::TableHeadersRow();
 
             int eventCount = static_cast<int>(AchievementEvent::ACHIEVEMENT_EVENT_MAX);
             for (int i = 0; i < eventCount; i++) {
                 AchievementEvent eventId = static_cast<AchievementEvent>(i);
-                bool isTriggered = IS_ACH_TRIGGERED(eventId);
+                uint32_t counter = Achievements::GetEventCounterReadOnly(eventId);
+                bool isTriggered = (counter > 0);
                 bool isSelected = (mSelectedEventId == eventId);
 
                 ImGui::PushID(i);
@@ -604,6 +653,10 @@ void AchievementEditor::DrawEventStatusGrid() {
                 if (ImGui::Selectable(eventName, isSelected, ImGuiSelectableFlags_SpanAllColumns)) {
                     mSelectedEventId = eventId;
                 }
+
+                // Counter
+                ImGui::TableNextColumn();
+                ImGui::Text("%u", counter);
 
                 // Status
                 ImGui::TableNextColumn();
@@ -631,18 +684,20 @@ void AchievementEditor::DrawEventTriggerControls() {
     ImGui::TextWrapped("%s", eventName);
     ImGui::Unindent();
 
-    bool isSelected = IS_ACH_TRIGGERED(mSelectedEventId);
-    ImGui::Text("Status: %s", isSelected ? "Triggered" : "Not Triggered");
+    uint32_t counter = Achievements::GetEventCounterReadOnly(mSelectedEventId);
+    bool isTriggered = (counter > 0);
+    ImGui::Text("Counter: %u", counter);
+    ImGui::Text("Status: %s", isTriggered ? "Triggered" : "Not Triggered");
 
     ImGui::Spacing();
     ImGui::Separator();
     ImGui::Spacing();
 
-    if (UIWidgets::Button(isSelected ? "Reset Event" : "Trigger Event",
+    if (UIWidgets::Button(isTriggered ? "Reset Event" : "Trigger Event",
                           UIWidgets::ButtonOptions()
                               .Size(UIWidgets::Sizes::Fill)
-                              .Color(isSelected ? UIWidgets::Colors::Orange : UIWidgets::Colors::Green))) {
-        if (isSelected) {
+                              .Color(isTriggered ? UIWidgets::Colors::Orange : UIWidgets::Colors::Green))) {
+        if (isTriggered) {
             Achievements::ResetEvent(mSelectedEventId);
         } else {
             Achievements::TriggerEvent(mSelectedEventId, true);
@@ -651,10 +706,10 @@ void AchievementEditor::DrawEventTriggerControls() {
             BenGui::mAchievementsWindow->InvalidateCache();
         }
     }
-    if (isSelected) {
-        UIWidgets::Tooltip("Reset this event and lock all achievements that depend on it");
+    if (isTriggered) {
+        UIWidgets::Tooltip("Reset this event counter and lock all achievements that depend on it");
     } else {
-        UIWidgets::Tooltip("Trigger this event and check for achievement completions");
+        UIWidgets::Tooltip("Increment this event counter and check for achievement completions");
     }
 
     ImGui::Spacing();
@@ -720,7 +775,7 @@ void AchievementEditor::DrawSystemInfo() {
     ImGui::Separator();
     ImGui::Spacing();
 
-    ImGui::Text("Save File Information:");
+    ImGui::Text("File Storage Information:");
     if (IS_ACHIEVEMENTS) {
         ImGui::BulletText("Achievements Enabled: Yes");
         ImGui::BulletText("Unlocked Achievements: %u", GetUnlockedCount());
@@ -1012,17 +1067,25 @@ void AchievementEditor::RefreshValidation() {
         }
 
         if (!IS_ACH_UNLOCKED(achId) && !achievement->requiredEvents.empty()) {
-            bool allEventsTriggered = true;
+            bool allEventsComplete = true;
             for (AchievementEvent eventId : achievement->requiredEvents) {
-                if (!IS_ACH_TRIGGERED(eventId)) {
-                    allEventsTriggered = false;
+                // Get required count (defaults to 1 if not specified)
+                uint32_t requiredCount = 1;
+                auto it = achievement->eventCounts.find(eventId);
+                if (it != achievement->eventCounts.end()) {
+                    requiredCount = it->second;
+                }
+
+                uint32_t currentCount = Achievements::GetEventCounterReadOnly(eventId);
+                if (currentCount < requiredCount) {
+                    allEventsComplete = false;
                     break;
                 }
             }
 
-            if (allEventsTriggered) {
+            if (allEventsComplete) {
                 mValidationWarnings.push_back("Achievement \"" + std::string(achievement->name) +
-                                              "\" has all events triggered but is still locked");
+                                              "\" has all events complete but is still locked");
             }
         }
     }
@@ -1128,16 +1191,25 @@ void AchievementEditor::FixCompletionIssues() {
             continue;
         }
 
-        bool allEventsTriggered = true;
+        // Check if all event counts are met
+        bool allEventsComplete = true;
         for (const AchievementEvent achievementEventId : achievement->requiredEvents) {
-            if (!IS_ACH_TRIGGERED(achievementEventId)) {
-                allEventsTriggered = false;
+            // Get required count (defaults to 1 if not specified)
+            uint32_t requiredCount = 1;
+            auto it = achievement->eventCounts.find(achievementEventId);
+            if (it != achievement->eventCounts.end()) {
+                requiredCount = it->second;
+            }
+
+            uint32_t currentCount = Achievements::GetEventCounterReadOnly(achievementEventId);
+            if (currentCount < requiredCount) {
+                allEventsComplete = false;
                 break;
             }
         }
 
-        // If all events are triggered, re-trigger one to force completion check
-        if (allEventsTriggered && !achievement->requiredEvents.empty()) {
+        // If all events are complete, trigger one to force completion check
+        if (allEventsComplete && !achievement->requiredEvents.empty()) {
             SPDLOG_DEBUG("Fixing completion issue for achievement: {}", achievement->name);
             Achievements::TriggerEvent(achievement->requiredEvents[0], true);
             fixedCount++;

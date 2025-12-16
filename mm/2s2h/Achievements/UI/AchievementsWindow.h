@@ -11,6 +11,9 @@
 // Ship/libultraship
 #include <ship/window/gui/GuiWindow.h>
 
+// Local includes
+#include "../StaticData/Registry.h"
+
 struct Achievement;
 
 namespace Achievements {
@@ -31,6 +34,9 @@ constexpr float HEIGHT = 80.0f;
 constexpr float PADDING = 12.0f;
 constexpr float ICON_SIZE = 60.0f;
 constexpr float BORDER_ROUNDING = 6.0f;
+constexpr float PILL_HEIGHT = 18.0f;
+constexpr float PILL_PADDING = 6.0f;
+constexpr float PILL_SPACING = 6.0f;
 } // namespace Card
 
 namespace Icon {
@@ -76,9 +82,8 @@ class AchievementsWindow : public Ship::GuiWindow {
         bool initialized = false;
     };
 
+    void DrawDisabledMessage();
     void DrawInGameInterface();
-    void DrawNotInGameMessage();
-    void DrawActivationPrompt();
     void DrawHeaderPanel();
     void DrawProgressSection();
     void DrawFilterSection();
@@ -93,11 +98,11 @@ class AchievementsWindow : public Ship::GuiWindow {
     void EndAchievementsPanel();
     void DrawFontIcon(const char* icon, const ImVec4& color, AchievementsUI::CardTheme theme);
     void DrawFilterButtons();
-    void DrawActivationDisclaimer();
     void DrawProgressIcon();
     void DrawScoreIcon();
     void DrawProgressBar(float progress, float width, float height, const ImVec4& color);
     void DrawCardBackground(const ImVec2& pos, const ImVec2& size, AchievementsUI::CardTheme theme, bool hovered);
+    void DrawCategoryPill(AchievementCategory category, AchievementsUI::CardTheme theme);
     ProgressStats CalculateProgressStats() const;
     AchievementsUI::CardTheme DetermineCardTheme(const Achievement* achievement, bool& hasProgress) const;
     bool ShouldShowAchievement(const Achievement* achievement) const;

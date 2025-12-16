@@ -3,6 +3,7 @@
 
 // Standard library
 #include <map>
+#include <utility>
 #include <vector>
 
 // Assets
@@ -24,16 +25,43 @@ namespace StaticData {
 #define ACH_AI(id) AchievementId::id
 #define ACH_AC(category) AchievementCategory::category
 #define ACH_AE(event) AchievementEvent::event
+#define ACH_AE_COUNT(event, count) std::make_pair(AchievementEvent::event, static_cast<uint32_t>(count))
 #define ACH_TEX(path) (const char*)path
 
-#define ACH_ACHIEVEMENT_ENTRY(id, name, description, iconPath, secret, category, harbourMastery, ...) \
-    {                                                                                                 \
-        id, {                                                                                         \
-            id, name, description, iconPath, secret, category, harbourMastery, {                      \
-                __VA_ARGS__                                                                           \
-            }                                                                                         \
-        }                                                                                             \
+// Helper to process events (handles both AchievementEvent and std::pair<AchievementEvent, uint32_t>)
+namespace {
+template <typename T> void ProcessEvent(Achievement& a, T&& event) {
+    if constexpr (std::is_same_v<std::decay_t<T>, AchievementEvent>) {
+        a.requiredEvents.push_back(event);
+        // eventCounts will be populated in post-processing, defaulting to 1
+    } else if constexpr (std::is_same_v<std::decay_t<T>, std::pair<AchievementEvent, uint32_t>>) {
+        a.requiredEvents.push_back(event.first);
+        a.eventCounts[event.first] = event.second;
     }
+}
+
+template <typename... Args> void ProcessEvents(Achievement& a, Args&&... args) {
+    (ProcessEvent(a, std::forward<Args>(args)), ...);
+}
+
+template <AchievementId Id>
+Achievement MakeAchievement(const char* name, const char* description, const char* iconPath, bool secret,
+                            AchievementCategory category, int harbourMastery, auto... events) {
+    Achievement a;
+    a.id = Id;
+    a.name = name;
+    a.description = description;
+    a.iconPath = iconPath;
+    a.secret = secret;
+    a.category = category;
+    a.harbourMastery = harbourMastery;
+    ProcessEvents(a, events...);
+    return a;
+}
+} // namespace
+
+#define ACH_ACHIEVEMENT_ENTRY(id, name, description, iconPath, secret, category, harbourMastery, ...) \
+    { id, MakeAchievement<id>(name, description, iconPath, secret, category, harbourMastery, __VA_ARGS__) }
 
 #define ACH_EVENT_ENTRY(id, name, description) \
     {                                          \
@@ -308,6 +336,16 @@ void Init() {
             20,
             ACH_AE(EVENT_PLAYED_SONG_OF_DOUBLE_TIME),
             ACH_AE(EVENT_PLAYED_INVERTED_SONG_OF_TIME)
+        ),
+
+        ACH_ACHIEVEMENT_ENTRY(ACH_AI(MAJORA_SLAYER),
+            "Majora Slayer",
+            "Defeat Majora 10 times",
+            ACH_TEX(gItemIcons[ITEM_MASK_FIERCE_DEITY]),    // TODO: Find or create a better icon
+            false,
+            ACH_AC(GENERAL),
+            50,
+            ACH_AE_COUNT(EVENT_DEFEATED_MAJORA, 10)
         )
     };
     // clang-format on
@@ -457,8 +495,18 @@ void Init() {
         ACH_EVENT_ENTRY(ACH_AE(EVENT_RECEIVED_OCEAN_TITLE_DEED), "Received Ocean Title Deed",
                         "Player obtained the Ocean Title Deed"),
         ACH_EVENT_ENTRY(ACH_AE(EVENT_ZORA_HALL_EVAN_HP), "Zora Hall Evan Reward",
-                        "Player received a Heart Piece from Evan")
+                        "Player received a Heart Piece from Evan"),
+        ACH_EVENT_ENTRY(ACH_AE(EVENT_DEFEATED_MAJORA), "Defeated Majora", "Player defeated Majora, the final boss")
     };
+
+    // Post-process: Set default counts to 1 for events without explicit counts
+    for (auto& [achievementId, achievement] : Data) {
+        for (const AchievementEvent requiredEvent : achievement.requiredEvents) {
+            if (achievement.eventCounts.find(requiredEvent) == achievement.eventCounts.end()) {
+                achievement.eventCounts[requiredEvent] = 1;
+            }
+        }
+    }
 
     for (auto& [achievementEventId, event] : EventData) {
         for (const auto& [achievementId, achievement] : Data) {
@@ -488,6 +536,7 @@ const Event* GetEvent(AchievementEvent achievementEventId) {
 #undef ACH_AI
 #undef ACH_AC
 #undef ACH_AE
+#undef ACH_AE_COUNT
 #undef ACH_TEX
 #undef ACH_ACHIEVEMENT_ENTRY
 #undef ACH_EVENT_ENTRY

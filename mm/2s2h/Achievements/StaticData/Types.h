@@ -25,6 +25,7 @@ typedef enum {
     BN_LOCAL_HERO,
 
     TIMELORD,
+    MAJORA_SLAYER,
 
     ACHIEVEMENT_ID_MAX
 } AchievementId;
@@ -109,6 +110,7 @@ typedef enum {
     EVENT_RECEIVED_RED_POTION,
     EVENT_RECEIVED_OCEAN_TITLE_DEED,
     EVENT_ZORA_HALL_EVAN_HP,
+    EVENT_DEFEATED_MAJORA,
 
     ACHIEVEMENT_EVENT_MAX
 } AchievementEvent;
