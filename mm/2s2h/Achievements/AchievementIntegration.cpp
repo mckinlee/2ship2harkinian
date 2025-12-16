@@ -35,6 +35,9 @@ namespace Integration {
 #define ACH_TRACK_SCENE_FLAG(sceneId, flagType, flag, event) \
     { { sceneId, ACH_FT(flagType), flag }, ACH_AE(event) }
 
+#define ACH_TRACK_BOSS(actorId, event) \
+    { actorId, ACH_AE(event) }
+
 #define ACH_TRACK_VB(event, ...)                                 \
     {                                                            \
         [](va_list args) -> bool { __VA_ARGS__; }, ACH_AE(event) \
@@ -45,6 +48,7 @@ std::map<GIVanillaBehavior, std::vector<std::pair<std::function<bool(va_list)>, 
 namespace {
 std::map<std::pair<FlagType, u32>, AchievementEvent> flagToEventMap;
 std::map<std::tuple<s16, FlagType, u32>, AchievementEvent> sceneFlagToEventMap;
+std::map<s16, AchievementEvent> bossToEventMap;
 } // namespace
 
 void Init() {
@@ -209,6 +213,12 @@ void Init() {
     // clang-format on
 
     // clang-format off
+    bossToEventMap = {
+        ACH_TRACK_BOSS(ACTOR_BOSS_07, EVENT_DEFEATED_MAJORA),
+    };
+    // clang-format on
+
+    // clang-format off
     vanillaBehaviorMap = {
         { ACH_VB(VB_START_CUTSCENE), {
             ACH_TRACK_VB(EVENT_PLAYED_SONG_OF_DOUBLE_TIME, 
@@ -236,6 +246,13 @@ void OnSceneFlagSet(s16 sceneId, FlagType flagType, u32 flag) {
     }
 }
 
+void OnBossDefeated(s16 actorId) {
+    const auto it = bossToEventMap.find(actorId);
+    if (it != bossToEventMap.end()) {
+        QUEUE_ACHIEVEMENT(it->second);
+    }
+}
+
 void OnVanillaBehavior(GIVanillaBehavior flag, bool* /*should*/, va_list originalArgs) {
     const auto it = vanillaBehaviorMap.find(flag);
     if (it != vanillaBehaviorMap.end()) {
@@ -255,6 +272,7 @@ void OnVanillaBehavior(GIVanillaBehavior flag, bool* /*should*/, va_list origina
 #undef ACH_FT
 #undef ACH_TRACK_FLAG
 #undef ACH_TRACK_SCENE_FLAG
+#undef ACH_TRACK_BOSS
 #undef ACH_TRACK_VB
 
 } // namespace Integration

@@ -147,7 +147,16 @@ void Window::DrawEnhancedNotification(const Options& notification, ImVec2 basePo
 
     ImGui::PushStyleVar(ImGuiStyleVar_Alpha, alpha);
     ImGui::PushStyleColor(ImGuiCol_WindowBg, ImVec4(0.08f, 0.08f, 0.12f, 0.95f)); // Darker, more opaque
-    ImGui::PushStyleColor(ImGuiCol_Border, ImVec4(1.0f, 0.85f, 0.0f, 1.0f));      // Gold border
+
+    // Use blue border for progress notifications, gold for achievement unlocks
+    ImVec4 borderColor = ImVec4(1.0f, 0.85f, 0.0f, 1.0f); // Default gold for unlocks
+    const ImVec4 goldColor = ImVec4(1.0f, 0.85f, 0.0f, 1.0f);
+    if (notification.prefixColor.x != goldColor.x || notification.prefixColor.y != goldColor.y ||
+        notification.prefixColor.z != goldColor.z) {
+        // Not gold = progress notification, use blue to match text
+        borderColor = ImVec4(0.4f, 0.8f, 1.0f, 1.0f); // Light blue matching prefix color
+    }
+    ImGui::PushStyleColor(ImGuiCol_Border, borderColor);
     ImGui::PushStyleVar(ImGuiStyleVar_WindowBorderSize, 2.0f);
     ImGui::PushStyleVar(ImGuiStyleVar_WindowRounding, 10.0f);
     ImGui::PushStyleVar(ImGuiStyleVar_WindowPadding, ImVec2(16.0f, 12.0f));
@@ -376,7 +385,7 @@ void EmitAchievementProgressWithEvent(const char* iconPath, const char* eventNam
     Options notification;
     notification.id = nextId++;
     notification.itemIcon = iconPath;
-    notification.prefix = "Event Completed";
+    notification.prefix = "Progress Update";
     notification.prefixColor = ImVec4(0.4f, 0.8f, 1.0f, 1.0f); // Light blue
     notification.message = progressText;
     notification.messageColor = ImVec4(0.9f, 0.9f, 0.9f, 1.0f); // Light gray

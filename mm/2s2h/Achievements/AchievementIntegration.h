@@ -21,6 +21,8 @@ void OnFlagSet(FlagType flagType, u32 flag);
 
 void OnSceneFlagSet(s16 sceneId, FlagType flagType, u32 flag);
 
+void OnBossDefeated(s16 actorId);
+
 void OnVanillaBehavior(GIVanillaBehavior flag, bool* should, va_list originalArgs);
 
 extern std::map<GIVanillaBehavior, std::vector<std::pair<std::function<bool(va_list)>, AchievementEvent>>>

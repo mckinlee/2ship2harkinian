@@ -19,6 +19,7 @@ struct Achievement {
     AchievementCategory category;
     int harbourMastery;
     std::vector<AchievementEvent> requiredEvents;
+    std::map<AchievementEvent, uint32_t> eventCounts; // Required count per event (defaults to 1)
 };
 
 struct Event {

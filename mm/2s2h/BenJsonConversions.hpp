@@ -12,20 +12,6 @@ extern "C" {
 
 using json = nlohmann::json;
 
-void to_json(json& j, const AchievementSaveData& achievementSaveData) {
-    j = json{
-        { "achievementsSystemEnabled", achievementSaveData.achievementsSystemEnabled },
-        { "unlocked", achievementSaveData.unlocked },
-        { "events", achievementSaveData.events },
-    };
-}
-
-void from_json(const json& j, AchievementSaveData& achievementSaveData) {
-    j.at("achievementsSystemEnabled").get_to(achievementSaveData.achievementsSystemEnabled);
-    j.at("unlocked").get_to(achievementSaveData.unlocked);
-    j.at("events").get_to(achievementSaveData.events);
-}
-
 void to_json(json& j, const DpadSaveInfo& dpadEquips) {
     j = json{
         { "dpadItems", dpadEquips.dpadItems },
@@ -104,8 +90,6 @@ void to_json(json& j, const ShipSaveInfo& shipSaveInfo) {
         { "commitHash", commitHash },
     };
 
-    j["achievements"] = shipSaveInfo.achievements;
-
     if (shipSaveInfo.saveType == SAVETYPE_RANDO) {
         j["rando"] = shipSaveInfo.rando;
     }
@@ -119,13 +103,6 @@ void from_json(const json& j, ShipSaveInfo& shipSaveInfo) {
     j.at("fileCompletedAt").get_to(shipSaveInfo.fileCompletedAt);
     j.at("filePlaytime").get_to(shipSaveInfo.filePlaytime);
     j.at("commitHash").get_to(shipSaveInfo.commitHash);
-
-    if (j.contains("achievements") && j.at("achievements").is_object()) {
-        j.at("achievements").get_to(shipSaveInfo.achievements);
-    } else {
-        SPDLOG_WARN("Achievements data missing or invalid in save file. Initializing defaults.");
-        shipSaveInfo.achievements = {};
-    }
 
     if (shipSaveInfo.saveType == SAVETYPE_RANDO) {
         if (strcmp(shipSaveInfo.commitHash, gGitCommitHash) != 0) {

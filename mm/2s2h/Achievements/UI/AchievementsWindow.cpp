@@ -64,11 +64,8 @@ void AchievementsWindow::UpdateElement() {
     mIsValidGameMode =
         (gSaveContext.gameMode != GAMEMODE_TITLE_SCREEN && gSaveContext.gameMode != GAMEMODE_FILE_SELECT);
 
-    if (mIsInGame) {
-        mIsRandomizerMode = IsRandomizerMode();
-    } else {
-        mIsRandomizerMode = false;
-    }
+    // Randomizer mode detection - gSaveContext is always valid
+    mIsRandomizerMode = IsRandomizerMode();
 
     if (wasInGame != mIsInGame) {
         InvalidateCache();
@@ -76,6 +73,11 @@ void AchievementsWindow::UpdateElement() {
 }
 
 void AchievementsWindow::DrawElement() {
+    if (!IS_ACHIEVEMENTS) {
+        DrawDisabledMessage();
+        return;
+    }
+
     ImGui::PushStyleColor(ImGuiCol_WindowBg, ImVec4(0.0f, 0.0f, 0.0f, 0.0f));
     ImGui::PushStyleColor(ImGuiCol_Border, ImVec4(0.0f, 0.0f, 0.0f, 0.0f));
     ImGui::PushStyleVar(ImGuiStyleVar_WindowPadding, ImVec2(0.0f, 0.0f));
@@ -84,18 +86,21 @@ void AchievementsWindow::DrawElement() {
 
     BeginAchievementsPanel();
 
-    if (!mIsInGame || !mIsValidGameMode) {
-        DrawNotInGameMessage();
-    } else if (!IS_ACHIEVEMENTS) {
-        DrawActivationPrompt();
-    } else {
-        DrawInGameInterface();
-    }
+    DrawInGameInterface();
 
     EndAchievementsPanel();
 
     ImGui::PopStyleVar();
     ImGui::PopStyleColor(2);
+}
+
+void AchievementsWindow::DrawDisabledMessage() {
+    const char* message =
+        ICON_FA_EXCLAMATION_TRIANGLE " Achievements are disabled. Enable them in the Enhancements menu.";
+    ImVec2 textSize = ImGui::CalcTextSize(message);
+    ImGui::SetCursorPos(
+        ImVec2((ImGui::GetWindowWidth() - textSize.x) / 2, (ImGui::GetWindowHeight() - textSize.y) / 2));
+    ImGui::TextColored(UIWidgets::ColorValues.at(UIWidgets::Colors::Orange), "%s", message);
 }
 
 void AchievementsWindow::DrawInGameInterface() {
@@ -108,39 +113,6 @@ void AchievementsWindow::DrawInGameInterface() {
     }
     ImGui::EndChild();
     ImGui::PopStyleVar();
-}
-
-void AchievementsWindow::DrawNotInGameMessage() {
-    const char* message = "Achievements can only be viewed in-game";
-    float windowWidth = ImGui::GetContentRegionAvail().x;
-    float textWidth = ImGui::CalcTextSize(message).x;
-    ImGui::SetCursorPosX((windowWidth - textWidth) * 0.5f);
-    ImGui::TextColored(UIWidgets::ColorValues.at(UIWidgets::Colors::LightGray), "%s", message);
-}
-
-void AchievementsWindow::DrawActivationPrompt() {
-    const ImVec4 primaryText = UIWidgets::ColorValues.at(UIWidgets::Colors::White);
-    const ImVec4 secondaryText = UIWidgets::ColorValues.at(UIWidgets::Colors::LightGray);
-
-    ImGui::TextColored(primaryText, "Achievements are currently OFF for this save file.");
-    ImGui::Dummy(ImVec2(0, AchievementsUI::Layout::TIGHT_SPACING));
-    ImGui::TextColored(secondaryText, "To start tracking progress, activate achievements for this save.");
-    ImGui::TextColored(secondaryText, "This will reset any prior (hidden) progress.");
-
-    ImGui::Dummy(ImVec2(0, AchievementsUI::Layout::STANDARD_SPACING));
-
-    if (UIWidgets::Button("Activate Achievements for this Save File",
-                          UIWidgets::ButtonOptions()
-                              .Color(UIWidgets::Colors::Green)
-                              .Size(ImVec2(-AchievementsUI::Layout::STANDARD_SPACING * 2,
-                                           ImGui::GetFrameHeight() + AchievementsUI::Layout::TIGHT_SPACING)))) {
-        Achievements::EnableAchievements();
-        InvalidateCache();
-        ImGui::OpenPopup("AchievementEnableDisclaimer");
-        SPDLOG_INFO("Achievements enabled for current save");
-    }
-
-    DrawActivationDisclaimer();
 }
 
 void AchievementsWindow::DrawHeaderPanel() {
@@ -344,7 +316,7 @@ void AchievementsWindow::DrawAchievementCard(const Achievement* achievement) {
 
 void AchievementsWindow::DrawCardIcon(const Achievement* achievement, AchievementsUI::CardTheme theme,
                                       bool hasProgress) {
-    bool isUnlocked = IS_ACH_UNLOCKED(achievement->id);
+    bool isUnlocked = Achievements::IsUnlockedReadOnly(achievement->id);
     bool isSecret = achievement->secret;
 
     auto gui = Ship::Context::GetInstance()->GetWindow()->GetGui();
@@ -377,7 +349,7 @@ void AchievementsWindow::DrawCardIcon(const Achievement* achievement, Achievemen
 }
 
 void AchievementsWindow::DrawCardContent(const Achievement* achievement, AchievementsUI::CardTheme theme) {
-    bool isUnlocked = IS_ACH_UNLOCKED(achievement->id);
+    bool isUnlocked = Achievements::IsUnlockedReadOnly(achievement->id);
     bool isSecret = achievement->secret;
 
     ImGui::PushStyleVar(ImGuiStyleVar_ItemSpacing, ImVec2(ImGui::GetStyle().ItemSpacing.x, 2.0f));
@@ -386,6 +358,13 @@ void AchievementsWindow::DrawCardContent(const Achievement* achievement, Achieve
     ImGui::PushFont(ImGui::GetIO().Fonts->Fonts[1]);
     ImGui::SetWindowFontScale(1.1f);
     ImGui::TextColored(GetTextColor(theme, true), "%s", displayName.c_str());
+
+    // Draw category pill tag if VANILLA or RANDO
+    if (achievement->category == AchievementCategory::VANILLA || achievement->category == AchievementCategory::RANDO) {
+        ImGui::SameLine(0, AchievementsUI::Card::PILL_SPACING);
+        DrawCategoryPill(achievement->category, theme);
+    }
+
     ImGui::SetWindowFontScale(1.0f);
     ImGui::PopFont();
 
@@ -435,7 +414,7 @@ void AchievementsWindow::DrawProgressIcons(const Achievement* achievement) {
 
     std::vector<std::pair<AchievementEvent, bool>> sortedEvents;
     for (const AchievementEvent achievementEventId : achievement->requiredEvents) {
-        const bool isEventTriggered = IS_ACH_TRIGGERED(achievementEventId);
+        const bool isEventTriggered = Achievements::IsEventTriggeredReadOnly(achievementEventId);
         sortedEvents.emplace_back(achievementEventId, isEventTriggered);
     }
 
@@ -545,48 +524,6 @@ void AchievementsWindow::DrawFilterButtons() {
     }
 }
 
-void AchievementsWindow::DrawActivationDisclaimer() {
-    ImVec2 popupSize(480, 0);
-    ImGui::SetNextWindowSizeConstraints(ImVec2(popupSize.x, 0), ImVec2(popupSize.x, FLT_MAX));
-
-    if (ImGui::BeginPopupModal("AchievementEnableDisclaimer", NULL,
-                               ImGuiWindowFlags_AlwaysAutoResize | ImGuiWindowFlags_NoMove |
-                                   ImGuiWindowFlags_NoSavedSettings)) {
-
-        const char* titleText = "Achievements Successfully Enabled!";
-        float titleWidth = ImGui::CalcTextSize(titleText).x;
-        float windowWidth = ImGui::GetWindowWidth();
-        ImGui::SetCursorPosX((windowWidth - titleWidth) * 0.5f);
-        ImGui::TextUnformatted(titleText);
-
-        ImGui::Separator();
-        ImGui::Spacing();
-
-        ImGui::TextWrapped(
-            "Progress tracking and unlocks will now consider actions from this point forward for this save file.");
-        ImGui::TextWrapped("Previously completed objectives on this save will not retroactively grant achievements.");
-        ImGui::Spacing();
-
-        ImGui::PushStyleColor(ImGuiCol_Text, UIWidgets::ColorValues.at(UIWidgets::Colors::Orange));
-        ImGui::TextWrapped("IMPORTANT: This change is active for your current play session. To make it permanent for "
-                           "this save file, you MUST save your game (e.g., using an Owl Statue or the Song of Time).");
-        ImGui::PopStyleColor();
-
-        ImGui::Spacing();
-        ImGui::Spacing();
-
-        float buttonWidth = 120.0f;
-        ImGui::SetCursorPosX((windowWidth - buttonWidth) * 0.5f);
-
-        if (UIWidgets::Button("OK", UIWidgets::ButtonOptions().Size(
-                                        ImVec2(buttonWidth, ImGui::GetTextLineHeightWithSpacing() * 1.5f)))) {
-            ImGui::CloseCurrentPopup();
-        }
-
-        ImGui::EndPopup();
-    }
-}
-
 AchievementsWindow::ProgressStats AchievementsWindow::CalculateProgressStats() const {
     if (!mStatsNeedUpdate) {
         return mCachedStats;
@@ -603,15 +540,10 @@ AchievementsWindow::ProgressStats AchievementsWindow::CalculateProgressStats() c
             continue;
         }
 
-        if ((achievement->category == AchievementCategory::RANDO && !mIsRandomizerMode) ||
-            (achievement->category == AchievementCategory::VANILLA && mIsRandomizerMode)) {
-            continue;
-        }
-
         stats.totalCount++;
         stats.totalScore += achievement->harbourMastery;
 
-        if (IS_ACH_UNLOCKED(id)) {
+        if (Achievements::IsUnlockedReadOnly(id)) {
             stats.unlockedCount++;
             stats.unlockedScore += achievement->harbourMastery;
         }
@@ -626,7 +558,7 @@ AchievementsWindow::ProgressStats AchievementsWindow::CalculateProgressStats() c
 AchievementsUI::CardTheme AchievementsWindow::DetermineCardTheme(const Achievement* achievement,
                                                                  bool& hasProgress) const {
     hasProgress = false;
-    bool isUnlocked = IS_ACH_UNLOCKED(achievement->id);
+    bool isUnlocked = Achievements::IsUnlockedReadOnly(achievement->id);
     bool isSecret = achievement->secret;
 
     if (isUnlocked) {
@@ -635,7 +567,7 @@ AchievementsUI::CardTheme AchievementsWindow::DetermineCardTheme(const Achieveme
 
     if (!isSecret && achievement->requiredEvents.size() > 1) {
         for (const AchievementEvent achievementEventId : achievement->requiredEvents) {
-            if (IS_ACH_TRIGGERED(achievementEventId)) {
+            if (Achievements::IsEventTriggeredReadOnly(achievementEventId)) {
                 hasProgress = true;
                 break;
             }
@@ -681,14 +613,9 @@ bool AchievementsWindow::ShouldShowAchievement(const Achievement* achievement) c
     if (!achievement)
         return false;
 
-    bool isUnlocked = IS_ACH_UNLOCKED(achievement->id);
+    bool isUnlocked = Achievements::IsUnlockedReadOnly(achievement->id);
 
     if ((mShowLockedOnly && isUnlocked) || (mShowUnlockedOnly && !isUnlocked)) {
-        return false;
-    }
-
-    if ((achievement->category == AchievementCategory::RANDO && !mIsRandomizerMode) ||
-        (achievement->category == AchievementCategory::VANILLA && mIsRandomizerMode)) {
         return false;
     }
 
@@ -895,6 +822,71 @@ void AchievementsWindow::DrawCardBackground(const ImVec2& pos, const ImVec2& siz
         drawList->AddRectFilled(pos, ImVec2(pos.x + size.x, pos.y + size.y), ImGui::ColorConvertFloat4ToU32(hoverColor),
                                 AchievementsUI::Card::BORDER_ROUNDING);
     }
+}
+
+void AchievementsWindow::DrawCategoryPill(AchievementCategory category, AchievementsUI::CardTheme theme) {
+    const char* label = (category == AchievementCategory::VANILLA) ? "Vanilla" : "Rando";
+
+    ImDrawList* drawList = ImGui::GetWindowDrawList();
+    ImVec2 cursorPos = ImGui::GetCursorScreenPos();
+
+    // Get title line height (title uses Fonts[1] with scale 1.1f, which is still active)
+    float titleLineHeight = ImGui::GetTextLineHeight();
+
+    ImGui::PushFont(ImGui::GetIO().Fonts->Fonts[1]);
+    ImGui::SetWindowFontScale(0.95f);
+    ImVec2 textSize = ImGui::CalcTextSize(label);
+    ImGui::SetWindowFontScale(1.0f);
+    ImGui::PopFont();
+
+    float height = AchievementsUI::Card::PILL_HEIGHT;
+    float padding = AchievementsUI::Card::PILL_PADDING;
+    float rounding = height * 0.5f; // Fully rounded pill
+    ImVec2 pillSize = ImVec2(textSize.x + (padding * 2.0f), height);
+
+    // Calculate vertical offset to center pill with title
+    float offsetY = (titleLineHeight - height) * 0.5f;
+    ImVec2 pillPos = ImVec2(cursorPos.x, cursorPos.y + offsetY);
+    // Add small offset to center text vertically (ImGui AddText positions at baseline)
+    ImVec2 textPos = ImVec2(pillPos.x + padding, pillPos.y + (height - textSize.y) * 0.5f + 1.5f);
+
+    // Choose colors based on category
+    ImVec4 bgColor, textColor;
+    if (category == AchievementCategory::VANILLA) {
+        bgColor = ImVec4(0.08f, 0.03f, 0.65f, 0.2f); // Blue background
+        textColor = UIWidgets::ColorValues.at(UIWidgets::Colors::White);
+    } else {                                       // RANDO
+        bgColor = ImVec4(0.55f, 0.0f, 0.0f, 0.2f); // Red background
+        textColor = UIWidgets::ColorValues.at(UIWidgets::Colors::White);
+    }
+
+    // Adjust colors based on theme for better visibility
+    if (theme == AchievementsUI::CardTheme::LOCKED) {
+        bgColor.w *= 0.5f; // More transparent for locked cards
+        textColor.w *= 0.7f;
+    }
+
+    // Draw pill background
+    drawList->AddRectFilled(pillPos, ImVec2(pillPos.x + pillSize.x, pillPos.y + pillSize.y),
+                            ImGui::ColorConvertFloat4ToU32(bgColor), rounding);
+
+    // Draw pill border (white)
+    ImVec4 borderColor = UIWidgets::ColorValues.at(UIWidgets::Colors::White);
+    if (theme == AchievementsUI::CardTheme::LOCKED) {
+        borderColor.w *= 0.7f; // More transparent for locked cards
+    }
+    drawList->AddRect(pillPos, ImVec2(pillPos.x + pillSize.x, pillPos.y + pillSize.y),
+                      ImGui::ColorConvertFloat4ToU32(borderColor), rounding, 0, 1.0f);
+
+    // Draw text
+    ImGui::PushFont(ImGui::GetIO().Fonts->Fonts[1]); // Use bold font for better readability
+    ImGui::SetWindowFontScale(0.95f);
+    drawList->AddText(textPos, ImGui::ColorConvertFloat4ToU32(textColor), label);
+    ImGui::SetWindowFontScale(1.0f);
+    ImGui::PopFont();
+
+    // Advance cursor (use original cursor position to maintain line spacing)
+    ImGui::Dummy(ImVec2(pillSize.x, titleLineHeight));
 }
 
 void AchievementsWindow::LoadSettings() {
