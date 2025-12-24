@@ -375,7 +375,7 @@ void MagicFire_Draw(Actor_CustomMagicFire* this, PlayState* play)
     }
 }
 
-ActorProfile Magic_Fire_InitVars = {
+ActorProfile Actor_CustomMagicFire_Profile = {
     ACTOR_CUSTOM_SPELL_FIRE,
     ACTORCAT_ITEMACTION,
     FLAGS,
