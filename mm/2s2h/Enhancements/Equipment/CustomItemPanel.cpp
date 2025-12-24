@@ -4,6 +4,7 @@
 #include <string.h>
 #include <math.h>
 #include "2s2h/Enhancements/FrameInterpolation/FrameInterpolation.h"
+#include "2s2h_assets.h"
 
 extern "C" {
 #include "z64save.h"
@@ -77,7 +78,7 @@ void InitCustomItems() {
         },
         []() {
             if (ITEM_ARROW_FIRE < 255) {
-                return (void*)gItemIcons[ITEM_ARROW_FIRE];
+                return (void*)gDinsFireIcon;
             }
             return (void*)NULL;
         });

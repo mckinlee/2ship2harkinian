@@ -388,3 +388,7 @@ static const ALIGN_ASSET(2) char gTriforcePieceCompletedDL[] = dgTriforcePieceCo
 
 #define dgTrapDL "__OTR__objects/object_trap/gTrapDL"
 static const ALIGN_ASSET(2) char gTrapDL[] = dgTrapDL;
+
+// Custom Items
+#define dgDinsFireIcon "__OTR__textures/icons/gItemIconDinsFireTex"
+static const ALIGN_ASSET(2) char gDinsFireIcon[] = dgDinsFireIcon;
