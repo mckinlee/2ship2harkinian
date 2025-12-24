@@ -3481,17 +3481,19 @@ void Player_InitZoraBoomerangIA(PlayState* play, Player* this) {
 }
 
 void Player_InitItemAction(PlayState* play, Player* this, PlayerItemAction itemAction) {
-    this->itemAction = this->heldItemAction = itemAction;
-    this->modelGroup = this->nextModelGroup;
+    if (GameInteractor_Should(VB_PLAYER_INIT_ITEM_ACTION, itemAction <= PLAYER_IA_MAX, &itemAction)) {
+        this->itemAction = this->heldItemAction = itemAction;
+        this->modelGroup = this->nextModelGroup;
 
-    this->stateFlags1 &= ~(PLAYER_STATE1_USING_ZORA_BOOMERANG | PLAYER_STATE1_8);
+        this->stateFlags1 &= ~(PLAYER_STATE1_USING_ZORA_BOOMERANG | PLAYER_STATE1_8);
 
-    this->unk_B08 = 0.0f;
-    this->unk_B0C = 0.0f;
-    this->unk_B28 = 0;
+        this->unk_B08 = 0.0f;
+        this->unk_B0C = 0.0f;
+        this->unk_B28 = 0;
 
-    sItemActionInitFuncs[itemAction](play, this);
-    Player_SetModelGroup(this, this->modelGroup);
+        sItemActionInitFuncs[itemAction](play, this);
+        Player_SetModelGroup(this, this->modelGroup);
+    }
 }
 
 // AttackAnimInfo sMeleeAttackAnimInfo

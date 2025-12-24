@@ -12,6 +12,7 @@ extern "C" {
 #include "overlays/kaleido_scope/ovl_kaleido_scope/z_kaleido_scope.h"
 
 #include "Enhancements/Items/Custom_Magic_Fire.h"
+void Player_InitDefaultIA(PlayState* play, Player* thisx);
 }
 
 #ifndef M_PI
@@ -296,6 +297,34 @@ void RegisterCustomItemPanel() {
                 }
                 break;
             }
+        }
+    });
+
+    COND_VB_SHOULD(VB_PLAYER_INIT_ITEM_ACTION, CVAR_CUSTOM_PANEL_ENABLED, {
+        PlayerItemAction itemAction = va_arg(args, PlayerItemAction);
+        Player* player = GET_PLAYER(gPlayState);
+
+        if (itemAction > PLAYER_IA_MAX) {
+            *should = false;
+            switch (itemAction) {
+                case 90:
+                    itemAction = PLAYER_IA_NONE;
+                    break;
+                default:
+                    itemAction = PLAYER_IA_NONE;
+                    break;
+            }
+            player->itemAction = player->heldItemAction = itemAction;
+            player->modelGroup = player->nextModelGroup;
+
+            player->stateFlags1 &= ~(PLAYER_STATE1_USING_ZORA_BOOMERANG | PLAYER_STATE1_8);
+
+            player->unk_B08 = 0.0f;
+            player->unk_B0C = 0.0f;
+            player->unk_B28 = 0;
+
+            //Player_InitDefaultIA;
+            //Player_SetModelGroup(player, (PlayerModelGroup)player->modelGroup);
         }
     });
 }

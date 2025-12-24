@@ -2033,6 +2033,14 @@ typedef enum {
     // #### `args`
     // - `*f32` (speed)
     VB_ZTARGET_SPEED_CHECK,
+
+    // #### `result`
+    // ```c
+    // itemAction <= PLAYER_IA_MAX
+    // ```
+    // #### `args`
+    // - `&itemAction` (PlayerItemAction)
+    VB_PLAYER_INIT_ITEM_ACTION,
 } GIVanillaBehavior;
 
 #endif

@@ -392,3 +392,6 @@ static const ALIGN_ASSET(2) char gTrapDL[] = dgTrapDL;
 // Custom Items
 #define dgDinsFireIcon "__OTR__textures/icons/gItemIconDinsFireTex"
 static const ALIGN_ASSET(2) char gDinsFireIcon[] = dgDinsFireIcon;
+
+#define dgFireTex "__OTR__overlays/ovl_Magic_Fire/gFireTex"
+static const ALIGN_ASSET(2) char gFireTex[] = dgFireTex;

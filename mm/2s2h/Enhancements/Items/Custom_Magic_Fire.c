@@ -1,4 +1,5 @@
-#include "Custom_Magic_Fire.h"
+﻿#include "Custom_Magic_Fire.h"
+#include "2s2h_assets.h"
 
 #define FLAGS (ACTOR_FLAG_UPDATE_CULLING_DISABLED | ACTOR_FLAG_UPDATE_DURING_OCARINA)
 
@@ -107,16 +108,20 @@ static Vtx sSphereVtx[76] = {
     VTX(0, -2000, 0, 640, 2048, 255, 255, 255, 0),
 };
 
-static Gfx sMaterialDL[5] = {
+static Gfx sMaterialDL[6] = {
     gsDPPipeSync(),
     gsDPSetCombineLERP(TEXEL1, PRIMITIVE, PRIM_LOD_FRAC, TEXEL0, TEXEL1, 1, PRIM_LOD_FRAC, TEXEL0, PRIMITIVE,
                        ENVIRONMENT, COMBINED, ENVIRONMENT, COMBINED, 0, SHADE, 0),
     gsDPSetRenderMode(G_RM_PASS, G_RM_AA_ZB_XLU_SURF2),
-    gsSPClearGeometryMode(G_CULL_BACK | G_FOG | G_LIGHTING | G_TEXTURE_GEN | G_TEXTURE_GEN_LINEAR),
+    gsSPClearGeometryMode(G_CULL_BOTH | G_FOG | G_TEXTURE_GEN | G_TEXTURE_GEN_LINEAR),
+    gsSPSetGeometryMode(G_LIGHTING | G_SHADING_SMOOTH),
     gsSPEndDisplayList(),
 };
 
-static Gfx sModelDL[45] = {
+static Gfx sModelDL[] = {
+    gsSPClearGeometryMode(G_CULL_BOTH | G_TEXTURE_GEN | G_TEXTURE_GEN_LINEAR),
+    gsSPSetGeometryMode(G_LIGHTING | G_SHADING_SMOOTH),
+
     gsSPVertex(sSphereVtx, 32, 0),
     gsSP2Triangles(0, 1, 2, 0, 3, 1, 0, 0),
     gsSP2Triangles(3, 4, 1, 0, 5, 4, 3, 0),
@@ -186,12 +191,6 @@ static ColliderCylinderInit sCylinderInit = {
 
 static InitChainEntry sInitChain[] = {
     ICHAIN_VEC3F(scale, 0, ICHAIN_STOP),
-};
-
-static u8 sVertexIndices[] = {
-    3,  4,  5,  6,  7,  8,  9,  10, 16, 17, 18, 19, 25, 26, 27, 32, 35, 36, 37, 38,
-    39, 45, 46, 47, 52, 53, 54, 59, 60, 61, 67, 68, 69, 70, 71, 72, 0,  1,  11, 12,
-    14, 20, 21, 23, 28, 30, 33, 34, 40, 41, 43, 48, 50, 55, 57, 62, 64, 65, 73, 74,
 };
 
 void MagicFire_Init(Actor_CustomMagicFire* this, PlayState* play) {
@@ -350,28 +349,34 @@ void MagicFire_Draw(Actor_CustomMagicFire* this, PlayState* play) {
         gDPPipeSync(POLY_XLU_DISP++);
         gSPTexture(POLY_XLU_DISP++, 0xFFFF, 0xFFFF, 0, G_TX_RENDERTILE, G_ON);
         gDPSetTextureLUT(POLY_XLU_DISP++, G_TT_NONE);
-        // gDPLoadTextureBlock(POLY_XLU_DISP++, 0x08000000 | CUSTOM_KEEP_MAGIC_FIRE_TEXTURE, G_IM_FMT_I, G_IM_SIZ_8b,
-        // 64, 64, 0, G_TX_NOMIRROR | G_TX_WRAP,
-        //                     G_TX_NOMIRROR | G_TX_WRAP, 6, 6, 15, G_TX_NOLOD);
-        // gDPSetTile(POLY_XLU_DISP++, G_IM_FMT_I, G_IM_SIZ_8b, 8, 0, 1, 0, G_TX_NOMIRROR | G_TX_WRAP, 6, 14,
-        //            G_TX_NOMIRROR | G_TX_WRAP, 6, 14);
-        // gDPSetTileSize(POLY_XLU_DISP++, 1, 0, 0, 63 << 2, 63 << 2);
+        gDPLoadTextureBlock(POLY_XLU_DISP++, gFireTex, G_IM_FMT_I, G_IM_SIZ_8b,
+        64, 64, 0, G_TX_NOMIRROR | G_TX_WRAP,
+                            G_TX_NOMIRROR | G_TX_WRAP, 6, 6, 15, G_TX_NOLOD);
+        gDPSetTile(POLY_XLU_DISP++, G_IM_FMT_I, G_IM_SIZ_8b, 8, 0, 1, 0, G_TX_NOMIRROR | G_TX_WRAP, 6, 14,
+                   G_TX_NOMIRROR | G_TX_WRAP, 6, 14);
+        gDPSetTileSize(POLY_XLU_DISP++, 1, 0, 0, 63 << 2, 63 << 2);
         gSPDisplayList(POLY_XLU_DISP++, sMaterialDL);
-        // gSPDisplayList(POLY_XLU_DISP++,
-        //                DisplaceTexture(play->state.gfxCtx, G_TX_RENDERTILE, (gameplayFrames * 2) % 512,
-        //                                 511 - ((gameplayFrames * 5) % 512), 64, 64, 1, (gameplayFrames * 2) % 256,
-        //                                 255 - ((gameplayFrames * 20) % 256), 32, 32));
+
+        gDPSetTileSize(POLY_XLU_DISP++, G_TX_RENDERTILE, ((gameplayFrames * 2) % 512) << 2,
+                       (511 - ((gameplayFrames * 5) % 512)) << 2, (((gameplayFrames * 2) % 512) + 64 - 1) << 2,
+                       ((511 - ((gameplayFrames * 5) % 512)) + 64 - 1) << 2);
+
+        gDPSetTileSize(POLY_XLU_DISP++, 1, ((gameplayFrames * 2) % 256) << 2,
+                       (255 - ((gameplayFrames * 20) % 256)) << 2, (((gameplayFrames * 2) % 256) + 32 - 1) << 2,
+                       ((255 - ((gameplayFrames * 20) % 256)) + 32 - 1) << 2);
+
+
+        //gSPDisplayList(POLY_XLU_DISP++,
+        //               DisplaceTexture(play->state.gfxCtx, G_TX_RENDERTILE, (gameplayFrames * 2) % 512,
+        //                                511 - ((gameplayFrames * 5) % 512), 64, 64, 1, (gameplayFrames * 2) % 256,
+        //                                255 - ((gameplayFrames * 20) % 256), 32, 32));
         gSPDisplayList(POLY_XLU_DISP++, sModelDL);
         CLOSE_DISPS(play->state.gfxCtx);
 
-        alpha = (s32)(this->alphaMultiplier * 255);
-        for (i = 0; i < 36; i++) {
-            sSphereVtx[sVertexIndices[i]].n.a = alpha;
-        }
+        u8 alpha = (u8)(this->alphaMultiplier * 255);
 
-        alpha = (s32)(this->alphaMultiplier * 76);
-        for (i = 36; i < 60; i++) {
-            sSphereVtx[sVertexIndices[i]].n.a = alpha;
+        for (i = 0; i < ARRAY_COUNT(sSphereVtx); i++) {
+            sSphereVtx[i].n.a = alpha;
         }
     }
 }
