@@ -8,6 +8,8 @@ extern "C" {
 #include "z64save.h"
 #include "variables.h"
 #include "overlays/kaleido_scope/ovl_kaleido_scope/z_kaleido_scope.h"
+
+#include "Enhancements/Items/Custom_Magic_Fire.h"
 }
 
 #ifndef M_PI
@@ -45,6 +47,7 @@ struct CustomItemEntry {
 
 static std::vector<CustomItemEntry> sCustomItemRegistry = {
     { ITEM_MOONS_TEAR, SLOT_OCARINA }, // Placeholder
+    { ITEM_CUSTOM_DINS_FIRE, SLOT_ARROW_FIRE },
 };
 
 void RegisterCustomItemPanel() {

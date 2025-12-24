@@ -703,3 +703,6 @@
 /* 0x2AF */ DEFINE_ACTOR(         En_Invisible_Ruppe,  ACTOR_EN_INVISIBLE_RUPPE,  ALLOCTYPE_NORMAL,    "En_Invisible_Ruppe",  "Invisible Ruppe")
 /* 0x2B0 */ DEFINE_ACTOR(         Obj_Ending,          ACTOR_OBJ_ENDING,          ALLOCTYPE_NORMAL,    "Obj_Ending",          "Stump/Lighting (credits end)")
 /* 0x2B1 */ DEFINE_ACTOR(         En_Rsn,              ACTOR_EN_RSN,              ALLOCTYPE_NORMAL,    "En_Rsn",              "Bomb Shop Man (credits)")
+
+// Custom Items
+/* 0x2B2 */ DEFINE_ACTOR_INTERNAL(Actor_CustomMagicFire, ACTOR_CUSTOM_SPELL_FIRE, ALLOCTYPE_NORMAL, "Din's Fire", "Din's Fire")
