@@ -491,6 +491,7 @@ void GameInteractor_ExecuteOnConsoleLogoUpdate();
 void GameInteractor_ExecuteOnKaleidoUpdate(PauseContext* pauseCtx);
 void GameInteractor_ExecuteBeforeKaleidoDrawPage(PauseContext* pauseCtx, u16 pauseIndex);
 void GameInteractor_ExecuteAfterKaleidoDrawPage(PauseContext* pauseCtx, u16 pauseIndex);
+void GameInteractor_ExecuteBeforeKaleidoDrawPageSections(PauseContext* pauseCtx, u16 pauseIndex);
 void GameInteractor_ExecuteOnSaveInit(s16 fileNum);
 void GameInteractor_ExecuteOnSaveLoad(s16 fileNum);
 void GameInteractor_ExecuteOnFileSelectSaveLoad(s16 fileNum, bool isOwlSave, SaveContext* saveContext);

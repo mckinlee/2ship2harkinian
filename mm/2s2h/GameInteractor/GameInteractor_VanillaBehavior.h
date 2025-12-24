@@ -242,6 +242,15 @@ typedef enum {
     // true
     // ```
     // #### `args`
+    // - `ItemId` (target item)
+    // - `ItemId` (existing item)
+    VB_CHECK_ITEM_SWAP_EQUIP_SLOT,
+
+    // #### `result`
+    // ```c
+    // true
+    // ```
+    // #### `args`
     // - `*f32` (speed)
     VB_CLAMP_ANIMATION_SPEED,
 

@@ -840,6 +840,7 @@ void KaleidoScope_DrawPages(PlayState* play, GraphicsContext* gfxCtx) {
                     Matrix_Translate(0.0f, sPauseMenuVerticalOffset / 100.0f, -93.0f, MTXMODE_APPLY);
                     Matrix_Scale(0.78f, 0.78f, 0.78f, MTXMODE_APPLY);
                     Matrix_RotateXFApply(-pauseCtx->itemPageRoll / 100.0f);
+                    GameInteractor_ExecuteBeforeKaleidoDrawPageSections(pauseCtx, pauseCtx->pageIndex);
 
                     MATRIX_FINALIZE_AND_LOAD(POLY_OPA_DISP++, gfxCtx);
 

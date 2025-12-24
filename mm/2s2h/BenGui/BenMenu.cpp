@@ -987,6 +987,10 @@ void BenMenu::AddEnhancements() {
         .CVar("gEnhancements.Equipment.InvertShieldY")
         .Options(CheckboxOptions().Tooltip(
             "Invert the Y axis while holding the shield so that it moves up with the left stick."));
+    AddWidget(path, "Custom Item Panel", WIDGET_CVAR_CHECKBOX)
+        .CVar("gEnhancements.Equipment.CustomItemPanel")
+        .Options(CheckboxOptions().Tooltip(
+            "Enables a custom item panel that can be flipped into view by pressing C-Up in the item menu."));
 
     path.column = SECTION_COLUMN_2;
     AddWidget(path, "Modes", WIDGET_SEPARATOR_TEXT);

@@ -882,7 +882,9 @@ void KaleidoScope_UpdateDpadItemEquip(PlayState* play) {
 
     if (pauseCtx->equipTargetCBtn == PAUSE_EQUIP_D_RIGHT) {
         // Swap if item is already equipped on other Item Buttons.
-        if (pauseCtx->equipTargetSlot == C_SLOT_EQUIP(0, EQUIP_SLOT_C_LEFT)) {
+        if (pauseCtx->equipTargetSlot == C_SLOT_EQUIP(0, EQUIP_SLOT_C_LEFT) &&
+            GameInteractor_Should(VB_CHECK_ITEM_SWAP_EQUIP_SLOT, true, pauseCtx->equipTargetItem,
+                                  BUTTON_ITEM_EQUIP(0, EQUIP_SLOT_C_LEFT))) {
             if ((DPAD_BUTTON_ITEM_EQUIP(0, EQUIP_SLOT_D_RIGHT) & 0xFF) != ITEM_NONE) {
                 if ((pauseCtx->equipTargetItem >= 0xB5) && (pauseCtx->equipTargetItem < 0xB8) &&
                     (((DPAD_BUTTON_ITEM_EQUIP(0, EQUIP_SLOT_D_RIGHT) & 0xFF) == ITEM_BOW) ||
@@ -899,7 +901,9 @@ void KaleidoScope_UpdateDpadItemEquip(PlayState* play) {
                 BUTTON_ITEM_EQUIP(0, EQUIP_SLOT_C_LEFT) = ITEM_NONE;
                 C_SLOT_EQUIP(0, EQUIP_SLOT_C_LEFT) = SLOT_NONE;
             }
-        } else if (pauseCtx->equipTargetSlot == C_SLOT_EQUIP(0, EQUIP_SLOT_C_DOWN)) {
+        } else if (pauseCtx->equipTargetSlot == C_SLOT_EQUIP(0, EQUIP_SLOT_C_DOWN) &&
+                   GameInteractor_Should(VB_CHECK_ITEM_SWAP_EQUIP_SLOT, true, pauseCtx->equipTargetItem,
+                                         BUTTON_ITEM_EQUIP(0, EQUIP_SLOT_C_DOWN))) {
             if ((DPAD_BUTTON_ITEM_EQUIP(0, EQUIP_SLOT_D_RIGHT) & 0xFF) != ITEM_NONE) {
                 if ((pauseCtx->equipTargetItem >= 0xB5) && (pauseCtx->equipTargetItem < 0xB8) &&
                     (((DPAD_BUTTON_ITEM_EQUIP(0, EQUIP_SLOT_D_RIGHT) & 0xFF) == ITEM_BOW) ||
@@ -916,7 +920,9 @@ void KaleidoScope_UpdateDpadItemEquip(PlayState* play) {
                 BUTTON_ITEM_EQUIP(0, EQUIP_SLOT_C_DOWN) = ITEM_NONE;
                 C_SLOT_EQUIP(0, EQUIP_SLOT_C_DOWN) = SLOT_NONE;
             }
-        } else if (pauseCtx->equipTargetSlot == C_SLOT_EQUIP(0, EQUIP_SLOT_C_RIGHT)) {
+        } else if (pauseCtx->equipTargetSlot == C_SLOT_EQUIP(0, EQUIP_SLOT_C_RIGHT) &&
+                   GameInteractor_Should(VB_CHECK_ITEM_SWAP_EQUIP_SLOT, true, pauseCtx->equipTargetItem,
+                                         BUTTON_ITEM_EQUIP(0, EQUIP_SLOT_C_RIGHT))) {
             if ((DPAD_BUTTON_ITEM_EQUIP(0, EQUIP_SLOT_D_RIGHT) & 0xFF) != ITEM_NONE) {
                 if ((pauseCtx->equipTargetItem >= 0xB5) && (pauseCtx->equipTargetItem < 0xB8) &&
                     (((DPAD_BUTTON_ITEM_EQUIP(0, EQUIP_SLOT_D_RIGHT) & 0xFF) == ITEM_BOW) ||
@@ -933,7 +939,9 @@ void KaleidoScope_UpdateDpadItemEquip(PlayState* play) {
                 BUTTON_ITEM_EQUIP(0, EQUIP_SLOT_C_RIGHT) = ITEM_NONE;
                 C_SLOT_EQUIP(0, EQUIP_SLOT_C_RIGHT) = SLOT_NONE;
             }
-        } else if (pauseCtx->equipTargetSlot == DPAD_SLOT_EQUIP(0, EQUIP_SLOT_D_LEFT)) {
+        } else if (pauseCtx->equipTargetSlot == DPAD_SLOT_EQUIP(0, EQUIP_SLOT_D_LEFT) &&
+                   GameInteractor_Should(VB_CHECK_ITEM_SWAP_EQUIP_SLOT, true, pauseCtx->equipTargetItem,
+                                         DPAD_BUTTON_ITEM_EQUIP(0, EQUIP_SLOT_D_LEFT))) {
             if ((DPAD_BUTTON_ITEM_EQUIP(0, EQUIP_SLOT_D_RIGHT) & 0xFF) != ITEM_NONE) {
                 if ((pauseCtx->equipTargetItem >= 0xB5) && (pauseCtx->equipTargetItem < 0xB8) &&
                     (((DPAD_BUTTON_ITEM_EQUIP(0, EQUIP_SLOT_D_RIGHT) & 0xFF) == ITEM_BOW) ||
@@ -950,7 +958,9 @@ void KaleidoScope_UpdateDpadItemEquip(PlayState* play) {
                 DPAD_BUTTON_ITEM_EQUIP(0, EQUIP_SLOT_D_LEFT) = ITEM_NONE;
                 DPAD_SLOT_EQUIP(0, EQUIP_SLOT_D_LEFT) = SLOT_NONE;
             }
-        } else if (pauseCtx->equipTargetSlot == DPAD_SLOT_EQUIP(0, EQUIP_SLOT_D_DOWN)) {
+        } else if (pauseCtx->equipTargetSlot == DPAD_SLOT_EQUIP(0, EQUIP_SLOT_D_DOWN) &&
+                   GameInteractor_Should(VB_CHECK_ITEM_SWAP_EQUIP_SLOT, true, pauseCtx->equipTargetItem,
+                                         DPAD_BUTTON_ITEM_EQUIP(0, EQUIP_SLOT_D_DOWN))) {
             if ((DPAD_BUTTON_ITEM_EQUIP(0, EQUIP_SLOT_D_RIGHT) & 0xFF) != ITEM_NONE) {
                 if ((pauseCtx->equipTargetItem >= 0xB5) && (pauseCtx->equipTargetItem < 0xB8) &&
                     (((DPAD_BUTTON_ITEM_EQUIP(0, EQUIP_SLOT_D_RIGHT) & 0xFF) == ITEM_BOW) ||
@@ -967,7 +977,9 @@ void KaleidoScope_UpdateDpadItemEquip(PlayState* play) {
                 DPAD_BUTTON_ITEM_EQUIP(0, EQUIP_SLOT_D_DOWN) = ITEM_NONE;
                 DPAD_SLOT_EQUIP(0, EQUIP_SLOT_D_DOWN) = SLOT_NONE;
             }
-        } else if (pauseCtx->equipTargetSlot == DPAD_SLOT_EQUIP(0, EQUIP_SLOT_D_UP)) {
+        } else if (pauseCtx->equipTargetSlot == DPAD_SLOT_EQUIP(0, EQUIP_SLOT_D_UP) &&
+                   GameInteractor_Should(VB_CHECK_ITEM_SWAP_EQUIP_SLOT, true, pauseCtx->equipTargetItem,
+                                         DPAD_BUTTON_ITEM_EQUIP(0, EQUIP_SLOT_D_UP))) {
             if ((DPAD_BUTTON_ITEM_EQUIP(0, EQUIP_SLOT_D_RIGHT) & 0xFF) != ITEM_NONE) {
                 if ((pauseCtx->equipTargetItem >= 0xB5) && (pauseCtx->equipTargetItem < 0xB8) &&
                     (((DPAD_BUTTON_ITEM_EQUIP(0, EQUIP_SLOT_D_RIGHT) & 0xFF) == ITEM_BOW) ||
@@ -1028,7 +1040,9 @@ void KaleidoScope_UpdateDpadItemEquip(PlayState* play) {
         Interface_Dpad_LoadItemIconImpl(play, EQUIP_SLOT_D_RIGHT);
     } else if (pauseCtx->equipTargetCBtn == PAUSE_EQUIP_D_LEFT) {
         // Swap if item is already equipped on other Item Buttons.
-        if (pauseCtx->equipTargetSlot == C_SLOT_EQUIP(0, EQUIP_SLOT_C_LEFT)) {
+        if (pauseCtx->equipTargetSlot == C_SLOT_EQUIP(0, EQUIP_SLOT_C_LEFT) &&
+            GameInteractor_Should(VB_CHECK_ITEM_SWAP_EQUIP_SLOT, true, pauseCtx->equipTargetItem,
+                                  BUTTON_ITEM_EQUIP(0, EQUIP_SLOT_C_LEFT))) {
             if ((DPAD_BUTTON_ITEM_EQUIP(0, EQUIP_SLOT_D_LEFT) & 0xFF) != ITEM_NONE) {
                 if ((pauseCtx->equipTargetItem >= 0xB5) && (pauseCtx->equipTargetItem < 0xB8) &&
                     (((DPAD_BUTTON_ITEM_EQUIP(0, EQUIP_SLOT_D_LEFT) & 0xFF) == ITEM_BOW) ||
@@ -1045,7 +1059,9 @@ void KaleidoScope_UpdateDpadItemEquip(PlayState* play) {
                 BUTTON_ITEM_EQUIP(0, EQUIP_SLOT_C_LEFT) = ITEM_NONE;
                 C_SLOT_EQUIP(0, EQUIP_SLOT_C_LEFT) = SLOT_NONE;
             }
-        } else if (pauseCtx->equipTargetSlot == C_SLOT_EQUIP(0, EQUIP_SLOT_C_DOWN)) {
+        } else if (pauseCtx->equipTargetSlot == C_SLOT_EQUIP(0, EQUIP_SLOT_C_DOWN) &&
+                   GameInteractor_Should(VB_CHECK_ITEM_SWAP_EQUIP_SLOT, true, pauseCtx->equipTargetItem,
+                                         BUTTON_ITEM_EQUIP(0, EQUIP_SLOT_C_DOWN))) {
             if ((DPAD_BUTTON_ITEM_EQUIP(0, EQUIP_SLOT_D_LEFT) & 0xFF) != ITEM_NONE) {
                 if ((pauseCtx->equipTargetItem >= 0xB5) && (pauseCtx->equipTargetItem < 0xB8) &&
                     (((DPAD_BUTTON_ITEM_EQUIP(0, EQUIP_SLOT_D_LEFT) & 0xFF) == ITEM_BOW) ||
@@ -1062,7 +1078,9 @@ void KaleidoScope_UpdateDpadItemEquip(PlayState* play) {
                 BUTTON_ITEM_EQUIP(0, EQUIP_SLOT_C_DOWN) = ITEM_NONE;
                 C_SLOT_EQUIP(0, EQUIP_SLOT_C_DOWN) = SLOT_NONE;
             }
-        } else if (pauseCtx->equipTargetSlot == C_SLOT_EQUIP(0, EQUIP_SLOT_C_RIGHT)) {
+        } else if (pauseCtx->equipTargetSlot == C_SLOT_EQUIP(0, EQUIP_SLOT_C_RIGHT) &&
+                   GameInteractor_Should(VB_CHECK_ITEM_SWAP_EQUIP_SLOT, true, pauseCtx->equipTargetItem,
+                                         BUTTON_ITEM_EQUIP(0, EQUIP_SLOT_C_RIGHT))) {
             if ((DPAD_BUTTON_ITEM_EQUIP(0, EQUIP_SLOT_D_LEFT) & 0xFF) != ITEM_NONE) {
                 if ((pauseCtx->equipTargetItem >= 0xB5) && (pauseCtx->equipTargetItem < 0xB8) &&
                     (((DPAD_BUTTON_ITEM_EQUIP(0, EQUIP_SLOT_D_LEFT) & 0xFF) == ITEM_BOW) ||
@@ -1079,7 +1097,9 @@ void KaleidoScope_UpdateDpadItemEquip(PlayState* play) {
                 BUTTON_ITEM_EQUIP(0, EQUIP_SLOT_C_RIGHT) = ITEM_NONE;
                 C_SLOT_EQUIP(0, EQUIP_SLOT_C_RIGHT) = SLOT_NONE;
             }
-        } else if (pauseCtx->equipTargetSlot == DPAD_SLOT_EQUIP(0, EQUIP_SLOT_D_RIGHT)) {
+        } else if (pauseCtx->equipTargetSlot == DPAD_SLOT_EQUIP(0, EQUIP_SLOT_D_RIGHT) &&
+                   GameInteractor_Should(VB_CHECK_ITEM_SWAP_EQUIP_SLOT, true, pauseCtx->equipTargetItem,
+                                         DPAD_BUTTON_ITEM_EQUIP(0, EQUIP_SLOT_D_RIGHT))) {
             if ((DPAD_BUTTON_ITEM_EQUIP(0, EQUIP_SLOT_D_LEFT) & 0xFF) != ITEM_NONE) {
                 if ((pauseCtx->equipTargetItem >= 0xB5) && (pauseCtx->equipTargetItem < 0xB8) &&
                     (((DPAD_BUTTON_ITEM_EQUIP(0, EQUIP_SLOT_D_LEFT) & 0xFF) == ITEM_BOW) ||
@@ -1096,7 +1116,9 @@ void KaleidoScope_UpdateDpadItemEquip(PlayState* play) {
                 DPAD_BUTTON_ITEM_EQUIP(0, EQUIP_SLOT_D_RIGHT) = ITEM_NONE;
                 DPAD_SLOT_EQUIP(0, EQUIP_SLOT_D_RIGHT) = SLOT_NONE;
             }
-        } else if (pauseCtx->equipTargetSlot == DPAD_SLOT_EQUIP(0, EQUIP_SLOT_D_DOWN)) {
+        } else if (pauseCtx->equipTargetSlot == DPAD_SLOT_EQUIP(0, EQUIP_SLOT_D_DOWN) &&
+                   GameInteractor_Should(VB_CHECK_ITEM_SWAP_EQUIP_SLOT, true, pauseCtx->equipTargetItem,
+                                         DPAD_BUTTON_ITEM_EQUIP(0, EQUIP_SLOT_D_DOWN))) {
             if ((DPAD_BUTTON_ITEM_EQUIP(0, EQUIP_SLOT_D_LEFT) & 0xFF) != ITEM_NONE) {
                 if ((pauseCtx->equipTargetItem >= 0xB5) && (pauseCtx->equipTargetItem < 0xB8) &&
                     (((DPAD_BUTTON_ITEM_EQUIP(0, EQUIP_SLOT_D_LEFT) & 0xFF) == ITEM_BOW) ||
@@ -1113,7 +1135,9 @@ void KaleidoScope_UpdateDpadItemEquip(PlayState* play) {
                 DPAD_BUTTON_ITEM_EQUIP(0, EQUIP_SLOT_D_DOWN) = ITEM_NONE;
                 DPAD_SLOT_EQUIP(0, EQUIP_SLOT_D_DOWN) = SLOT_NONE;
             }
-        } else if (pauseCtx->equipTargetSlot == DPAD_SLOT_EQUIP(0, EQUIP_SLOT_D_UP)) {
+        } else if (pauseCtx->equipTargetSlot == DPAD_SLOT_EQUIP(0, EQUIP_SLOT_D_UP) &&
+                   GameInteractor_Should(VB_CHECK_ITEM_SWAP_EQUIP_SLOT, true, pauseCtx->equipTargetItem,
+                                         DPAD_BUTTON_ITEM_EQUIP(0, EQUIP_SLOT_D_UP))) {
             if ((DPAD_BUTTON_ITEM_EQUIP(0, EQUIP_SLOT_D_LEFT) & 0xFF) != ITEM_NONE) {
                 if ((pauseCtx->equipTargetItem >= 0xB5) && (pauseCtx->equipTargetItem < 0xB8) &&
                     (((DPAD_BUTTON_ITEM_EQUIP(0, EQUIP_SLOT_D_LEFT) & 0xFF) == ITEM_BOW) ||
@@ -1174,7 +1198,9 @@ void KaleidoScope_UpdateDpadItemEquip(PlayState* play) {
         Interface_Dpad_LoadItemIconImpl(play, EQUIP_SLOT_D_LEFT);
     } else if (pauseCtx->equipTargetCBtn == PAUSE_EQUIP_D_DOWN) {
         // Swap if item is already equipped on other Item Buttons.
-        if (pauseCtx->equipTargetSlot == C_SLOT_EQUIP(0, EQUIP_SLOT_C_LEFT)) {
+        if (pauseCtx->equipTargetSlot == C_SLOT_EQUIP(0, EQUIP_SLOT_C_LEFT) &&
+            GameInteractor_Should(VB_CHECK_ITEM_SWAP_EQUIP_SLOT, true, pauseCtx->equipTargetItem,
+                                  BUTTON_ITEM_EQUIP(0, EQUIP_SLOT_C_LEFT))) {
             if ((DPAD_BUTTON_ITEM_EQUIP(0, EQUIP_SLOT_D_DOWN) & 0xFF) != ITEM_NONE) {
                 if ((pauseCtx->equipTargetItem >= 0xB5) && (pauseCtx->equipTargetItem < 0xB8) &&
                     (((DPAD_BUTTON_ITEM_EQUIP(0, EQUIP_SLOT_D_DOWN) & 0xFF) == ITEM_BOW) ||
@@ -1191,7 +1217,9 @@ void KaleidoScope_UpdateDpadItemEquip(PlayState* play) {
                 BUTTON_ITEM_EQUIP(0, EQUIP_SLOT_C_LEFT) = ITEM_NONE;
                 C_SLOT_EQUIP(0, EQUIP_SLOT_C_LEFT) = SLOT_NONE;
             }
-        } else if (pauseCtx->equipTargetSlot == C_SLOT_EQUIP(0, EQUIP_SLOT_C_DOWN)) {
+        } else if (pauseCtx->equipTargetSlot == C_SLOT_EQUIP(0, EQUIP_SLOT_C_DOWN) &&
+                   GameInteractor_Should(VB_CHECK_ITEM_SWAP_EQUIP_SLOT, true, pauseCtx->equipTargetItem,
+                                         BUTTON_ITEM_EQUIP(0, EQUIP_SLOT_C_DOWN))) {
             if ((DPAD_BUTTON_ITEM_EQUIP(0, EQUIP_SLOT_D_DOWN) & 0xFF) != ITEM_NONE) {
                 if ((pauseCtx->equipTargetItem >= 0xB5) && (pauseCtx->equipTargetItem < 0xB8) &&
                     (((DPAD_BUTTON_ITEM_EQUIP(0, EQUIP_SLOT_D_DOWN) & 0xFF) == ITEM_BOW) ||
@@ -1208,7 +1236,9 @@ void KaleidoScope_UpdateDpadItemEquip(PlayState* play) {
                 BUTTON_ITEM_EQUIP(0, EQUIP_SLOT_C_DOWN) = ITEM_NONE;
                 C_SLOT_EQUIP(0, EQUIP_SLOT_C_DOWN) = SLOT_NONE;
             }
-        } else if (pauseCtx->equipTargetSlot == C_SLOT_EQUIP(0, EQUIP_SLOT_C_RIGHT)) {
+        } else if (pauseCtx->equipTargetSlot == C_SLOT_EQUIP(0, EQUIP_SLOT_C_RIGHT) &&
+                   GameInteractor_Should(VB_CHECK_ITEM_SWAP_EQUIP_SLOT, true, pauseCtx->equipTargetItem,
+                                         BUTTON_ITEM_EQUIP(0, EQUIP_SLOT_C_RIGHT))) {
             if ((DPAD_BUTTON_ITEM_EQUIP(0, EQUIP_SLOT_D_DOWN) & 0xFF) != ITEM_NONE) {
                 if ((pauseCtx->equipTargetItem >= 0xB5) && (pauseCtx->equipTargetItem < 0xB8) &&
                     (((DPAD_BUTTON_ITEM_EQUIP(0, EQUIP_SLOT_D_DOWN) & 0xFF) == ITEM_BOW) ||
@@ -1225,7 +1255,9 @@ void KaleidoScope_UpdateDpadItemEquip(PlayState* play) {
                 BUTTON_ITEM_EQUIP(0, EQUIP_SLOT_C_RIGHT) = ITEM_NONE;
                 C_SLOT_EQUIP(0, EQUIP_SLOT_C_RIGHT) = SLOT_NONE;
             }
-        } else if (pauseCtx->equipTargetSlot == DPAD_SLOT_EQUIP(0, EQUIP_SLOT_D_RIGHT)) {
+        } else if (pauseCtx->equipTargetSlot == DPAD_SLOT_EQUIP(0, EQUIP_SLOT_D_RIGHT) &&
+                   GameInteractor_Should(VB_CHECK_ITEM_SWAP_EQUIP_SLOT, true, pauseCtx->equipTargetItem,
+                                         DPAD_BUTTON_ITEM_EQUIP(0, EQUIP_SLOT_D_RIGHT))) {
             if ((DPAD_BUTTON_ITEM_EQUIP(0, EQUIP_SLOT_D_DOWN) & 0xFF) != ITEM_NONE) {
                 if ((pauseCtx->equipTargetItem >= 0xB5) && (pauseCtx->equipTargetItem < 0xB8) &&
                     (((DPAD_BUTTON_ITEM_EQUIP(0, EQUIP_SLOT_D_DOWN) & 0xFF) == ITEM_BOW) ||
@@ -1242,7 +1274,9 @@ void KaleidoScope_UpdateDpadItemEquip(PlayState* play) {
                 DPAD_BUTTON_ITEM_EQUIP(0, EQUIP_SLOT_D_RIGHT) = ITEM_NONE;
                 DPAD_SLOT_EQUIP(0, EQUIP_SLOT_D_RIGHT) = SLOT_NONE;
             }
-        } else if (pauseCtx->equipTargetSlot == DPAD_SLOT_EQUIP(0, EQUIP_SLOT_D_LEFT)) {
+        } else if (pauseCtx->equipTargetSlot == DPAD_SLOT_EQUIP(0, EQUIP_SLOT_D_LEFT) &&
+                   GameInteractor_Should(VB_CHECK_ITEM_SWAP_EQUIP_SLOT, true, pauseCtx->equipTargetItem,
+                                         DPAD_BUTTON_ITEM_EQUIP(0, EQUIP_SLOT_D_LEFT))) {
             if ((DPAD_BUTTON_ITEM_EQUIP(0, EQUIP_SLOT_D_DOWN) & 0xFF) != ITEM_NONE) {
                 if ((pauseCtx->equipTargetItem >= 0xB5) && (pauseCtx->equipTargetItem < 0xB8) &&
                     (((DPAD_BUTTON_ITEM_EQUIP(0, EQUIP_SLOT_D_DOWN) & 0xFF) == ITEM_BOW) ||
@@ -1259,7 +1293,9 @@ void KaleidoScope_UpdateDpadItemEquip(PlayState* play) {
                 DPAD_BUTTON_ITEM_EQUIP(0, EQUIP_SLOT_D_LEFT) = ITEM_NONE;
                 DPAD_SLOT_EQUIP(0, EQUIP_SLOT_D_LEFT) = SLOT_NONE;
             }
-        } else if (pauseCtx->equipTargetSlot == DPAD_SLOT_EQUIP(0, EQUIP_SLOT_D_UP)) {
+        } else if (pauseCtx->equipTargetSlot == DPAD_SLOT_EQUIP(0, EQUIP_SLOT_D_UP) &&
+                   GameInteractor_Should(VB_CHECK_ITEM_SWAP_EQUIP_SLOT, true, pauseCtx->equipTargetItem,
+                                         DPAD_BUTTON_ITEM_EQUIP(0, EQUIP_SLOT_D_UP))) {
             if ((DPAD_BUTTON_ITEM_EQUIP(0, EQUIP_SLOT_D_DOWN) & 0xFF) != ITEM_NONE) {
                 if ((pauseCtx->equipTargetItem >= 0xB5) && (pauseCtx->equipTargetItem < 0xB8) &&
                     (((DPAD_BUTTON_ITEM_EQUIP(0, EQUIP_SLOT_D_DOWN) & 0xFF) == ITEM_BOW) ||
@@ -1320,7 +1356,9 @@ void KaleidoScope_UpdateDpadItemEquip(PlayState* play) {
         Interface_Dpad_LoadItemIconImpl(play, EQUIP_SLOT_D_DOWN);
     } else if (pauseCtx->equipTargetCBtn == PAUSE_EQUIP_D_UP) {
         // Swap if item is already equipped on other Item Buttons.
-        if (pauseCtx->equipTargetSlot == C_SLOT_EQUIP(0, EQUIP_SLOT_C_LEFT)) {
+        if (pauseCtx->equipTargetSlot == C_SLOT_EQUIP(0, EQUIP_SLOT_C_LEFT) &&
+            GameInteractor_Should(VB_CHECK_ITEM_SWAP_EQUIP_SLOT, true, pauseCtx->equipTargetItem,
+                                  BUTTON_ITEM_EQUIP(0, EQUIP_SLOT_C_LEFT))) {
             if ((DPAD_BUTTON_ITEM_EQUIP(0, EQUIP_SLOT_D_UP) & 0xFF) != ITEM_NONE) {
                 if ((pauseCtx->equipTargetItem >= 0xB5) && (pauseCtx->equipTargetItem < 0xB8) &&
                     (((DPAD_BUTTON_ITEM_EQUIP(0, EQUIP_SLOT_D_UP) & 0xFF) == ITEM_BOW) ||
@@ -1337,7 +1375,9 @@ void KaleidoScope_UpdateDpadItemEquip(PlayState* play) {
                 BUTTON_ITEM_EQUIP(0, EQUIP_SLOT_C_LEFT) = ITEM_NONE;
                 C_SLOT_EQUIP(0, EQUIP_SLOT_C_LEFT) = SLOT_NONE;
             }
-        } else if (pauseCtx->equipTargetSlot == C_SLOT_EQUIP(0, EQUIP_SLOT_C_DOWN)) {
+        } else if (pauseCtx->equipTargetSlot == C_SLOT_EQUIP(0, EQUIP_SLOT_C_DOWN) &&
+                   GameInteractor_Should(VB_CHECK_ITEM_SWAP_EQUIP_SLOT, true, pauseCtx->equipTargetItem,
+                                         BUTTON_ITEM_EQUIP(0, EQUIP_SLOT_C_DOWN))) {
             if ((DPAD_BUTTON_ITEM_EQUIP(0, EQUIP_SLOT_D_UP) & 0xFF) != ITEM_NONE) {
                 if ((pauseCtx->equipTargetItem >= 0xB5) && (pauseCtx->equipTargetItem < 0xB8) &&
                     (((DPAD_BUTTON_ITEM_EQUIP(0, EQUIP_SLOT_D_UP) & 0xFF) == ITEM_BOW) ||
@@ -1354,7 +1394,9 @@ void KaleidoScope_UpdateDpadItemEquip(PlayState* play) {
                 BUTTON_ITEM_EQUIP(0, EQUIP_SLOT_C_DOWN) = ITEM_NONE;
                 C_SLOT_EQUIP(0, EQUIP_SLOT_C_DOWN) = SLOT_NONE;
             }
-        } else if (pauseCtx->equipTargetSlot == C_SLOT_EQUIP(0, EQUIP_SLOT_C_RIGHT)) {
+        } else if (pauseCtx->equipTargetSlot == C_SLOT_EQUIP(0, EQUIP_SLOT_C_RIGHT) &&
+                   GameInteractor_Should(VB_CHECK_ITEM_SWAP_EQUIP_SLOT, true, pauseCtx->equipTargetItem,
+                                         BUTTON_ITEM_EQUIP(0, EQUIP_SLOT_C_RIGHT))) {
             if ((DPAD_BUTTON_ITEM_EQUIP(0, EQUIP_SLOT_D_UP) & 0xFF) != ITEM_NONE) {
                 if ((pauseCtx->equipTargetItem >= 0xB5) && (pauseCtx->equipTargetItem < 0xB8) &&
                     (((DPAD_BUTTON_ITEM_EQUIP(0, EQUIP_SLOT_D_UP) & 0xFF) == ITEM_BOW) ||
@@ -1371,7 +1413,9 @@ void KaleidoScope_UpdateDpadItemEquip(PlayState* play) {
                 BUTTON_ITEM_EQUIP(0, EQUIP_SLOT_C_RIGHT) = ITEM_NONE;
                 C_SLOT_EQUIP(0, EQUIP_SLOT_C_RIGHT) = SLOT_NONE;
             }
-        } else if (pauseCtx->equipTargetSlot == DPAD_SLOT_EQUIP(0, EQUIP_SLOT_D_RIGHT)) {
+        } else if (pauseCtx->equipTargetSlot == DPAD_SLOT_EQUIP(0, EQUIP_SLOT_D_RIGHT) &&
+                   GameInteractor_Should(VB_CHECK_ITEM_SWAP_EQUIP_SLOT, true, pauseCtx->equipTargetItem,
+                                         DPAD_BUTTON_ITEM_EQUIP(0, EQUIP_SLOT_D_RIGHT))) {
             if ((DPAD_BUTTON_ITEM_EQUIP(0, EQUIP_SLOT_D_UP) & 0xFF) != ITEM_NONE) {
                 if ((pauseCtx->equipTargetItem >= 0xB5) && (pauseCtx->equipTargetItem < 0xB8) &&
                     (((DPAD_BUTTON_ITEM_EQUIP(0, EQUIP_SLOT_D_UP) & 0xFF) == ITEM_BOW) ||
@@ -1388,7 +1432,9 @@ void KaleidoScope_UpdateDpadItemEquip(PlayState* play) {
                 DPAD_BUTTON_ITEM_EQUIP(0, EQUIP_SLOT_D_RIGHT) = ITEM_NONE;
                 DPAD_SLOT_EQUIP(0, EQUIP_SLOT_D_RIGHT) = SLOT_NONE;
             }
-        } else if (pauseCtx->equipTargetSlot == DPAD_SLOT_EQUIP(0, EQUIP_SLOT_D_LEFT)) {
+        } else if (pauseCtx->equipTargetSlot == DPAD_SLOT_EQUIP(0, EQUIP_SLOT_D_LEFT) &&
+                   GameInteractor_Should(VB_CHECK_ITEM_SWAP_EQUIP_SLOT, true, pauseCtx->equipTargetItem,
+                                         DPAD_BUTTON_ITEM_EQUIP(0, EQUIP_SLOT_D_LEFT))) {
             if ((DPAD_BUTTON_ITEM_EQUIP(0, EQUIP_SLOT_D_UP) & 0xFF) != ITEM_NONE) {
                 if ((pauseCtx->equipTargetItem >= 0xB5) && (pauseCtx->equipTargetItem < 0xB8) &&
                     (((DPAD_BUTTON_ITEM_EQUIP(0, EQUIP_SLOT_D_UP) & 0xFF) == ITEM_BOW) ||
@@ -1405,7 +1451,9 @@ void KaleidoScope_UpdateDpadItemEquip(PlayState* play) {
                 DPAD_BUTTON_ITEM_EQUIP(0, EQUIP_SLOT_D_LEFT) = ITEM_NONE;
                 DPAD_SLOT_EQUIP(0, EQUIP_SLOT_D_LEFT) = SLOT_NONE;
             }
-        } else if (pauseCtx->equipTargetSlot == DPAD_SLOT_EQUIP(0, EQUIP_SLOT_D_DOWN)) {
+        } else if (pauseCtx->equipTargetSlot == DPAD_SLOT_EQUIP(0, EQUIP_SLOT_D_DOWN) &&
+                   GameInteractor_Should(VB_CHECK_ITEM_SWAP_EQUIP_SLOT, true, pauseCtx->equipTargetItem,
+                                         DPAD_BUTTON_ITEM_EQUIP(0, EQUIP_SLOT_D_DOWN))) {
             if ((DPAD_BUTTON_ITEM_EQUIP(0, EQUIP_SLOT_D_UP) & 0xFF) != ITEM_NONE) {
                 if ((pauseCtx->equipTargetItem >= 0xB5) && (pauseCtx->equipTargetItem < 0xB8) &&
                     (((DPAD_BUTTON_ITEM_EQUIP(0, EQUIP_SLOT_D_UP) & 0xFF) == ITEM_BOW) ||
@@ -1598,7 +1646,9 @@ void KaleidoScope_UpdateItemEquip(PlayState* play) {
             // Equip item onto c buttons
             if (pauseCtx->equipTargetCBtn == PAUSE_EQUIP_C_LEFT) {
                 // Swap if item is already equipped on CDown or CRight.
-                if (pauseCtx->equipTargetSlot == C_SLOT_EQUIP(0, EQUIP_SLOT_C_DOWN)) {
+                if (pauseCtx->equipTargetSlot == C_SLOT_EQUIP(0, EQUIP_SLOT_C_DOWN) &&
+                    GameInteractor_Should(VB_CHECK_ITEM_SWAP_EQUIP_SLOT, true, pauseCtx->equipTargetItem,
+                                          BUTTON_ITEM_EQUIP(0, EQUIP_SLOT_C_DOWN))) {
                     if ((BUTTON_ITEM_EQUIP(0, EQUIP_SLOT_C_LEFT) & 0xFF) != ITEM_NONE) {
                         if ((pauseCtx->equipTargetItem >= 0xB5) && (pauseCtx->equipTargetItem < 0xB8) &&
                             (((BUTTON_ITEM_EQUIP(0, EQUIP_SLOT_C_LEFT) & 0xFF) == ITEM_BOW) ||
@@ -1615,7 +1665,9 @@ void KaleidoScope_UpdateItemEquip(PlayState* play) {
                         BUTTON_ITEM_EQUIP(0, EQUIP_SLOT_C_DOWN) = ITEM_NONE;
                         C_SLOT_EQUIP(0, EQUIP_SLOT_C_DOWN) = SLOT_NONE;
                     }
-                } else if (pauseCtx->equipTargetSlot == C_SLOT_EQUIP(0, EQUIP_SLOT_C_RIGHT)) {
+                } else if (pauseCtx->equipTargetSlot == C_SLOT_EQUIP(0, EQUIP_SLOT_C_RIGHT) &&
+                           GameInteractor_Should(VB_CHECK_ITEM_SWAP_EQUIP_SLOT, true, pauseCtx->equipTargetItem,
+                                                 BUTTON_ITEM_EQUIP(0, EQUIP_SLOT_C_RIGHT))) {
                     if ((BUTTON_ITEM_EQUIP(0, EQUIP_SLOT_C_LEFT) & 0xFF) != ITEM_NONE) {
                         if ((pauseCtx->equipTargetItem >= 0xB5) && (pauseCtx->equipTargetItem < 0xB8) &&
                             (((BUTTON_ITEM_EQUIP(0, EQUIP_SLOT_C_LEFT) & 0xFF) == ITEM_BOW) ||
@@ -1689,7 +1741,9 @@ void KaleidoScope_UpdateItemEquip(PlayState* play) {
                 Interface_LoadItemIconImpl(play, EQUIP_SLOT_C_LEFT);
             } else if (pauseCtx->equipTargetCBtn == PAUSE_EQUIP_C_DOWN) {
                 // Swap if item is already equipped on CLeft or CRight.
-                if (pauseCtx->equipTargetSlot == C_SLOT_EQUIP(0, EQUIP_SLOT_C_LEFT)) {
+                if (pauseCtx->equipTargetSlot == C_SLOT_EQUIP(0, EQUIP_SLOT_C_LEFT) &&
+                    GameInteractor_Should(VB_CHECK_ITEM_SWAP_EQUIP_SLOT, true, pauseCtx->equipTargetItem,
+                                          BUTTON_ITEM_EQUIP(0, EQUIP_SLOT_C_LEFT))) {
                     if ((BUTTON_ITEM_EQUIP(0, EQUIP_SLOT_C_DOWN) & 0xFF) != ITEM_NONE) {
                         if ((pauseCtx->equipTargetItem >= 0xB5) && (pauseCtx->equipTargetItem < 0xB8) &&
                             (((BUTTON_ITEM_EQUIP(0, EQUIP_SLOT_C_DOWN) & 0xFF) == ITEM_BOW) ||
@@ -1706,7 +1760,9 @@ void KaleidoScope_UpdateItemEquip(PlayState* play) {
                         BUTTON_ITEM_EQUIP(0, EQUIP_SLOT_C_LEFT) = ITEM_NONE;
                         C_SLOT_EQUIP(0, EQUIP_SLOT_C_LEFT) = SLOT_NONE;
                     }
-                } else if (pauseCtx->equipTargetSlot == C_SLOT_EQUIP(0, EQUIP_SLOT_C_RIGHT)) {
+                } else if (pauseCtx->equipTargetSlot == C_SLOT_EQUIP(0, EQUIP_SLOT_C_RIGHT) &&
+                           GameInteractor_Should(VB_CHECK_ITEM_SWAP_EQUIP_SLOT, true, pauseCtx->equipTargetItem,
+                                                 BUTTON_ITEM_EQUIP(0, EQUIP_SLOT_C_RIGHT))) {
                     if ((BUTTON_ITEM_EQUIP(0, EQUIP_SLOT_C_DOWN) & 0xFF) != ITEM_NONE) {
                         if ((pauseCtx->equipTargetItem >= 0xB5) && (pauseCtx->equipTargetItem < 0xB8) &&
                             (((BUTTON_ITEM_EQUIP(0, EQUIP_SLOT_C_DOWN) & 0xFF) == ITEM_BOW) ||
@@ -1775,7 +1831,9 @@ void KaleidoScope_UpdateItemEquip(PlayState* play) {
             } else if (pauseCtx->equipTargetCBtn ==
                        PAUSE_EQUIP_C_RIGHT) { // #Region 2S2H [Dpad] Added condition here to allow for other cases
                 // Swap if item is already equipped on CLeft or CDown.
-                if (pauseCtx->equipTargetSlot == C_SLOT_EQUIP(0, EQUIP_SLOT_C_LEFT)) {
+                if (pauseCtx->equipTargetSlot == C_SLOT_EQUIP(0, EQUIP_SLOT_C_LEFT) &&
+                    GameInteractor_Should(VB_CHECK_ITEM_SWAP_EQUIP_SLOT, true, pauseCtx->equipTargetItem,
+                                          BUTTON_ITEM_EQUIP(0, EQUIP_SLOT_C_LEFT))) {
                     if ((BUTTON_ITEM_EQUIP(0, EQUIP_SLOT_C_RIGHT) & 0xFF) != ITEM_NONE) {
                         if ((pauseCtx->equipTargetItem >= 0xB5) && (pauseCtx->equipTargetItem < 0xB8) &&
                             (((BUTTON_ITEM_EQUIP(0, EQUIP_SLOT_C_RIGHT) & 0xFF) == ITEM_BOW) ||
@@ -1792,7 +1850,9 @@ void KaleidoScope_UpdateItemEquip(PlayState* play) {
                         BUTTON_ITEM_EQUIP(0, EQUIP_SLOT_C_LEFT) = ITEM_NONE;
                         C_SLOT_EQUIP(0, EQUIP_SLOT_C_LEFT) = SLOT_NONE;
                     }
-                } else if (pauseCtx->equipTargetSlot == C_SLOT_EQUIP(0, EQUIP_SLOT_C_DOWN)) {
+                } else if (pauseCtx->equipTargetSlot == C_SLOT_EQUIP(0, EQUIP_SLOT_C_DOWN) &&
+                           GameInteractor_Should(VB_CHECK_ITEM_SWAP_EQUIP_SLOT, true, pauseCtx->equipTargetItem,
+                                                 BUTTON_ITEM_EQUIP(0, EQUIP_SLOT_C_DOWN))) {
                     if ((BUTTON_ITEM_EQUIP(0, EQUIP_SLOT_C_RIGHT) & 0xFF) != ITEM_NONE) {
                         if ((pauseCtx->equipTargetItem >= 0xB5) && (pauseCtx->equipTargetItem < 0xB8) &&
                             (((BUTTON_ITEM_EQUIP(0, EQUIP_SLOT_C_RIGHT) & 0xFF) == ITEM_BOW) ||
