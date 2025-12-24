@@ -349,8 +349,7 @@ void MagicFire_Draw(Actor_CustomMagicFire* this, PlayState* play) {
         gDPPipeSync(POLY_XLU_DISP++);
         gSPTexture(POLY_XLU_DISP++, 0xFFFF, 0xFFFF, 0, G_TX_RENDERTILE, G_ON);
         gDPSetTextureLUT(POLY_XLU_DISP++, G_TT_NONE);
-        gDPLoadTextureBlock(POLY_XLU_DISP++, gFireTex, G_IM_FMT_I, G_IM_SIZ_8b,
-        64, 64, 0, G_TX_NOMIRROR | G_TX_WRAP,
+        gDPLoadTextureBlock(POLY_XLU_DISP++, gFireTex, G_IM_FMT_I, G_IM_SIZ_8b, 64, 64, 0, G_TX_NOMIRROR | G_TX_WRAP,
                             G_TX_NOMIRROR | G_TX_WRAP, 6, 6, 15, G_TX_NOLOD);
         gDPSetTile(POLY_XLU_DISP++, G_IM_FMT_I, G_IM_SIZ_8b, 8, 0, 1, 0, G_TX_NOMIRROR | G_TX_WRAP, 6, 14,
                    G_TX_NOMIRROR | G_TX_WRAP, 6, 14);
@@ -365,11 +364,10 @@ void MagicFire_Draw(Actor_CustomMagicFire* this, PlayState* play) {
                        (255 - ((gameplayFrames * 20) % 256)) << 2, (((gameplayFrames * 2) % 256) + 32 - 1) << 2,
                        ((255 - ((gameplayFrames * 20) % 256)) + 32 - 1) << 2);
 
-
-        //gSPDisplayList(POLY_XLU_DISP++,
-        //               DisplaceTexture(play->state.gfxCtx, G_TX_RENDERTILE, (gameplayFrames * 2) % 512,
-        //                                511 - ((gameplayFrames * 5) % 512), 64, 64, 1, (gameplayFrames * 2) % 256,
-        //                                255 - ((gameplayFrames * 20) % 256), 32, 32));
+        // gSPDisplayList(POLY_XLU_DISP++,
+        //                DisplaceTexture(play->state.gfxCtx, G_TX_RENDERTILE, (gameplayFrames * 2) % 512,
+        //                                 511 - ((gameplayFrames * 5) % 512), 64, 64, 1, (gameplayFrames * 2) % 256,
+        //                                 255 - ((gameplayFrames * 20) % 256), 32, 32));
         gSPDisplayList(POLY_XLU_DISP++, sModelDL);
         CLOSE_DISPS(play->state.gfxCtx);
 

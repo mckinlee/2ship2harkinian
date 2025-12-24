@@ -323,8 +323,8 @@ void RegisterCustomItemPanel() {
             player->unk_B0C = 0.0f;
             player->unk_B28 = 0;
 
-            //Player_InitDefaultIA;
-            //Player_SetModelGroup(player, (PlayerModelGroup)player->modelGroup);
+            // Player_InitDefaultIA;
+            // Player_SetModelGroup(player, (PlayerModelGroup)player->modelGroup);
         }
     });
 }
