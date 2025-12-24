@@ -3,6 +3,7 @@
 #include "2s2h/ShipInit.hpp"
 #include <string.h>
 #include <math.h>
+#include "2s2h/Enhancements/FrameInterpolation/FrameInterpolation.h"
 
 extern "C" {
 #include "z64save.h"
@@ -18,6 +19,7 @@ extern "C" {
 
 #define CVAR_CUSTOM_PANEL_ENABLED_NAME "gEnhancements.Equipment.CustomItemPanel"
 #define CVAR_CUSTOM_PANEL_ENABLED CVarGetInteger(CVAR_CUSTOM_PANEL_ENABLED_NAME, 0)
+#define MAGIC_COST_DINS_FIRE (MAGIC_NORMAL_METER / 10)
 
 static bool sShowingCustomItems = false;
 static u8 sCustomItems[48];
@@ -39,18 +41,51 @@ static float sFlipAngle = 0.0f;
 static float sTargetFlipAngle = 0.0f;
 
 #include <vector>
+#include <functional>
 
 struct CustomItemEntry {
     ItemId itemId;
     u8 slot;
+    std::function<bool()> canUse;
+    std::function<void()> onUse;
+    std::function<void*()> getIcon;
 };
 
-static std::vector<CustomItemEntry> sCustomItemRegistry = {
-    { ITEM_MOONS_TEAR, SLOT_OCARINA }, // Placeholder
-    { ITEM_CUSTOM_DINS_FIRE, SLOT_ARROW_FIRE },
-};
+static std::vector<CustomItemEntry> sCustomItemRegistry;
+
+void RegisterCustomItem(ItemId itemId, u8 slot, std::function<bool()> canUse, std::function<void()> onUse,
+                        std::function<void*()> getIcon) {
+    sCustomItemRegistry.push_back({ itemId, slot, canUse, onUse, getIcon });
+}
+
+void InitCustomItems() {
+    sCustomItemRegistry.clear();
+
+    // Register Moon's Tear (Placeholder / No Action)
+    RegisterCustomItem(
+        ITEM_MOONS_TEAR, SLOT_OCARINA, []() { return false; }, []() {}, nullptr);
+
+    // Register Custom Din's Fire
+    RegisterCustomItem(
+        ITEM_CUSTOM_DINS_FIRE, SLOT_ARROW_FIRE,
+        []() { return gSaveContext.save.saveInfo.playerData.magic >= MAGIC_COST_DINS_FIRE; },
+        []() {
+            Player* player = GET_PLAYER(gPlayState);
+            Actor_Spawn(&gPlayState->actorCtx, gPlayState, ACTOR_CUSTOM_SPELL_FIRE, player->actor.world.pos.x,
+                        player->actor.world.pos.y, player->actor.world.pos.z, 0, player->actor.shape.rot.y, 0, 0);
+            gSaveContext.save.saveInfo.playerData.magic -= MAGIC_COST_DINS_FIRE;
+        },
+        []() {
+            if (ITEM_ARROW_FIRE < 255) {
+                return (void*)gItemIcons[ITEM_ARROW_FIRE];
+            }
+            return (void*)NULL;
+        });
+}
 
 void RegisterCustomItemPanel() {
+    InitCustomItems();
+
     // Initialize custom items
     for (int i = 0; i < 48; i++) {
         sCustomItems[i] = ITEM_NONE;
@@ -127,6 +162,36 @@ void RegisterCustomItemPanel() {
         }
     });
 
+    // Custom Item Usage Logic
+    COND_HOOK(OnPassPlayerInputs, CVAR_CUSTOM_PANEL_ENABLED, [](Input* input) {
+        if (gPlayState == NULL || gPlayState->pauseCtx.state != 0 || gPlayState->msgCtx.msgLength != 0) {
+            return;
+        }
+
+        for (int i = 1; i < 4; i++) {
+            if (CHECK_BTN_ALL(input->press.button, (i == 1) ? BTN_CLEFT : (i == 2) ? BTN_CDOWN : BTN_CRIGHT)) {
+                ItemId equippedItem = (ItemId)gSaveContext.save.saveInfo.equips.buttonItems[0][i];
+
+                // Iterate registry to find matching item logic
+                for (const auto& entry : sCustomItemRegistry) {
+                    if (entry.itemId == equippedItem) {
+                        if (entry.canUse && entry.canUse()) {
+                            if (entry.onUse) {
+                                entry.onUse();
+                            }
+                        } else {
+                            Audio_PlaySfx(NA_SE_SY_ERROR);
+                        }
+
+                        // Consume Input
+                        input->press.button &= ~((i == 1) ? BTN_CLEFT : (i == 2) ? BTN_CDOWN : BTN_CRIGHT);
+                        break;
+                    }
+                }
+            }
+        }
+    });
+
     COND_ID_HOOK(BeforeKaleidoDrawPage, PAUSE_ITEM, CVAR_CUSTOM_PANEL_ENABLED,
                  [](PauseContext* pauseCtx, u16 pauseIndex) {
                      // Fix equip outline: The outline is slot-based, so it incorrectly shows on both panels if they
@@ -196,6 +261,12 @@ void RegisterCustomItemPanel() {
                      float angle = sFlipAngle;
                      if (sShowingCustomItems) {
                          angle += (float)M_PI;
+
+                         // Purple theme for Custom Panel
+                         GraphicsContext* gfxCtx = gPlayState->state.gfxCtx;
+                         OPEN_DISPS(gfxCtx);
+                         gDPSetPrimColor(POLY_OPA_DISP++, 0, 0, 150, 100, 200, pauseCtx->alpha);
+                         CLOSE_DISPS(gfxCtx);
                      }
                      if (angle != 0.0f) {
                          Matrix_RotateXF(angle, MTXMODE_APPLY);
@@ -209,6 +280,20 @@ void RegisterCustomItemPanel() {
         if (existingItem != ITEM_NONE && targetItem != ITEM_NONE) {
             if (targetItem != existingItem) {
                 *should = false;
+            }
+        }
+    });
+
+    COND_VB_SHOULD(VB_GET_ITEM_ICON_TEXTURE, CVAR_CUSTOM_PANEL_ENABLED, {
+        ItemId itemId = (ItemId)va_arg(args, int);
+        void** texture = va_arg(args, void**);
+
+        for (const auto& entry : sCustomItemRegistry) {
+            if (entry.itemId == itemId) {
+                if (entry.getIcon) {
+                    *texture = entry.getIcon();
+                }
+                break;
             }
         }
     });

@@ -2,7 +2,14 @@
 
 #define FLAGS (ACTOR_FLAG_UPDATE_CULLING_DISABLED | ACTOR_FLAG_UPDATE_DURING_OCARINA)
 
-#define VTX(x,y,z,s,t,crnx,cgny,cbnz,a) { { { x, y, z }, 0, { s, t }, { crnx, cgny, cbnz, a } } }
+#define VTX(x, y, z, s, t, crnx, cgny, cbnz, a) \
+    {                                           \
+        {                                       \
+            { x, y, z }, 0, { s, t }, {         \
+                crnx, cgny, cbnz, a             \
+            }                                   \
+        }                                       \
+    }
 
 void MagicFire_UpdateBeforeCast(Actor_CustomMagicFire* this, PlayState* play);
 
@@ -187,8 +194,7 @@ static u8 sVertexIndices[] = {
     14, 20, 21, 23, 28, 30, 33, 34, 40, 41, 43, 48, 50, 55, 57, 62, 64, 65, 73, 74,
 };
 
-void MagicFire_Init(Actor_CustomMagicFire* this, PlayState* play)
-{
+void MagicFire_Init(Actor_CustomMagicFire* this, PlayState* play) {
     Actor_ProcessInitChain(&this->actor, sInitChain);
     this->action = 0;
     this->screenTintBehaviour = 0;
@@ -203,13 +209,11 @@ void MagicFire_Init(Actor_CustomMagicFire* this, PlayState* play)
     this->actor.room = -1;
 }
 
-void MagicFire_Destroy(Actor_CustomMagicFire* this, PlayState* play)
-{
+void MagicFire_Destroy(Actor_CustomMagicFire* this, PlayState* play) {
     Magic_Reset(play);
 }
 
-void MagicFire_Update(Actor_CustomMagicFire* this, PlayState* play)
-{
+void MagicFire_Update(Actor_CustomMagicFire* this, PlayState* play) {
     Player* player = GET_PLAYER(play);
 
     this->actor.world.pos = player->actor.world.pos;
@@ -217,7 +221,8 @@ void MagicFire_Update(Actor_CustomMagicFire* this, PlayState* play)
     /* See `ACTOROVL_ALLOC_ABSOLUTE` */
     /*! @bug This condition is too broad, the actor will also be killed by warp songs. But warp songs do not use an */
     /*! actor which uses `ACTOROVL_ALLOC_ABSOLUTE`. There is no reason to kill the actor in this case. */
-    /* if ((play->msgCtx.msgMode == MSGMODE_OCARINA_CORRECT_PLAYBACK) || (play->msgCtx.msgMode == MSGMODE_SONG_PLAYED)) { */
+    /* if ((play->msgCtx.msgMode == MSGMODE_OCARINA_CORRECT_PLAYBACK) || (play->msgCtx.msgMode == MSGMODE_SONG_PLAYED))
+     * { */
     /*     Actor_Kill(&this->actor); */
     /*     return; */
     /* } */
@@ -301,32 +306,28 @@ void MagicFire_Update(Actor_CustomMagicFire* this, PlayState* play)
     }
 }
 
-void MagicFire_UpdateBeforeCast(Actor_CustomMagicFire* this, PlayState* play)
-{
+void MagicFire_UpdateBeforeCast(Actor_CustomMagicFire* this, PlayState* play) {
     Player* player = GET_PLAYER(play);
 
     /* See `ACTOROVL_ALLOC_ABSOLUTE` */
     /*! @bug This condition is too broad, the actor will also be killed by warp songs. But warp songs do not use an */
     /*! actor which uses `ACTOROVL_ALLOC_ABSOLUTE`. There is no reason to kill the actor in this case. */
-    /* if ((play->msgCtx.msgMode == MSGMODE_OCARINA_CORRECT_PLAYBACK) || (play->msgCtx.msgMode == MSGMODE_SONG_PLAYED)) { */
+    /* if ((play->msgCtx.msgMode == MSGMODE_OCARINA_CORRECT_PLAYBACK) || (play->msgCtx.msgMode == MSGMODE_SONG_PLAYED))
+     * { */
     /*     Actor_Kill(&this->actor); */
     /*     return; */
     /* } */
 
-    if (this->actionTimer > 0)
-    {
+    if (this->actionTimer > 0) {
         this->actionTimer--;
-    }
-    else
-    {
+    } else {
         this->actor.update = (ActorFunc)MagicFire_Update;
         Player_PlaySfx(player, NA_SE_PL_MAGIC_FIRE);
     }
     this->actor.world.pos = player->actor.world.pos;
 }
 
-void MagicFire_Draw(Actor_CustomMagicFire* this, PlayState* play)
-{
+void MagicFire_Draw(Actor_CustomMagicFire* this, PlayState* play) {
     u32 gameplayFrames = play->gameplayFrames;
     s32 i;
     u8 alpha;
@@ -345,21 +346,21 @@ void MagicFire_Draw(Actor_CustomMagicFire* this, PlayState* play)
         gDPSetPrimColor(POLY_XLU_DISP++, 0, 128, 255, 200, 0, (u8)(this->alphaMultiplier * 255));
         gDPSetEnvColor(POLY_XLU_DISP++, 255, 0, 0, (u8)(this->alphaMultiplier * 255));
         Matrix_Scale(0.15f, 0.15f, 0.15f, MTXMODE_APPLY);
-        gSPMatrix(POLY_XLU_DISP++, Matrix_Finalize(play->state.gfxCtx),
-                  G_MTX_NOPUSH | G_MTX_LOAD | G_MTX_MODELVIEW);
+        gSPMatrix(POLY_XLU_DISP++, Matrix_Finalize(play->state.gfxCtx), G_MTX_NOPUSH | G_MTX_LOAD | G_MTX_MODELVIEW);
         gDPPipeSync(POLY_XLU_DISP++);
         gSPTexture(POLY_XLU_DISP++, 0xFFFF, 0xFFFF, 0, G_TX_RENDERTILE, G_ON);
         gDPSetTextureLUT(POLY_XLU_DISP++, G_TT_NONE);
-        gDPLoadTextureBlock(POLY_XLU_DISP++, 0x08000000 | CUSTOM_KEEP_MAGIC_FIRE_TEXTURE, G_IM_FMT_I, G_IM_SIZ_8b, 64, 64, 0, G_TX_NOMIRROR | G_TX_WRAP,
-                            G_TX_NOMIRROR | G_TX_WRAP, 6, 6, 15, G_TX_NOLOD);
-        gDPSetTile(POLY_XLU_DISP++, G_IM_FMT_I, G_IM_SIZ_8b, 8, 0, 1, 0, G_TX_NOMIRROR | G_TX_WRAP, 6, 14,
-                   G_TX_NOMIRROR | G_TX_WRAP, 6, 14);
-        gDPSetTileSize(POLY_XLU_DISP++, 1, 0, 0, 63 << 2, 63 << 2);
+        // gDPLoadTextureBlock(POLY_XLU_DISP++, 0x08000000 | CUSTOM_KEEP_MAGIC_FIRE_TEXTURE, G_IM_FMT_I, G_IM_SIZ_8b,
+        // 64, 64, 0, G_TX_NOMIRROR | G_TX_WRAP,
+        //                     G_TX_NOMIRROR | G_TX_WRAP, 6, 6, 15, G_TX_NOLOD);
+        // gDPSetTile(POLY_XLU_DISP++, G_IM_FMT_I, G_IM_SIZ_8b, 8, 0, 1, 0, G_TX_NOMIRROR | G_TX_WRAP, 6, 14,
+        //            G_TX_NOMIRROR | G_TX_WRAP, 6, 14);
+        // gDPSetTileSize(POLY_XLU_DISP++, 1, 0, 0, 63 << 2, 63 << 2);
         gSPDisplayList(POLY_XLU_DISP++, sMaterialDL);
-        //gSPDisplayList(POLY_XLU_DISP++,
-        //               DisplaceTexture(play->state.gfxCtx, G_TX_RENDERTILE, (gameplayFrames * 2) % 512,
-        //                                511 - ((gameplayFrames * 5) % 512), 64, 64, 1, (gameplayFrames * 2) % 256,
-        //                                255 - ((gameplayFrames * 20) % 256), 32, 32));
+        // gSPDisplayList(POLY_XLU_DISP++,
+        //                DisplaceTexture(play->state.gfxCtx, G_TX_RENDERTILE, (gameplayFrames * 2) % 512,
+        //                                 511 - ((gameplayFrames * 5) % 512), 64, 64, 1, (gameplayFrames * 2) % 256,
+        //                                 255 - ((gameplayFrames * 20) % 256), 32, 32));
         gSPDisplayList(POLY_XLU_DISP++, sModelDL);
         CLOSE_DISPS(play->state.gfxCtx);
 

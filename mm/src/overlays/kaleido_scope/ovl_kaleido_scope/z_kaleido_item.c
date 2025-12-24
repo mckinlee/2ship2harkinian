@@ -332,8 +332,9 @@ void KaleidoScope_DrawItemSelect(PlayState* play) {
                 gSPGrayscale(POLY_OPA_DISP++, true);
             }
             gSPVertex(POLY_OPA_DISP++, &pauseCtx->itemVtx[j + 0], 4, 0);
-            KaleidoScope_DrawTexQuadRGBA32(
-                play->state.gfxCtx, gItemIcons[((void)0, gSaveContext.save.saveInfo.inventory.items[i])], 32, 32, 0);
+            void* texture = (void*)gItemIcons[itemId];
+            GameInteractor_Should(VB_GET_ITEM_ICON_TEXTURE, true, itemId, &texture);
+            KaleidoScope_DrawTexQuadRGBA32(play->state.gfxCtx, texture, 32, 32, 0);
             if (itemRestricted) {
                 gSPGrayscale(POLY_OPA_DISP++, false);
             }

@@ -485,6 +485,15 @@ typedef enum {
 
     // #### `result`
     // ```c
+    // *texture (void**)
+    // ```
+    // #### `args`
+    // - `ItemId`
+    // - `void**` (texture to return)
+    VB_GET_ITEM_ICON_TEXTURE,
+
+    // #### `result`
+    // ```c
     // true
     // ```
     // #### `args`
