@@ -355,9 +355,6 @@ typedef enum ItemId {
     /* 0xFD */ ITEM_FD,
     /* 0xFE */ ITEM_FE,
     /* 0xFF */ ITEM_NONE = 0xFF,
-
-    // Custom Items
-    ITEM_CUSTOM_DINS_FIRE,
 } ItemId;
 
 #define BOTTLE_FIRST 0

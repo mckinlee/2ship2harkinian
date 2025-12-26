@@ -5,6 +5,7 @@
  */
 
 #include "z_kaleido_scope.h"
+#include "2s2h_assets.h"
 #include "interface/parameter_static/parameter_static.h"
 
 #include "2s2h/BenGui/HudEditor.h"
@@ -332,7 +333,7 @@ void KaleidoScope_DrawItemSelect(PlayState* play) {
                 gSPGrayscale(POLY_OPA_DISP++, true);
             }
             gSPVertex(POLY_OPA_DISP++, &pauseCtx->itemVtx[j + 0], 4, 0);
-            void* texture = (void*)gItemIcons[itemId];
+            void* texture = (itemId < ARRAY_COUNT(gItemIcons)) ? gItemIcons[itemId] : gEmptyTexture;
             GameInteractor_Should(VB_GET_ITEM_ICON_TEXTURE, true, itemId, &texture);
             KaleidoScope_DrawTexQuadRGBA32(play->state.gfxCtx, texture, 32, 32, 0);
             if (itemRestricted) {

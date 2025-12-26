@@ -4028,11 +4028,10 @@ void Interface_InitMinigame(PlayState* play) {
 void Interface_Dpad_LoadItemIconImpl(PlayState* play, u8 btn) {
     InterfaceContext* interfaceCtx = &play->interfaceCtx;
 
-    if (DPAD_GET_CUR_FORM_BTN_ITEM(btn) < ARRAY_COUNT(gItemIcons)) {
-        interfaceCtx->iconItemSegment[DPAD_BUTTON(btn) + EQUIP_SLOT_MAX] = gItemIcons[DPAD_GET_CUR_FORM_BTN_ITEM(btn)];
-    } else {
-        interfaceCtx->iconItemSegment[btn] = gEmptyTexture;
-    }
+    ItemId itemId = DPAD_GET_CUR_FORM_BTN_ITEM(btn);
+    void* texture = (itemId < ARRAY_COUNT(gItemIcons)) ? gItemIcons[itemId] : gEmptyTexture;
+    GameInteractor_Should(VB_GET_ITEM_ICON_TEXTURE, true, itemId, &texture);
+    interfaceCtx->iconItemSegment[DPAD_BUTTON(btn) + EQUIP_SLOT_MAX] = texture;
 }
 
 void Interface_DrawAutosaveIcon(PlayState* play, uint16_t opacity) {
@@ -4068,11 +4067,10 @@ void Interface_LoadItemIconImpl(PlayState* play, u8 btn) {
     // #region 2S2H [Port]
     // CmpDma_LoadFile(SEGMENT_ROM_START(icon_item_static_yar), GET_CUR_FORM_BTN_ITEM(btn),
     //             &interfaceCtx->iconItemSegment[(u32)btn * ICON_ITEM_TEX_SIZE], ICON_ITEM_TEX_SIZE);
-    if (GET_CUR_FORM_BTN_ITEM(btn) < ARRAY_COUNT(gItemIcons)) {
-        interfaceCtx->iconItemSegment[btn] = gItemIcons[GET_CUR_FORM_BTN_ITEM(btn)];
-    } else {
-        interfaceCtx->iconItemSegment[btn] = gEmptyTexture;
-    }
+    ItemId itemId = GET_CUR_FORM_BTN_ITEM(btn);
+    void* texture = (itemId < ARRAY_COUNT(gItemIcons)) ? gItemIcons[itemId] : gEmptyTexture;
+    GameInteractor_Should(VB_GET_ITEM_ICON_TEXTURE, true, itemId, &texture);
+    interfaceCtx->iconItemSegment[btn] = texture;
     // #endregion
 }
 
@@ -6682,13 +6680,17 @@ void Interface_DrawPauseMenuEquippingIcons(PlayState* play) {
         pauseCtx->cursorVtx[18].v.ob[1] = pauseCtx->cursorVtx[19].v.ob[1] =
             pauseCtx->cursorVtx[16].v.ob[1] - (pauseCtx->equipAnimScale / 10);
 
-        if (pauseCtx->equipTargetItem < 0xB5) {
+        if (GameInteractor_Should(VB_ITEM_HAS_NORMAL_EQUIP_ANIMATION, pauseCtx->equipTargetItem < 0xB5,
+                                  pauseCtx->equipTargetItem)) {
             // Normal Equip (icon goes from the inventory slot to the C button when equipping it)
+            ItemId itemId = pauseCtx->equipTargetItem;
+            void* texture = (itemId < ARRAY_COUNT(gItemIcons)) ? gItemIcons[itemId] : gEmptyTexture;
+            GameInteractor_Should(VB_GET_ITEM_ICON_TEXTURE, true, itemId, &texture);
             gDPSetPrimColor(OVERLAY_DISP++, 0, 0, 255, 255, 255, pauseCtx->equipAnimAlpha);
             gSPVertex(OVERLAY_DISP++, &pauseCtx->cursorVtx[16], 4, 0);
-            gDPLoadTextureBlock(OVERLAY_DISP++, gItemIcons[pauseCtx->equipTargetItem], G_IM_FMT_RGBA, G_IM_SIZ_32b,
-                                ICON_ITEM_TEX_WIDTH, ICON_ITEM_TEX_HEIGHT, 0, G_TX_NOMIRROR | G_TX_WRAP,
-                                G_TX_NOMIRROR | G_TX_WRAP, G_TX_NOMASK, G_TX_NOMASK, G_TX_NOLOD, G_TX_NOLOD);
+            gDPLoadTextureBlock(OVERLAY_DISP++, texture, G_IM_FMT_RGBA, G_IM_SIZ_32b, ICON_ITEM_TEX_WIDTH,
+                                ICON_ITEM_TEX_HEIGHT, 0, G_TX_NOMIRROR | G_TX_WRAP, G_TX_NOMIRROR | G_TX_WRAP,
+                                G_TX_NOMASK, G_TX_NOMASK, G_TX_NOLOD, G_TX_NOLOD);
         } else {
             // Magic Arrow Equip Effect
             temp = pauseCtx->equipTargetItem - 0xB5;

@@ -494,6 +494,14 @@ typedef enum {
 
     // #### `result`
     // ```c
+    // pauseCtx->equipTargetItem < 0xB5
+    // ```
+    // #### `args`
+    // - `ItemId` (equipTargetItem)
+    VB_ITEM_HAS_NORMAL_EQUIP_ANIMATION,
+
+    // #### `result`
+    // ```c
     // true
     // ```
     // #### `args`

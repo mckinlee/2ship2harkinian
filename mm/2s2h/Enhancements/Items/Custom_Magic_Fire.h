@@ -1,8 +1,13 @@
-#ifndef COMBO_OVL_MM_CUSOM_MAGIC_FIRE_H
-#define COMBO_OVL_MM_CUSOM_MAGIC_FIRE_H
+#ifndef COMBO_OVL_MM_CUSTOM_MAGIC_FIRE_H
+#define COMBO_OVL_MM_CUSTOM_MAGIC_FIRE_H
 
-extern u64 CUSTOM_KEEP_MAGIC_FIRE_TEXTURE[];
-#define ITEM_CUSTOM_DINS_FIRE ITEM_C1
+#include "align_asset_macro.h"
+
+#define dgFireTex "__OTR__overlays/ovl_Magic_Fire/gFireTex"
+static const ALIGN_ASSET(2) char gFireTex[] = dgFireTex;
+
+#define dgDinsFireIcon "__OTR__overlays/ovl_Magic_Fire/gItemIconDinsFireTex"
+static const ALIGN_ASSET(2) char gDinsFireIcon[] = dgDinsFireIcon;
 
 typedef struct {
     Actor actor;

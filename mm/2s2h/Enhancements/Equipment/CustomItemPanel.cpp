@@ -42,12 +42,24 @@ static bool sHasDpadBackup = false;
 static float sFlipAngle = 0.0f;
 static float sTargetFlipAngle = 0.0f;
 
-#include <vector>
-#include <functional>
+typedef enum {
+    CUSTOM_ITEM_NONE,
+    CUSTOM_ITEM_DINS_FIRE,
+} CustomItemId;
+
+#define ITEM_CUSTOM_MARKER_B 0xD0
+#define ITEM_CUSTOM_MARKER_C_LEFT 0xD1
+#define ITEM_CUSTOM_MARKER_C_DOWN 0xD2
+#define ITEM_CUSTOM_MARKER_C_RIGHT 0xD3
+#define ITEM_CUSTOM_MARKER_DINS_FIRE 0xD4
+
+#define IS_CUSTOM_MARKER(id) ((id) >= ITEM_CUSTOM_MARKER_B && (id) <= ITEM_CUSTOM_MARKER_DINS_FIRE)
+#define IS_HUD_MARKER(id) ((id) >= ITEM_CUSTOM_MARKER_B && (id) <= ITEM_CUSTOM_MARKER_C_RIGHT)
 
 struct CustomItemEntry {
-    ItemId itemId;
+    CustomItemId customItemId;
     u8 slot;
+    u8 markerId;
     std::function<bool()> canUse;
     std::function<void()> onUse;
     std::function<void*()> getIcon;
@@ -55,21 +67,17 @@ struct CustomItemEntry {
 
 static std::vector<CustomItemEntry> sCustomItemRegistry;
 
-void RegisterCustomItem(ItemId itemId, u8 slot, std::function<bool()> canUse, std::function<void()> onUse,
-                        std::function<void*()> getIcon) {
-    sCustomItemRegistry.push_back({ itemId, slot, canUse, onUse, getIcon });
+void RegisterCustomItem(CustomItemId customItemId, u8 slot, u8 markerId, std::function<bool()> canUse,
+                        std::function<void()> onUse, std::function<void*()> getIcon) {
+    sCustomItemRegistry.push_back({ customItemId, slot, markerId, canUse, onUse, getIcon });
 }
 
 void InitCustomItems() {
     sCustomItemRegistry.clear();
 
-    // Register Moon's Tear (Placeholder / No Action)
-    RegisterCustomItem(
-        ITEM_MOONS_TEAR, SLOT_OCARINA, []() { return false; }, []() {}, nullptr);
-
     // Register Custom Din's Fire
     RegisterCustomItem(
-        ITEM_CUSTOM_DINS_FIRE, SLOT_ARROW_FIRE,
+        CUSTOM_ITEM_DINS_FIRE, SLOT_ARROW_FIRE, ITEM_CUSTOM_MARKER_DINS_FIRE,
         []() { return gSaveContext.save.saveInfo.playerData.magic >= MAGIC_COST_DINS_FIRE; },
         []() {
             Player* player = GET_PLAYER(gPlayState);
@@ -77,12 +85,7 @@ void InitCustomItems() {
                         player->actor.world.pos.y, player->actor.world.pos.z, 0, player->actor.shape.rot.y, 0, 0);
             gSaveContext.save.saveInfo.playerData.magic -= MAGIC_COST_DINS_FIRE;
         },
-        []() {
-            if (ITEM_ARROW_FIRE < 255) {
-                return (void*)gDinsFireIcon;
-            }
-            return (void*)NULL;
-        });
+        []() -> void* { return (void*)gDinsFireIcon; });
 }
 
 void RegisterCustomItemPanel() {
@@ -99,13 +102,36 @@ void RegisterCustomItemPanel() {
     // Populate from registry
     for (const auto& entry : sCustomItemRegistry) {
         if (entry.slot < 48) {
-            sCustomItems[entry.slot] = entry.itemId;
+            sCustomItems[entry.slot] = entry.markerId;
         }
     }
 
     // Use GameState hooks for the inventory swap to ensure it covers the entire update and draw cycle.
-    // This fixes the bug where equipping a custom item (like Moon's Tear) would default to the vanilla item (Ocarina).
     COND_HOOK(OnGameStateMainStart, CVAR_CUSTOM_PANEL_ENABLED, []() {
+        // Detect custom item equips
+        for (int i = 0; i < 4; i++) {
+            u8 itemOnButton = gSaveContext.save.saveInfo.equips.buttonItems[0][i];
+
+            // If it's an inventory marker, we need to convert it to a slot marker and track it
+            if (itemOnButton >= ITEM_CUSTOM_MARKER_DINS_FIRE) {
+                CustomItemId customItemId = CUSTOM_ITEM_NONE;
+                for (const auto& entry : sCustomItemRegistry) {
+                    if (entry.markerId == itemOnButton) {
+                        customItemId = entry.customItemId;
+                        break;
+                    }
+                }
+
+                if (customItemId != CUSTOM_ITEM_NONE) {
+                    gSaveContext.save.shipSaveInfo.customEquips[i] = customItemId;
+                    gSaveContext.save.saveInfo.equips.buttonItems[0][i] = (ITEM_CUSTOM_MARKER_B + i);
+                }
+            } else if (itemOnButton < ITEM_CUSTOM_MARKER_B || itemOnButton > ITEM_CUSTOM_MARKER_C_RIGHT) {
+                // Vanilla item equipped, clear custom tracking
+                gSaveContext.save.shipSaveInfo.customEquips[i] = CUSTOM_ITEM_NONE;
+            }
+        }
+
         if (gPlayState != NULL && IS_PAUSED(&gPlayState->pauseCtx) && gPlayState->pauseCtx.pageIndex == PAUSE_ITEM &&
             sShowingCustomItems) {
 
@@ -170,72 +196,102 @@ void RegisterCustomItemPanel() {
             return;
         }
 
-        for (int i = 1; i < 4; i++) {
-            if (CHECK_BTN_ALL(input->press.button, (i == 1) ? BTN_CLEFT : (i == 2) ? BTN_CDOWN : BTN_CRIGHT)) {
-                ItemId equippedItem = (ItemId)gSaveContext.save.saveInfo.equips.buttonItems[0][i];
+        for (int i = 0; i < 4; i++) {
+            if (CHECK_BTN_ALL(input->press.button, (i == 0)   ? BTN_B
+                                                   : (i == 1) ? BTN_CLEFT
+                                                   : (i == 2) ? BTN_CDOWN
+                                                              : BTN_CRIGHT)) {
+                u8 itemOnButton = gSaveContext.save.saveInfo.equips.buttonItems[0][i];
+                CustomItemId customItemId = CUSTOM_ITEM_NONE;
 
-                // Iterate registry to find matching item logic
-                for (const auto& entry : sCustomItemRegistry) {
-                    if (entry.itemId == equippedItem) {
-                        if (entry.canUse && entry.canUse()) {
-                            if (entry.onUse) {
-                                entry.onUse();
+                // Check if it's a marker
+                if (IS_HUD_MARKER(itemOnButton)) {
+                    customItemId = (CustomItemId)gSaveContext.save.shipSaveInfo.customEquips[i];
+                }
+
+                if (customItemId != CUSTOM_ITEM_NONE) {
+                    // Iterate registry to find matching item logic
+                    for (const auto& entry : sCustomItemRegistry) {
+                        if (entry.customItemId == customItemId) {
+                            if (entry.canUse && entry.canUse()) {
+                                if (entry.onUse) {
+                                    entry.onUse();
+                                }
+                            } else {
+                                Audio_PlaySfx(NA_SE_SY_ERROR);
                             }
-                        } else {
-                            Audio_PlaySfx(NA_SE_SY_ERROR);
-                        }
 
-                        // Consume Input
-                        input->press.button &= ~((i == 1) ? BTN_CLEFT : (i == 2) ? BTN_CDOWN : BTN_CRIGHT);
-                        break;
+                            // Consume Input
+                            input->press.button &= ~((i == 0)   ? BTN_B
+                                                     : (i == 1) ? BTN_CLEFT
+                                                     : (i == 2) ? BTN_CDOWN
+                                                                : BTN_CRIGHT);
+                            break;
+                        }
                     }
                 }
             }
         }
     });
 
-    COND_ID_HOOK(BeforeKaleidoDrawPage, PAUSE_ITEM, CVAR_CUSTOM_PANEL_ENABLED,
-                 [](PauseContext* pauseCtx, u16 pauseIndex) {
-                     // Fix equip outline: The outline is slot-based, so it incorrectly shows on both panels if they
-                     // share a slot index. We temporarily set buttonItems to ITEM_NONE for the draw call if the item in
-                     // that slot doesn't match the equipped item.
-                     for (int i = 0; i < 3; i++) {
-                         u8 slot = gSaveContext.save.saveInfo.equips.cButtonSlots[0][i + 1];
-                         if (slot < ITEM_NUM_SLOTS) {
-                             u8 itemInSlot = gSaveContext.save.saveInfo.inventory.items[slot];
-                             u8 itemOnButton = gSaveContext.save.saveInfo.equips.buttonItems[0][i + 1];
-                             if (itemInSlot != itemOnButton) {
-                                 sBackupButtonItems[i] = itemOnButton;
-                                 gSaveContext.save.saveInfo.equips.buttonItems[0][i + 1] = ITEM_NONE;
-                                 sHasButtonBackup = true;
-                             } else {
-                                 sBackupButtonItems[i] = itemOnButton; // Still keep it for restore loop
-                             }
-                         } else {
-                             sBackupButtonItems[i] = gSaveContext.save.saveInfo.equips.buttonItems[0][i + 1];
-                         }
-                     }
+    COND_ID_HOOK(
+        BeforeKaleidoDrawPage, PAUSE_ITEM, CVAR_CUSTOM_PANEL_ENABLED, [](PauseContext* pauseCtx, u16 pauseIndex) {
+            // Fix equip outline: The outline is slot-based, so it incorrectly shows on both panels if they
+            // share a slot index. We temporarily set buttonItems to ITEM_NONE for the draw call if the item in
+            // that slot doesn't match the equipped item.
+            for (int i = 0; i < 3; i++) {
+                u8 slot = gSaveContext.save.saveInfo.equips.cButtonSlots[0][i + 1];
+                if (slot < ITEM_NUM_SLOTS) {
+                    u8 itemInSlot = gSaveContext.save.saveInfo.inventory.items[slot];
+                    u8 itemOnButton = gSaveContext.save.saveInfo.equips.buttonItems[0][i + 1];
+                    bool match = (itemInSlot == itemOnButton);
 
-                     // D-pad support
-                     if (CVarGetInteger("gEnhancements.Dpad.DpadEquips", 0)) {
-                         for (int i = 0; i < 4; i++) {
-                             u8 slot = gSaveContext.save.shipSaveInfo.dpadEquips.dpadSlots[0][i];
-                             if (slot < ITEM_NUM_SLOTS) {
-                                 u8 itemInSlot = gSaveContext.save.saveInfo.inventory.items[slot];
-                                 u8 itemOnButton = gSaveContext.save.shipSaveInfo.dpadEquips.dpadItems[0][i];
-                                 if (itemInSlot != itemOnButton) {
-                                     sBackupDpadItems[i] = itemOnButton;
-                                     gSaveContext.save.shipSaveInfo.dpadEquips.dpadItems[0][i] = ITEM_NONE;
-                                     sHasDpadBackup = true;
-                                 } else {
-                                     sBackupDpadItems[i] = itemOnButton;
-                                 }
-                             } else {
-                                 sBackupDpadItems[i] = gSaveContext.save.shipSaveInfo.dpadEquips.dpadItems[0][i];
-                             }
-                         }
-                     }
-                 });
+                    // Decoupled marker matching
+                    if (!match && IS_HUD_MARKER(itemOnButton)) {
+                        u8 index = itemOnButton - ITEM_CUSTOM_MARKER_B;
+                        CustomItemId customItemId = (CustomItemId)gSaveContext.save.shipSaveInfo.customEquips[index];
+                        if (customItemId != CUSTOM_ITEM_NONE) {
+                            for (const auto& entry : sCustomItemRegistry) {
+                                if (entry.customItemId == customItemId && entry.markerId == itemInSlot) {
+                                    match = true;
+                                    break;
+                                }
+                            }
+                        }
+                    }
+
+                    if (!match) {
+                        sBackupButtonItems[i] = itemOnButton;
+                        gSaveContext.save.saveInfo.equips.buttonItems[0][i + 1] = ITEM_NONE;
+                        sHasButtonBackup = true;
+                    } else {
+                        sBackupButtonItems[i] = itemOnButton; // Still keep it for restore loop
+                    }
+                } else {
+                    sBackupButtonItems[i] = gSaveContext.save.saveInfo.equips.buttonItems[0][i + 1];
+                }
+            }
+
+            // D-pad support
+            if (CVarGetInteger("gEnhancements.Dpad.DpadEquips", 0)) {
+                for (int i = 0; i < 4; i++) {
+                    u8 slot = gSaveContext.save.shipSaveInfo.dpadEquips.dpadSlots[0][i];
+                    if (slot < ITEM_NUM_SLOTS) {
+                        u8 itemInSlot = gSaveContext.save.saveInfo.inventory.items[slot];
+                        u8 itemOnButton = gSaveContext.save.shipSaveInfo.dpadEquips.dpadItems[0][i];
+                        if (itemInSlot != itemOnButton) {
+                            sBackupDpadItems[i] = itemOnButton;
+                            gSaveContext.save.shipSaveInfo.dpadEquips.dpadItems[0][i] = ITEM_NONE;
+                            sHasDpadBackup = true;
+                        } else {
+                            sBackupDpadItems[i] = itemOnButton;
+                        }
+                    } else {
+                        sBackupDpadItems[i] = gSaveContext.save.shipSaveInfo.dpadEquips.dpadItems[0][i];
+                    }
+                }
+            }
+        });
 
     COND_ID_HOOK(AfterKaleidoDrawPage, PAUSE_ITEM, CVAR_CUSTOM_PANEL_ENABLED,
                  [](PauseContext* pauseCtx, u16 pauseIndex) {
@@ -275,7 +331,7 @@ void RegisterCustomItemPanel() {
                      }
                  });
 
-    COND_VB_SHOULD(VB_CHECK_ITEM_SWAP_EQUIP_SLOT, CVAR_CUSTOM_PANEL_ENABLED, {
+    REGISTER_VB_SHOULD(VB_CHECK_ITEM_SWAP_EQUIP_SLOT, {
         ItemId targetItem = (ItemId)va_arg(args, int);
         ItemId existingItem = (ItemId)va_arg(args, int);
 
@@ -286,21 +342,57 @@ void RegisterCustomItemPanel() {
         }
     });
 
-    COND_VB_SHOULD(VB_GET_ITEM_ICON_TEXTURE, CVAR_CUSTOM_PANEL_ENABLED, {
-        ItemId itemId = (ItemId)va_arg(args, int);
+    REGISTER_VB_SHOULD(VB_GET_ITEM_ICON_TEXTURE, {
+        u8 itemId = va_arg(args, int);
         void** texture = va_arg(args, void**);
 
-        for (const auto& entry : sCustomItemRegistry) {
-            if (entry.itemId == itemId) {
-                if (entry.getIcon) {
-                    *texture = entry.getIcon();
+        if (IS_CUSTOM_MARKER(itemId)) {
+            *texture = (void*)gEmptyTexture; // Prevent corruption by defaulting to empty
+            CustomItemId customItemId = CUSTOM_ITEM_NONE;
+
+            // HUD markers (mapping to slot index)
+            if (IS_HUD_MARKER(itemId)) {
+                u8 index = itemId - ITEM_CUSTOM_MARKER_B; // 0, 1, 2, 3
+                customItemId = (CustomItemId)gSaveContext.save.shipSaveInfo.customEquips[index];
+            }
+            // Specific item markers (Inventory)
+            else if (itemId == ITEM_CUSTOM_MARKER_DINS_FIRE) {
+                customItemId = CUSTOM_ITEM_DINS_FIRE;
+            }
+
+            if (customItemId != CUSTOM_ITEM_NONE) {
+                for (const auto& entry : sCustomItemRegistry) {
+                    if (entry.customItemId == customItemId) {
+                        if (entry.getIcon) {
+                            void* icon = entry.getIcon();
+                            if (icon != nullptr) {
+                                *texture = icon;
+                            }
+                        }
+                        break;
+                    }
                 }
-                break;
             }
         }
     });
 
-    COND_VB_SHOULD(VB_PLAYER_INIT_ITEM_ACTION, CVAR_CUSTOM_PANEL_ENABLED, {
+    REGISTER_VB_SHOULD(VB_ITEM_HAS_NORMAL_EQUIP_ANIMATION, {
+        u8 itemId = va_arg(args, int);
+
+        // Check if this is a registered custom item marker
+        if (IS_CUSTOM_MARKER(itemId)) {
+            *should = true;
+        }
+    });
+
+    REGISTER_VB_SHOULD(VB_ITEM_BE_RESTRICTED, {
+        u8 itemId = *(u8*)va_arg(args, u8*);
+
+        if (IS_CUSTOM_MARKER(itemId)) {
+            *should = false; // Custom items are not restricted
+        }
+    });
+    REGISTER_VB_SHOULD(VB_PLAYER_INIT_ITEM_ACTION, {
         PlayerItemAction itemAction = va_arg(args, PlayerItemAction);
         Player* player = GET_PLAYER(gPlayState);
 

@@ -402,6 +402,7 @@ typedef struct ShipSaveInfo {
     RespawnData respawn[RESPAWN_MODE_MAX];
     char commitHash[8];
     RandoSaveInfo rando;
+    u8 customEquips[4]; // [0] = B, [1..3] = C-Left, C-Down, C-Right
 } ShipSaveInfo;
 // #endregion
 
