@@ -134,7 +134,14 @@ void FindReachableRegions(RandoRegionId currentRegion, std::set<RandoRegionId>& 
             reachableRegions.insert(connectedRegionId);
 
             auto& targetRegion = Regions[connectedRegionId];
-            regionTimeStates[connectedRegionId] = { .timeSlices = currentTime,
+
+            // Apply time filter if present
+            uint64_t exitTime = currentTime;
+            if (regionExit.timeFilter) {
+                exitTime = regionExit.timeFilter(currentTime);
+            }
+
+            regionTimeStates[connectedRegionId] = { .timeSlices = exitTime,
                                                     .canStayOverTime = targetRegion.canStayOverTime };
 
             FindReachableRegions(connectedRegionId, reachableRegions, regionTimeStates);

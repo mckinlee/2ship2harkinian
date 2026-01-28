@@ -134,6 +134,7 @@ struct RandoRegionExit {
     s32 returnEntrance;
     std::function<bool()> condition;
     std::string conditionString;
+    std::function<uint64_t(uint64_t)> timeFilter;
 };
 
 struct RandoRegion {
@@ -238,11 +239,18 @@ void ValidateRegionTimeOwnership(RandoRegionId regionId, RandoCheckId checkId, u
     {                                        \
         randoEvent, [] { return condition; } \
     }
-#define EXIT(toEntrance, fromEntrance, condition)                           \
-    {                                                                       \
-        toEntrance, {                                                       \
-            fromEntrance, [] { return condition; }, LogicString(#condition) \
-        }                                                                   \
+#define EXIT(toEntrance, fromEntrance, condition)                                    \
+    {                                                                                \
+        toEntrance, {                                                                \
+            fromEntrance, [] { return condition; }, LogicString(#condition), nullptr \
+        }                                                                            \
+    }
+
+#define EXIT_TIMED(toEntrance, fromEntrance, condition, timeFilterFn)                     \
+    {                                                                                     \
+        toEntrance, {                                                                     \
+            fromEntrance, [] { return condition; }, LogicString(#condition), timeFilterFn \
+        }                                                                                 \
     }
 #define CONNECTION(region, condition)                         \
     {                                                         \

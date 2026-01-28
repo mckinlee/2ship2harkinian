@@ -2,6 +2,7 @@
 #include "2s2h/ShipInit.hpp"
 
 #include "2s2h/Rando/Logic/Logic.h"
+#include "2s2h/Rando/Logic/EntranceShuffle.h"
 
 using namespace Rando::Logic;
 
@@ -13,6 +14,19 @@ using namespace Rando::Logic;
 #define BREAK_BOULDER_BEFORE_OR_BEAT_ALIENS_NIGHT                                                          \
     ((BETWEEN(TIME_NIGHT1_PM_06_00, TIME_NIGHT1_AM_02_30) && CAN_BE_GORON && HAS_ITEM(ITEM_POWDER_KEG)) || \
      RANDO_EVENTS[RE_COWS_FROM_ALIENS])
+
+inline uint64_t FilterRanchEntryTime(uint64_t sourceTime) {
+    if (!SettingClocks()) {
+        return sourceTime;
+    }
+    if (RANDO_EVENTS[RE_DESTROY_MILK_ROAD_BOULDER]) {
+        return sourceTime;
+    }
+    if (Rando::EntranceShuffle::IsEntranceShuffleEnabled()) {
+        return sourceTime;
+    }
+    return sourceTime & (GetHalfDayTimeMask(4) | GetHalfDayTimeMask(5));
+}
 
 // clang-format off
 static RegisterShipInitFunc initFunc([]() {
@@ -144,7 +158,7 @@ static RegisterShipInitFunc initFunc([]() {
         },
         .exits = { //     TO                                         FROM
             EXIT(ENTRANCE(TERMINA_FIELD, 5),                ENTRANCE(MILK_ROAD, 0), true),
-            EXIT(ENTRANCE(ROMANI_RANCH, 0),                 ENTRANCE(MILK_ROAD, 1), AFTER(TIME_DAY3_AM_06_00) || RANDO_EVENTS[RE_DESTROY_MILK_ROAD_BOULDER]),
+            EXIT_TIMED(ENTRANCE(ROMANI_RANCH, 0),           ENTRANCE(MILK_ROAD, 1), AFTER(TIME_DAY3_AM_06_00) || RANDO_EVENTS[RE_DESTROY_MILK_ROAD_BOULDER], FilterRanchEntryTime),
             EXIT(ENTRANCE(GORMAN_TRACK, 0),                 ENTRANCE(MILK_ROAD, 3), true),
         },
         .connections = {
