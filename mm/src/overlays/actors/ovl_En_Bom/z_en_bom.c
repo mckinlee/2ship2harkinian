@@ -9,6 +9,8 @@
 #include "overlays/actors/ovl_En_Clear_Tag/z_en_clear_tag.h"
 #include "objects/gameplay_keep/gameplay_keep.h"
 
+#include "2s2h/GameInteractor/GameInteractor.h"
+
 #define FLAGS (ACTOR_FLAG_UPDATE_CULLING_DISABLED | ACTOR_FLAG_DRAW_CULLING_DISABLED)
 
 void EnBom_Init(Actor* thisx, PlayState* play);
@@ -314,6 +316,7 @@ void EnBom_WaitForRelease(EnBom* this, PlayState* play) {
         EnBom_Move(this, play);
     } else {
         Math_Vec3f_ToVec3s(&this->actor.home.rot, &this->actor.parent->world.pos);
+        GameInteractor_ExecuteOnBombUpdateWithParent(play, this);
         if (this->isPowderKeg) {
             gSaveContext.powderKegTimer = this->timer;
         }

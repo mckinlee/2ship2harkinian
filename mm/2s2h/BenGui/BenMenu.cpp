@@ -1024,6 +1024,9 @@ void BenMenu::AddEnhancements() {
         .CVar("gEnhancements.PlayerActions.ArrowCycle")
         .Options(CheckboxOptions().Tooltip(
             "While aiming the bow, use R to cycle between Normal, Fire, Ice and Light arrows."));
+    AddWidget(path, "Bomb Arrows", WIDGET_CVAR_CHECKBOX)
+        .CVar("gEnhancements.PlayerActions.BombArrows")
+        .Options(CheckboxOptions().Tooltip("Allows bombs to be attached to arrows while aiming the bow."));
     AddWidget(path, "Remote Bombchu Control", WIDGET_CVAR_CHECKBOX)
         .CVar("gEnhancements.PlayerActions.RemoteBombchu")
         .Options(CheckboxOptions().Tooltip(

@@ -9,6 +9,8 @@
 extern "C" {
 #endif
 #include "z64.h"
+struct EnArrow;
+struct EnBom;
 #ifdef __cplusplus
 }
 #endif
@@ -530,12 +532,17 @@ void GameInteractor_ExecuteOnCameraChangeSettingsFlags(Camera* camera);
 
 void GameInteractor_ExecuteOnPassPlayerInputs(Input* input);
 
+bool GameInteractor_ShouldPlayerUseHeldItem(PlayState* play, Player* player, ItemId item, s32 actionParam);
+
 void GameInteractor_ExecuteOnOpenText(u16* textId, bool* loadFromMessageTable);
 
 bool GameInteractor_ShouldItemGive(u8 item);
 void GameInteractor_ExecuteOnItemGive(u8 item);
 
 void GameInteractor_ExecuteOnBottleContentsUpdate(u8 item);
+void GameInteractor_ExecuteOnArrowAfterDraw(PlayState* play, EnArrow* arrow);
+bool GameInteractor_ShouldArrowHit(PlayState* play, EnArrow* arrow, bool hitActor);
+void GameInteractor_ExecuteOnBombUpdateWithParent(PlayState* play, EnBom* bomb);
 
 void GameInteractor_ExecuteOnSeqPlayerInit(int32_t playerIdx, int32_t seqId);
 

@@ -9,6 +9,7 @@
 #include "overlays/effects/ovl_Effect_Ss_Sbn/z_eff_ss_sbn.h"
 #include "objects/gameplay_keep/gameplay_keep.h"
 
+#include "2s2h/GameInteractor/GameInteractor.h"
 #include "2s2h/framebuffer_effects.h"
 
 #define FLAGS (ACTOR_FLAG_UPDATE_CULLING_DISABLED | ACTOR_FLAG_DRAW_CULLING_DISABLED)
@@ -434,7 +435,12 @@ void func_8088ACE0(EnArrow* this, PlayState* play) {
         } else {
             EffectSsHitmark_SpawnCustomScale(play, EFFECT_HITMARK_WHITE, 150, &this->actor.world.pos);
 
-            if (sp50 && (this->collider.elem.atHitElem->elemMaterial != ELEM_MATERIAL_UNK4)) {
+            s32 hitActor = sp50 && (this->collider.elem.atHitElem->elemMaterial != ELEM_MATERIAL_UNK4);
+            if (!GameInteractor_ShouldArrowHit(play, this, hitActor)) {
+                return;
+            }
+
+            if (hitActor) {
                 sp7C = this->collider.base.at;
 
                 if ((sp7C->update != NULL) && !(this->collider.base.atFlags & AT_BOUNCED) &&
@@ -626,6 +632,7 @@ void func_8088B88C(PlayState* play, EnArrow* this, EnArrowUnkStruct* arg2) {
     s32 sp30;
 
     Matrix_MultVec3f(&arg2->unk_48, &this->unk_234);
+    GameInteractor_ExecuteOnArrowAfterDraw(play, this);
     if (func_8088ACE0 == this->actionFunc) {
         if (!this->unk_244.active) {
             sp4C = arg2->unk_00;

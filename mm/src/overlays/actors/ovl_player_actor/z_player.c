@@ -3983,6 +3983,9 @@ void Player_ProcessItemButtons(Player* this, PlayState* play) {
                 Message_StartTextbox(play, 0xF7, NULL);
             }
         } else {
+            if (!GameInteractor_ShouldPlayerUseHeldItem(play, this, item, i)) {
+                return;
+            }
             this->heldItemButton = i;
             Player_UseItem(play, this, item);
         }

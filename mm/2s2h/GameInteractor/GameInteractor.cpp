@@ -248,6 +248,13 @@ void GameInteractor_ExecuteOnPassPlayerInputs(Input* input) {
     GameInteractor::Instance->ExecuteHooksForFilter<GameInteractor::OnPassPlayerInputs>(input);
 }
 
+bool GameInteractor_ShouldPlayerUseHeldItem(PlayState* play, Player* player, ItemId item, s32 actionParam) {
+    bool result = true;
+    GameInteractor::Instance->ExecuteHooks<GameInteractor::ShouldPlayerUseHeldItem>(play, player, item, actionParam,
+                                                                                   &result);
+    return result;
+}
+
 void GameInteractor_ExecuteOnOpenText(u16* textId, bool* loadFromMessageTable) {
     SPDLOG_DEBUG("OnOpenText: textId: {}", *textId);
     GameInteractor::Instance->ExecuteHooks<GameInteractor::OnOpenText>(textId, loadFromMessageTable);
@@ -275,6 +282,20 @@ void GameInteractor_ExecuteOnBottleContentsUpdate(u8 item) {
     GameInteractor::Instance->ExecuteHooks<GameInteractor::OnBottleContentsUpdate>(item);
     GameInteractor::Instance->ExecuteHooksForID<GameInteractor::OnBottleContentsUpdate>(item, item);
     GameInteractor::Instance->ExecuteHooksForFilter<GameInteractor::OnBottleContentsUpdate>(item);
+}
+
+void GameInteractor_ExecuteOnArrowAfterDraw(PlayState* play, EnArrow* arrow) {
+    GameInteractor::Instance->ExecuteHooks<GameInteractor::OnArrowAfterDraw>(play, arrow);
+}
+
+bool GameInteractor_ShouldArrowHit(PlayState* play, EnArrow* arrow, bool hitActor) {
+    bool result = true;
+    GameInteractor::Instance->ExecuteHooks<GameInteractor::ShouldArrowHit>(play, arrow, hitActor, &result);
+    return result;
+}
+
+void GameInteractor_ExecuteOnBombUpdateWithParent(PlayState* play, EnBom* bomb) {
+    GameInteractor::Instance->ExecuteHooks<GameInteractor::OnBombUpdateWithParent>(play, bomb);
 }
 
 void GameInteractor_ExecuteOnSeqPlayerInit(int32_t playerIdx, int32_t seqId) {

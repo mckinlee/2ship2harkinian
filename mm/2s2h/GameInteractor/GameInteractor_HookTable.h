@@ -45,12 +45,18 @@ DEFINE_HOOK(OnCameraChangeSettingsFlags, (Camera * camera))
 
 DEFINE_HOOK(OnPassPlayerInputs, (Input * input))
 
+DEFINE_HOOK(ShouldPlayerUseHeldItem, (PlayState * play, Player * player, ItemId item, s32 actionParam, bool* should))
+
 DEFINE_HOOK(OnOpenText, (u16 * textId, bool* loadFromMessageTable))
 
 DEFINE_HOOK(ShouldItemGive, (u8 item, bool* should))
 DEFINE_HOOK(OnItemGive, (u8 item))
 
 DEFINE_HOOK(OnBottleContentsUpdate, (u8 item))
+
+DEFINE_HOOK(OnArrowAfterDraw, (PlayState * play, EnArrow * arrow))
+DEFINE_HOOK(ShouldArrowHit, (PlayState * play, EnArrow * arrow, bool hitActor, bool* should))
+DEFINE_HOOK(OnBombUpdateWithParent, (PlayState * play, EnBom * bomb))
 
 DEFINE_HOOK(ShouldVanillaBehavior, (GIVanillaBehavior flag, bool* should, va_list originalArgs))
 
