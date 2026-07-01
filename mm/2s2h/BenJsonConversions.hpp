@@ -125,6 +125,7 @@ inline void to_json(json& j, const ShipSaveInfo& shipSaveInfo) {
         { "filePlaytime", shipSaveInfo.filePlaytime },
         { "respawn", shipSaveInfo.respawn },
         { "commitHash", commitHash },
+        { "giantsMaskAnywhereIsGiant", shipSaveInfo.giantsMaskAnywhereIsGiant },
     };
 
     if (shipSaveInfo.saveType == SAVETYPE_RANDO) {
@@ -141,6 +142,7 @@ inline void from_json(const json& j, ShipSaveInfo& shipSaveInfo) {
     j.at("filePlaytime").get_to(shipSaveInfo.filePlaytime);
     j.at("respawn").get_to(shipSaveInfo.respawn);
     j.at("commitHash").get_to(shipSaveInfo.commitHash);
+    j.at("giantsMaskAnywhereIsGiant").get_to(shipSaveInfo.giantsMaskAnywhereIsGiant);
 
     if (shipSaveInfo.saveType == SAVETYPE_RANDO) {
         if (strcmp(shipSaveInfo.commitHash, gGitCommitHash) != 0) {
