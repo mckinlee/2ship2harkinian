@@ -374,6 +374,20 @@ typedef enum {
 
     // #### `result`
     // ```c
+    // true
+    // ```
+    // #### `args`
+    // - `*Collider` (AT collider)
+    // - `*ColliderElement` (AT element)
+    // - `*Collider` (AC collider)
+    // - `*ColliderElement` (AC element)
+    // - `*f32` (damage)
+    // - `*u32` (effect)
+    // - `f32 sDamageMultipliers[16]`
+    VB_DAMAGE_AND_EFFECT,
+
+    // #### `result`
+    // ```c
     // this->animIndex == EN_DNO_ANIM_SHOCK_LOOP
     // ```
     // #### `args`
@@ -424,14 +438,6 @@ typedef enum {
     // #### `args`
     // - None
     VB_DISABLE_FD_MASK,
-
-    // #### `result`
-    // ```c
-    // play->sceneId != SCENE_INISIE_BS
-    // ```
-    // #### `args`
-    // - None
-    VB_DISABLE_GIANTS_MASK,
 
     // #### `result`
     // ```c
@@ -1762,14 +1768,6 @@ typedef enum {
     // ```
     // #### `args`
     // - None
-    VB_PLAY_GIANTS_MASK_CS,
-
-    // #### `result`
-    // ```c
-    // true
-    // ```
-    // #### `args`
-    // - None
     VB_PLAY_GORON_CHILD_CRY,
 
     // #### `result`
@@ -2476,48 +2474,13 @@ typedef enum {
 
     // #### `result`
     // ```c
-    // this->actor.depthInWater > 100.0f
-    // ```
-    // #### `args`
-    // - `*f32` (depthThreshold)
-    VB_PLAYER_DIVE_DEPTH_CHECK,
-
-    // #### `result`
-    // ```c
-    // true
-    // ```
-    // #### `args`
-    // - `*f32` (climbDelta - hardcoded ledge climb height: 60.0f, 59.0f, or 41.0f)
-    VB_PLAYER_LEDGE_CLIMB_FACTOR,
-
-    // #### `result`
-    // ```c
-    // true
-    // ```
-    // #### `args`
-    // - `*Player`
-    // - `*PlayState`
-    // - `*u32` (stateFlags1)
-    VB_GIANTS_MASK_TRANSFORMATION_STATE,
-
-    // #### `result`
-    // ```c
-    // gSaveContext.save.equippedMask == PLAYER_MASK_GIANT
-    // ```
-    // #### `args`
-    // - `*Player`
-    // - `*PlayState`
-    VB_GIANTS_MASK_CLEAR_ON_LOAD,
-
-    // #### `result`
-    // ```c
     // true
     // ```
     // #### `args`
     // - `*Player`
     // - `*PlayerItemAction`
     // - `*f32` (ceilingCheckHeight)
-    VB_GIANTS_MASK_CEILING_CHECK_HEIGHT,
+    VB_PLAYER_MASK_CEILING_CHECK_HEIGHT,
 
     // #### `result`
     // ```c
@@ -2525,7 +2488,7 @@ typedef enum {
     // ```
     // #### `args`
     // - `*Player`
-    VB_GIANTS_MASK_AUTO_REMOVE,
+    VB_GIANT_MASK_AUTO_REMOVE,
 
     // #### `result`
     // ```c
@@ -2565,6 +2528,15 @@ typedef enum {
 
     // #### `result`
     // ```c
+    // this->currentMask != PLAYER_MASK_GIANT
+    // ```
+    // #### `args`
+    // - `*Player`
+    // - `*Actor` (nextLockOnActor)
+    VB_PLAYER_CAN_LOCK_ON,
+
+    // #### `result`
+    // ```c
     // (damageEffect == 1) || (damageEffect == 2) ||
     //     !(this->actor.bgCheckFlags & BGCHECKFLAG_GROUND) ||
     //     (this->stateFlags1 & (PLAYER_STATE1_4 | PLAYER_STATE1_2000 | PLAYER_STATE1_4000 | PLAYER_STATE1_200000))
@@ -2594,16 +2566,7 @@ typedef enum {
     // - `*Vec3f` (position)
     // - `*Actor` (hittingActor)
     // - `*f32` (hitDistanceSq)
-    VB_GIANTS_MASK_HIT_DISTANCE,
-
-    // #### `result`
-    // ```c
-    // true
-    // ```
-    // #### `args`
-    // - `*Player`
-    // - `*f32` (linearVelocity)
-    VB_GIANTS_MASK_JUMPSLASH_VELOCITY,
+    VB_COLLIDER_HIT_DISTANCE,
 
     // #### `result`
     // ```c
@@ -2612,7 +2575,7 @@ typedef enum {
     // #### `args`
     // - `*Player`
     // - `*f32` (value)
-    VB_GIANTS_MASK_SCALE_PLAYER_VALUE,
+    VB_PLAYER_SCALE_VALUE,
 
     // #### `result`
     // ```c
@@ -2621,7 +2584,17 @@ typedef enum {
     // #### `args`
     // - `*Player`
     // - `*f32` (value)
-    VB_GIANTS_MASK_INVERT_PLAYER_VALUE,
+    VB_PLAYER_INVERT_SCALE_VALUE,
+
+    // #### `result`
+    // ```c
+    // (this->yDistToLedge * 0.08f) + 5.5f
+    // ```
+    // #### `args`
+    // - `*Player`
+    // - `*f32` (velocityY)
+    // - `*f32` (speedXZ)
+    VB_PLAYER_SMALL_LEDGE_JUMP_SPEED,
 } GIVanillaBehavior;
 
 #endif
