@@ -65,9 +65,10 @@ static InitChainEntry sInitChain[] = {
 
 s32 func_80BD5E00(BgHakaBombwall* this) {
     if (this->collider.base.acFlags & AC_HIT) {
-        if ((this->collider.base.ac != NULL) &&
-            (Math3D_Vec3fDistSq(&this->dyna.actor.world.pos, &this->collider.base.ac->world.pos) < SQ(80.0f))) {
-            return true;
+        if (this->collider.base.ac != NULL) {
+            if (Actor_ColliderHitDistSq(&this->dyna.actor.world.pos, this->collider.base.ac) < SQ(80.0f)) {
+                return true;
+            }
         }
     }
     return false;

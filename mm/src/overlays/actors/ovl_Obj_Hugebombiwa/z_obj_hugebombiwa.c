@@ -318,7 +318,7 @@ s32 func_80A54A0C(ObjHugebombiwa* this) {
         sp20.y = this->actor.world.pos.y + 50.0f;
         sp20.z = this->actor.world.pos.z;
         if (ac != NULL) {
-            if (Math3D_Vec3fDistSq(&sp20, &ac->world.pos) < D_80A55D74[params]) {
+            if (Actor_ColliderHitDistSq(&sp20, ac) < D_80A55D74[params]) {
                 return true;
             }
         }

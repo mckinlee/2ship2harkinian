@@ -58,9 +58,10 @@ s32 BgKin2Bombwall_IsHitFromNearby(BgKin2Bombwall* this, PlayState* play) {
     if (this->collider.base.acFlags & AC_HIT) {
         bombwallCollider = this->collider.base.ac;
         // Distance check required to only react to sufficiently close explosions.
-        if ((bombwallCollider != NULL) &&
-            (Math3D_Vec3fDistSq(&this->dyna.actor.world.pos, &bombwallCollider->world.pos) < 6400.0f)) {
-            return true;
+        if (bombwallCollider != NULL) {
+            if (Actor_ColliderHitDistSq(&this->dyna.actor.world.pos, bombwallCollider) < 6400.0f) {
+                return true;
+            }
         }
     }
     return false;

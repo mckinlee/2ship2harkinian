@@ -112,12 +112,16 @@ s32 func_809393B0(Actor* thisx) {
         Actor* ac = this->collider.base.ac;
 
         if (this->collider.elem.acHitElem->atDmgInfo.dmgFlags & 0x80000000) {
-            if ((ac != NULL) && (Math3D_Vec3fDistSq(&this->actor.world.pos, &ac->world.pos) < SQ(150.0f))) {
-                return true;
+            if (ac != NULL) {
+                if (Actor_ColliderHitDistSq(&this->actor.world.pos, ac) < SQ(150.0f)) {
+                    return true;
+                }
             }
         } else if (this->collider.elem.acHitElem->atDmgInfo.dmgFlags & 8) {
-            if ((ac != NULL) && (Math3D_Vec3fDistSq(&this->actor.world.pos, &ac->world.pos) < SQ(95.0f))) {
-                return true;
+            if (ac != NULL) {
+                if (Actor_ColliderHitDistSq(&this->actor.world.pos, ac) < SQ(95.0f)) {
+                    return true;
+                }
             }
         } else if (this->collider.elem.acHitElem->atDmgInfo.dmgFlags & 0x500) {
             return true;
@@ -134,12 +138,13 @@ s32 func_80939470(Actor* thisx) {
 
         if (temp_v0 != NULL) {
             if (this->collider.elem.acHitElem->atDmgInfo.dmgFlags & 0x80000000) {
-                if (Math3D_Vec3fDistSq(&this->actor.world.pos, &temp_v0->world.pos) < SQ(175.0f)) {
+                if (Actor_ColliderHitDistSq(&this->actor.world.pos, temp_v0) < SQ(175.0f)) {
                     return true;
                 }
-            } else if ((this->collider.elem.acHitElem->atDmgInfo.dmgFlags & 8) &&
-                       (Math3D_Vec3fDistSq(&this->actor.world.pos, &temp_v0->world.pos) < SQ(115.0f))) {
-                return true;
+            } else if (this->collider.elem.acHitElem->atDmgInfo.dmgFlags & 8) {
+                if (Actor_ColliderHitDistSq(&this->actor.world.pos, temp_v0) < SQ(115.0f)) {
+                    return true;
+                }
             }
         }
     }

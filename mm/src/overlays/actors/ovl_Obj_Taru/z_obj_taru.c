@@ -253,11 +253,11 @@ s32 func_80B9BF7C(ObjTaru* this) {
         if (ac != NULL) {
             if (this->collider.elem.acHitElem->atDmgInfo.dmgFlags & 0x80000000) {
                 phi_a3 = false;
-                if (Math3D_Vec3fDistSq(&this->dyna.actor.world.pos, &ac->world.pos) < SQ(160.0f)) {
+                if (Actor_ColliderHitDistSq(&this->dyna.actor.world.pos, ac) < SQ(160.0f)) {
                     phi_a3 = true;
                 }
             } else if (this->collider.elem.acHitElem->atDmgInfo.dmgFlags & 8) {
-                if (Math3D_Vec3fDistSq(&this->dyna.actor.world.pos, &ac->world.pos) < SQ(100.0f)) {
+                if (Actor_ColliderHitDistSq(&this->dyna.actor.world.pos, ac) < SQ(100.0f)) {
                     phi_a3 = true;
                 }
             } else if (this->collider.elem.acHitElem->atDmgInfo.dmgFlags & 0x500) {

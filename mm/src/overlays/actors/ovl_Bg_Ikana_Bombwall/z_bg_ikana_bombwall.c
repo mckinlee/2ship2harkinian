@@ -270,9 +270,10 @@ void BgIkanaBombwall_Destroy(Actor* thisx, PlayState* play) {
 
 s32 func_80BD4E44(BgIkanaBombwall* this) {
     if (this->collider.base.acFlags & AC_HIT) {
-        if ((this->collider.base.ac != NULL) &&
-            (Math3D_Vec3fDistSq(&this->dyna.actor.world.pos, &this->collider.base.ac->world.pos) < SQ(75.0f))) {
-            return true;
+        if (this->collider.base.ac != NULL) {
+            if (Actor_ColliderHitDistSq(&this->dyna.actor.world.pos, this->collider.base.ac) < SQ(75.0f)) {
+                return true;
+            }
         }
     }
     return false;
@@ -280,9 +281,10 @@ s32 func_80BD4E44(BgIkanaBombwall* this) {
 
 s32 func_80BD4EAC(BgIkanaBombwall* this) {
     if (this->collider.base.acFlags & AC_HIT) {
-        if ((this->collider.base.ac != NULL) &&
-            (Math3D_Vec3fDistSq(&this->dyna.actor.world.pos, &this->collider.base.ac->world.pos) < SQ(80.0f))) {
-            return true;
+        if (this->collider.base.ac != NULL) {
+            if (Actor_ColliderHitDistSq(&this->dyna.actor.world.pos, this->collider.base.ac) < SQ(80.0f)) {
+                return true;
+            }
         }
     }
     return false;

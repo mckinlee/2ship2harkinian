@@ -64,6 +64,11 @@ f32 CollisionCheck_GetDamageAndEffectOnElementAC(Collider* atCol, ColliderElemen
     if (acCol->actor->colChkInfo.damageTable != NULL) {
         dmgFlags = atElem->atDmgInfo.dmgFlags;
 
+        if (!GameInteractor_Should(VB_DAMAGE_AND_EFFECT, true, atCol, atElem, acCol, acElem, &damage, effect,
+                                   sDamageMultipliers)) {
+            return damage;
+        }
+
         for (i = 0; i < ARRAY_COUNT(acCol->actor->colChkInfo.damageTable->attack); i++) {
             if (dmgFlags == 1) {
                 break;
