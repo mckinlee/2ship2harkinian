@@ -220,7 +220,7 @@ jobs:
 
   build-windows:
     needs: generate-2ship-otr
-    runs-on: windows-latest
+    runs-on: windows-2022
     steps:
     - name: Install dependencies
       run: |
